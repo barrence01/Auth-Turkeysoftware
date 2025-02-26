@@ -1,0 +1,16 @@
+https://macoratti.net/22/06/aspnc_jwtrfsh1.htm
+
+
+%APPDATA%\ASP.NET\https       // Pasta deve ser criada obrigatoriamente
+dotnet dev-certs https --clean
+dotnet dev-certs https --trust
+
+dotnet tool update -g linux-dev-certs
+dotnet linux-dev-certs install
+
+
+dotnet tool install --global dotnet-ef
+dotnet ef migrations add Inicial
+dotnet ef database update
+
+# Para acessar o localhost da maquina windows por dentro do WSL, utilize-o em modo mirrored

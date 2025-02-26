@@ -1,0 +1,6 @@
+@Auth_Turkeysoftware_HostAddress = http://localhost:5154
+
+GET {{Auth_Turkeysoftware_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
