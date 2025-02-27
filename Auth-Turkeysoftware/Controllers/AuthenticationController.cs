@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace Auth_Turkeysoftware.Controllers
@@ -34,8 +34,7 @@ namespace Auth_Turkeysoftware.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            Console.WriteLine(getSecretKey());
-            var user = await _userManager.FindByNameAsync(model.Username);
+            var user = await _userManager.FindByNameAsync(model.Email);
 
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
@@ -52,22 +51,31 @@ namespace Auth_Turkeysoftware.Controllers
                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
                 }
 
-                var token = CreateToken(authClaims);
-                var refreshToken = GenerateRefreshToken();
+                var accessToken = CreateAccessToken(authClaims);
+                var refreshToken = CreateRefreshToken(authClaims);
+                
+                _ = int.TryParse(getTokenSettings("RefreshTokenValidityInMinutes"), out int refreshTokenValidityInMinutes);
 
-                _ = int.TryParse(_configuration["JwtBearerTokenSettings:RefreshTokenValidityInMinutes"],
-                    out int refreshTokenValidityInMinutes);
-
-                user.RefreshToken = refreshToken;
+                user.RefreshToken = new JwtSecurityTokenHandler().WriteToken(refreshToken);
                 user.RefreshTokenExpiryTime = DateTime.Now.AddMinutes(refreshTokenValidityInMinutes);
 
                 await _userManager.UpdateAsync(user);
 
+                HttpContext.Response.Cookies.Append("RefreshToken", new JwtSecurityTokenHandler().WriteToken(refreshToken),
+                    new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        IsEssential = true,
+                        SameSite = SameSiteMode.Strict,
+                        Domain = "localhost",
+                        MaxAge = refreshToken.ValidTo.TimeOfDay
+                    });
+
                 return Ok(new
                 {
-                    Token = new JwtSecurityTokenHandler().WriteToken(token),
-                    RefreshToken = refreshToken,
-                    Expiration = token.ValidTo
+                    AccessToken = new JwtSecurityTokenHandler().WriteToken(accessToken),
+                    Expiration = accessToken.ValidTo
                 });
             }
             return Unauthorized();
@@ -77,7 +85,7 @@ namespace Auth_Turkeysoftware.Controllers
         [Route("register-admin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
         {
-            var userExists = await _userManager.FindByNameAsync(model.Username);
+            var userExists = await _userManager.FindByNameAsync(model.Email);
 
             if (userExists != null)
             {
@@ -88,16 +96,16 @@ namespace Auth_Turkeysoftware.Controllers
             ApplicationUser user = new()
             {
                 Email = model.Email,
-                SecurityStamp = Guid.CreateVersion7(TimeProvider.System.GetUtcNow()).ToString(),
-                UserName = model.Username
+                UserName = model.Email
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (!result.Succeeded)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new Response { Status = "Error", Message = "User creation failed!" });
+                Console.WriteLine(JsonConvert.SerializeObject(result));
+                return StatusCode(StatusCodes.Status400BadRequest,
+                    new Response { Status = "Error", Message = "User creation failed!", Data = result.Errors });
             }
 
             await CheckAndInsertDefaultRoles();
@@ -108,52 +116,37 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         [HttpPost]
-        [Route("refresh-token")]
-        public async Task<IActionResult> RefreshToken(TokenModel tokenModel)
+        [Route("refresh-access-token")]
+        public async Task<IActionResult> RefreshToken()
         {
-            if (tokenModel is null)
+            try
             {
-                return BadRequest("Invalid client request");
+                Request.Cookies.TryGetValue("RefreshToken", out string refreshToken);
+                var principalRefresh = GetPrincipalFromExpiredRefreshToken(refreshToken);
+
+                string username = principalRefresh.Identity.Name;
+
+                var user = await _userManager.FindByNameAsync(username);
+
+                var newAccessToken = CreateAccessToken(principalRefresh.Claims.ToList());
+
+                return new ObjectResult(new
+                {
+                    accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken)
+                });
+            } catch(Exception e) {
+                Console.WriteLine(e.Message);
+                return Unauthorized("Token inválido.");
             }
-
-            string? accessToken = tokenModel.AccessToken;
-            string? refreshToken = tokenModel.RefreshToken;
-
-            var principal = GetPrincipalFromExpiredToken(accessToken);
-            if (principal == null)
-            {
-                return BadRequest("Invalid access token/refresh token");
-            }
-
-            string username = principal.Identity.Name;
-            var user = await _userManager.FindByNameAsync(username);
-
-            if (user == null || user.RefreshToken != refreshToken ||
-                       user.RefreshTokenExpiryTime <= DateTime.Now)
-            {
-                return BadRequest("Invalid access token/refresh token");
-            }
-
-            var newAccessToken = CreateToken(principal.Claims.ToList());
-            var newRefreshToken = GenerateRefreshToken();
-
-            user.RefreshToken = newRefreshToken;
-            await _userManager.UpdateAsync(user);
-
-            return new ObjectResult(new
-            {
-                accessToken = new JwtSecurityTokenHandler().WriteToken(newAccessToken),
-                refreshToken = newRefreshToken
-            });
         }
 
         [Authorize]
         [HttpPost]
-        [Route("revoke/{username}")]
-        public async Task<IActionResult> Revoke(string username)
+        [Route("revoke/{email}")]
+        public async Task<IActionResult> Revoke(string email)
         {
-            var user = await _userManager.FindByNameAsync(username);
-            if (user == null) return BadRequest("Invalid user name");
+            var user = await _userManager.FindByNameAsync(email);
+            if (user == null) { return BadRequest("Invalid user name"); }
 
             user.RefreshToken = null;
             await _userManager.UpdateAsync(user);
@@ -176,17 +169,20 @@ namespace Auth_Turkeysoftware.Controllers
             return NoContent();
         }
 
-        private JwtSecurityToken CreateToken(List<Claim> authClaims)
+        private JwtSecurityToken CreateAccessToken(List<Claim> authClaims)
         {
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-                                 .GetBytes(getSecretKey()));
-            _ = int.TryParse(_configuration["JwtBearerTokenSettings:TokenValidityInMinutes"], out
-                int tokenValidityInMinutes);
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(getAccessSecretKey()));
+
+            bool result = int.TryParse(getTokenSettings("AccessTokenValidityInMinutes"), out int accessTokenValidityInMinutes);
+
+            if (!result) {
+                throw new BusinessRuleException("Não foi possível converter TokenValidityInMinutes para númerico.");
+            }
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["JwtBearerTokenSettings:ValidIssuer"],
-                audience: _configuration["JwtBearerTokenSettings:ValidAudience"],
-                expires: DateTime.Now.AddMinutes(tokenValidityInMinutes),
+                issuer: getTokenSettings("ValidIssuer"),
+                audience: getTokenSettings("ValidAudience"),
+                expires: DateTime.Now.AddMinutes(accessTokenValidityInMinutes),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                 );
@@ -194,31 +190,45 @@ namespace Auth_Turkeysoftware.Controllers
             return token;
         }
 
-        private static string GenerateRefreshToken()
+        private JwtSecurityToken CreateRefreshToken(List<Claim> authClaims)
         {
-            var randomNumber = new byte[64];
-            using var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(getRefreshSecretKey()));
+
+            bool result = int.TryParse(getTokenSettings("RefreshTokenValidityInMinutes"), out int refreshTokenValidityInMinutes);
+
+            if (!result)
+            {
+                throw new BusinessRuleException("Não foi possível converter TokenValidityInMinutes para númerico.");
+            }
+
+            var token = new JwtSecurityToken(
+                issuer: getTokenSettings("ValidIssuer"),
+                audience: getTokenSettings("ValidAudience"),
+                expires: DateTime.Now.AddMinutes(refreshTokenValidityInMinutes),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                );
+
+            return token;
         }
 
-        private ClaimsPrincipal? GetPrincipalFromExpiredToken(string? token)
+        private ClaimsPrincipal GetPrincipalFromExpiredRefreshToken(string? refreshToken)
         {
             var tokenValidationParameters = new TokenValidationParameters
             {
-                ValidateAudience = false,
-                ValidateIssuer = false,
+                ValidateAudience = true,
+                ValidAudience = getTokenSettings("ValidAudience"),
+                ValidateIssuer = true,
+                ValidIssuer = getTokenSettings("ValidIssuer"),
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-                                   .GetBytes(getSecretKey())),
-                ValidateLifetime = false
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(getRefreshSecretKey())),
+                ValidateLifetime = true
             };
 
             var tokenHandler = new JwtSecurityTokenHandler();
 
 
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters,
-                            out SecurityToken securityToken);
+            var principal = tokenHandler.ValidateToken(refreshToken, tokenValidationParameters, out SecurityToken securityToken);
 
             if (securityToken is not JwtSecurityToken jwtSecurityToken ||
                       !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
@@ -237,9 +247,23 @@ namespace Auth_Turkeysoftware.Controllers
             return true;
         }
 
-        private string getSecretKey()
+        private string getTokenSettings(string key) {
+            string? value = _configuration[string.Concat("JwtBearerToken:", key)];
+            if (value == null)
+                throw new BusinessRuleException("Não foi possível obter a configuração de token específicada.");
+            return value;
+        }
+        private string getAccessSecretKey()
         {
-            string? secretKey = _configuration["JwtBearerTokenSettings:SecretKey"];
+            string? secretKey = _configuration["JwtBearerToken:AccessSecretKey"];
+            if (secretKey == null)
+                throw new BusinessRuleException("Não foi possível obter a chave do token.");
+            return secretKey;
+        }
+
+        private string getRefreshSecretKey()
+        {
+            string? secretKey = _configuration["JwtBearerToken:RefreshSecretKey"];
             if (secretKey == null)
                 throw new BusinessRuleException("Não foi possível obter a chave do token.");
             return secretKey;

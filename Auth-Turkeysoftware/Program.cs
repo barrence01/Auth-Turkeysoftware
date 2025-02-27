@@ -45,10 +45,17 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ClockSkew = TimeSpan.Zero,
 
-        ValidAudience = builder.Configuration["JwtBearerTokenSettings:ValidAudience"],
-        ValidIssuer = builder.Configuration["JwtBearerTokenSettings:ValidIssuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.
-                            GetBytes(builder.Configuration["JwtBearerTokenSettings:SecretKey"]))
+        ValidAudience = builder.Configuration["JwtBearerToken:ValidAudience"],
+        ValidIssuer = builder.Configuration["JwtBearerToken:ValidIssuer"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtBearerToken:RefreshSecretKey"]))
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            context.Token = context.Request.Cookies["RefreshToken"];
+            return Task.CompletedTask;
+        },
     };
 });
 

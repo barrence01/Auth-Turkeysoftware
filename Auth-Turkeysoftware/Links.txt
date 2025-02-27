@@ -14,3 +14,37 @@ dotnet ef migrations add Inicial
 dotnet ef database update
 
 # Para acessar o localhost da maquina windows por dentro do WSL, utilize-o em modo mirrored
+
+
+
+
+
+
+
+
+# REMOVE MIGRATIONS #
+
+* Step 1: Restore to a previous migration
+
+	If you haven't yet applied your migration you can skip this part. To restore your database schema to a previous point issue the Update-Database command with -TargetMigration option to specify the last good migration. For EFCore use Update-Database "Name-of-Migration"
+
+	If your entity framework code resides in a different project in your solution, you may need to use the '-Project' option or switch the default project in the package manager console.
+
+	Update-Database –TargetMigration: <name of last good migration>
+	For EFCore:
+
+	Update-Database <name of last good migration>
+
+* Step 2: Delete your migration from the project
+
+	If you are using Entity Framework Core you can use the 'remove-migration' command, for Entity Framework, delete the files of the unwanted migration in your EF project 'Migrations' folder manually. At this point, you are free to create a new migration and apply it to the database.
+
+	For EFCore:
+
+	remove-migration name_of_bad_migration
+	Step 3: Add your new migration
+
+	add-migration my_new_migration
+	Step 4: Apply your migration to the database
+
+	update-database
