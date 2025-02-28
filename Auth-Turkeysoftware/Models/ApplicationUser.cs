@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace Auth_Turkeysoftware.Models
 {
@@ -13,7 +15,8 @@ namespace Auth_Turkeysoftware.Models
     /// </remarks>
     public class ApplicationUser : IdentityUser
     {
-        public string? RefreshToken { get; set; }
-        public DateTime RefreshTokenExpiryTime { get; set; }
+        [MaxLength(120)]
+        [Column(TypeName = "VARCHAR")]
+        public string? Name { get; set; }
     }
 }

@@ -1,26 +1,36 @@
 https://macoratti.net/22/06/aspnc_jwtrfsh1.htm
 
+# Para instalar os certificados necessários para rodar o visual studio
+# Deve ser criada a pasta abaixo:
+%APPDATA%\ASP.NET\https    
 
-%APPDATA%\ASP.NET\https       // Pasta deve ser criada obrigatoriamente
+# Execute os comandos abaixo:
 dotnet dev-certs https --clean
 dotnet dev-certs https --trust
 
 dotnet tool update -g linux-dev-certs
 dotnet linux-dev-certs install
 
-
 dotnet tool install --global dotnet-ef
-dotnet ef migrations add Inicial
-dotnet ef database update
 
 # Para acessar o localhost da maquina windows por dentro do WSL, utilize-o em modo mirrored
+# Crie arquivo .wslconfig na pasta %appdata%
+[wsl2]
+networkingMode=mirrored
 
 
+# Para instalar o SDK do .NET 9 no WSL. Execute o comando abaixo:
+sudo apt-get update
+sudo apt-get install -y dotnet-sdk-9.0
+# Para o runtime
+sudo apt-get update
+sudo apt-get install -y aspnetcore-runtime-9.0
 
 
+# Criar migrations
 
-
-
+dotnet ef migrations add 'Inicial'
+dotnet ef database update
 
 # REMOVE MIGRATIONS #
 
@@ -48,3 +58,13 @@ dotnet ef database update
 	Step 4: Apply your migration to the database
 
 	update-database
+
+
+
+# Database access
+
+CREATE USER admin@'william-laptop' IDENTIFIED BY '123';
+SHOW GRANTS for admin@'william-laptop';
+GRANT ALL PRIVILEGES ON auth_turkey.* TO admin@'william-laptop';
+SELECT * FROM mysql.global_priv; -- Consulta todos os usuarios cadastrados
+DROP USER 'admin'@'laptop-william';

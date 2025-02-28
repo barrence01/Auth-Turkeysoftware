@@ -1,8 +1,10 @@
 using Auth_Turkeysoftware.Models;
+using Auth_Turkeysoftware.Models.Repository.Context;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -17,7 +19,7 @@ builder.Services.AddOpenApiDocument();
 //builder.Services.AddOpenApi();
 
 // Entity Framework
-var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
+var connectionString = builder.Configuration.GetConnectionString("DatabaseConnectionInLan");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // Identity
@@ -26,6 +28,8 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddDefaultTokenProviders();
 
 // Authentication
+var jwtAuthorites = builder.Configuration.GetSection("JwtBearerToken:JwtAuthorities").GetChildren().Select(c => c.GetValue<string>("Issuer")).ToList();
+Console.WriteLine(string.Concat("Valid Issuers: ", string.Join(",", jwtAuthorites)));
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -40,20 +44,20 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters()
     {
         ValidateIssuer = true,
-        ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         ClockSkew = TimeSpan.Zero,
 
-        ValidAudience = builder.Configuration["JwtBearerToken:ValidAudience"],
-        ValidIssuer = builder.Configuration["JwtBearerToken:ValidIssuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtBearerToken:RefreshSecretKey"]))
+        ValidIssuers = jwtAuthorites,
+        //ValidIssuer = builder.Configuration["JwtBearerToken:Issuer"],
+        ValidAudience = builder.Configuration["JwtBearerToken:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtBearerToken:AccessSecretKey"]))
     };
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
-            context.Token = context.Request.Cookies["RefreshToken"];
+            context.Token = context.Request.Cookies["AccessToken"];
             return Task.CompletedTask;
         },
     };
@@ -64,7 +68,6 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    //app.MapOpenApi(); // /openapi.v1.json
     app.UseOpenApi(); /// https://localhost:7157/swagger/index.html
     app.UseSwaggerUi(); //Add swagger from NSwag.AspNetCore
 }

@@ -11,5 +11,10 @@ namespace Auth_Turkeysoftware.Models
 
         [Required(ErrorMessage = "Password is required")]
         public string? Password { get; set; }
+
+        [StringLength(100)]
+        public string? Name { get; set; }
+
+        public string? PhoneNumber { get; set; }
     }
 }
