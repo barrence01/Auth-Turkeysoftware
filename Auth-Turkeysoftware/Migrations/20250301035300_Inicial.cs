@@ -15,6 +15,10 @@ namespace Auth_Turkeysoftware.Migrations
             migrationBuilder.AlterDatabase()
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateSequence<int>(
+                name: "usuario_logado_sequence",
+                cyclic: true);
+
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -72,18 +76,32 @@ namespace Auth_Turkeysoftware.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
-                name: "USER_BLACKLIST",
+                name: "TB_USUAR_SESSION",
                 columns: table => new
                 {
-                    ds_email = table.Column<string>(type: "VARCHAR(256)", maxLength: 256, nullable: false)
+                    id_sessao = table.Column<int>(type: "int", maxLength: 9, nullable: false, defaultValueSql: "NEXT VALUE FOR usuario_logado_sequence"),
+                    fk_id_usuario = table.Column<string>(type: "VARCHAR(255)", maxLength: 255, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ds_email = table.Column<string>(type: "VARCHAR(256)", maxLength: 256, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ds_refresh_token = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    dt_inclusao = table.Column<DateTime>(type: "datetime(6)", nullable: true)
+                    st_token = table.Column<string>(type: "varchar(1)", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    dt_inclusao = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    dt_alteracao = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    ds_pais = table.Column<string>(type: "VARCHAR(60)", maxLength: 60, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ds_estado = table.Column<string>(type: "VARCHAR(60)", maxLength: 60, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ds_provedora = table.Column<string>(type: "VARCHAR(60)", maxLength: 60, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ds_ip = table.Column<string>(type: "VARCHAR(50)", maxLength: 50, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_USER_BLACKLIST", x => x.ds_email);
+                    table.PrimaryKey("PK_TB_USUAR_SESSION", x => x.id_sessao);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -271,13 +289,16 @@ namespace Auth_Turkeysoftware.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "USER_BLACKLIST");
+                name: "TB_USUAR_SESSION");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropSequence(
+                name: "usuario_logado_sequence");
         }
     }
 }

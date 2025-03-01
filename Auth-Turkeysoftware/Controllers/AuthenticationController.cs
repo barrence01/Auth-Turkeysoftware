@@ -1,18 +1,22 @@
 ﻿using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models;
-using Auth_Turkeysoftware.Models.Facade;
+using Auth_Turkeysoftware.Models.DataBaseModels;
+using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
 namespace Auth_Turkeysoftware.Controllers
 {
+    //[SessionState(SessionStateBehavior.Disabled)] - Faz os métodos do controller rodar em paralelo.
+    // Não pode ser usado com o efcore porque cada contexto só roda em 1 instância
     [Route("api/[controller]")]
     [ApiController]
     public class AuthenticationController : ControllerBase
@@ -20,26 +24,33 @@ namespace Auth_Turkeysoftware.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
-        private readonly IUserBlackListService _userBlackListFacade;
+        private readonly ILoggedUserService _loggedUserService;
 
         public AuthenticationController(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration,
-            IUserBlackListService userBlackListFacade)
+            ILoggedUserService loggedUserService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
-            _userBlackListFacade = userBlackListFacade;
+            _loggedUserService = loggedUserService;
         }
 
         [Authorize]
         [HttpPost]
         [Route("teste")]
         public async Task<IActionResult> teste() {
+            Log.Information("Hello, world!");
+            await Task.Run(() =>
+            {
+                Log.Information("Doing magic asynchronously!");
+                // Simulate a long running task
+                Thread.Sleep(5000);
+            });
             var email2 = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
-            Console.WriteLine(email2);
+            Log.Information(email2);
             return Ok(email2);
         }
 
@@ -59,7 +70,7 @@ namespace Auth_Turkeysoftware.Controllers
                     new Claim(ClaimTypes.Email, user.UserName),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
-
+                
                 foreach (var userRole in userRoles)
                 {
                     authClaims.Add(new Claim(ClaimTypes.Role, userRole));
@@ -67,6 +78,13 @@ namespace Auth_Turkeysoftware.Controllers
 
                 var accessToken = CreateAccessToken(authClaims);
                 var refreshToken = CreateRefreshToken(authClaims);
+
+                await _loggedUserService.AddLoggedUser(new LoggedUserModel { 
+                    FkIdUsuario = user.Id,
+                    EmailUsuario = user.Email,
+                    RefreshToken = new JwtSecurityTokenHandler().WriteToken(refreshToken),
+                    IP = "4654654.54.4.6"
+                });
 
                 HttpContext.Response.Cookies.Append("RefreshToken", new JwtSecurityTokenHandler().WriteToken(refreshToken),
                     new CookieOptions
@@ -76,7 +94,7 @@ namespace Auth_Turkeysoftware.Controllers
                         IsEssential = true,
                         SameSite = SameSiteMode.Strict,
                         Domain = "localhost",
-                        Path = "/api/Authentication/refresh-access-token",
+                        Path = "/api/Authentication/admin",
                         MaxAge = refreshToken.ValidTo.TimeOfDay
                     });
 
@@ -120,7 +138,7 @@ namespace Auth_Turkeysoftware.Controllers
 
             if (!result.Succeeded)
             {
-                Console.WriteLine(JsonConvert.SerializeObject(result));
+                Log.Error($"Houve uma falha na criação de usuário: {result}");
                 return StatusCode(StatusCodes.Status400BadRequest,
                     new Response { Status = "Error", Message = "Criação de usuário falhou!", Data = result.Errors });
             }
@@ -156,7 +174,7 @@ namespace Auth_Turkeysoftware.Controllers
 
             if (!result.Succeeded)
             {
-                Console.WriteLine(JsonConvert.SerializeObject(result));
+                Log.Error($"Houve uma falha na criação de usuário: {result}");
                 return StatusCode(StatusCodes.Status400BadRequest,
                     new Response { Status = "Error", Message = "Criação de usuário falhou!", Data = result.Errors });
             }
@@ -169,7 +187,7 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         [HttpPost]
-        [Route("refresh-access-token")]
+        [Route("admin/refresh-access-token")]
         public async Task<IActionResult> RefreshToken()
         {
             try
@@ -184,8 +202,13 @@ namespace Auth_Turkeysoftware.Controllers
                 string username = principalRefresh.Identity.Name;
 
                 var user = await _userManager.FindByNameAsync(username);
+                if (user == null)
+                {
+                    Log.Error($"Não foi possível encontrar usuário com UserName: {username}.");
+                    return Unauthorized("Usuário não encontrado.");
+                }
 
-                if (await _userBlackListFacade.IsBlackListed(user.UserName, refreshToken)) {
+                if (await _loggedUserService.IsBlackListed(user.Id, refreshToken)) {
                     return Unauthorized("Token inválido.");
                 }
 
@@ -204,22 +227,16 @@ namespace Auth_Turkeysoftware.Controllers
 
                 return Ok();
             } catch(Exception e) {
-                Console.WriteLine(e.Message);
+                Log.Warning($"RefreshToken não gerado: {e.Message}");
                 return Unauthorized("Token inválido.");
             }
         }
 
         [Authorize]
         [HttpPost]
-        [Route("revoke/{email}")]
-        public async Task<IActionResult> Revoke()
+        [Route("admin/revoke-session/{IdSessao}")]
+        public async Task<IActionResult> Revoke([FromRoute] int IdSessao)
         {
-            Request.Cookies.TryGetValue("RefreshToken", out string refreshToken);
-            if (refreshToken == null)
-            {
-                return Unauthorized("Token inválido.");
-            }
-
             var userEmail = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
             var user = await _userManager.FindByNameAsync(userEmail);
             if (user == null) {
@@ -230,10 +247,10 @@ namespace Auth_Turkeysoftware.Controllers
                 return Unauthorized("Não foi possivel revogar o token.");
             }
 
-            await _userBlackListFacade.AddTokenInBlackList(new UserBlackListModel
+            await _loggedUserService.AddTokenInBlackList(new LoggedUserModel
             {
-                EmailUsuario = user.UserName,
-                RefreshToken = refreshToken
+                IdSessao = IdSessao,
+                FkIdUsuario = user.Id
             });
 
             return NoContent();

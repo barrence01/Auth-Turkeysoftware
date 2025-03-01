@@ -2,7 +2,8 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
-namespace Auth_Turkeysoftware.Models
+//TODO Alterar o username para ser email
+namespace Auth_Turkeysoftware.Models.DataBaseModels
 {
     /// <summary>
     /// ApplicationUser class

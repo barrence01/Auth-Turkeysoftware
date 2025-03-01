@@ -1,25 +1,37 @@
-using Auth_Turkeysoftware.Models;
-using Auth_Turkeysoftware.Models.Repository.Context;
+using Auth_Turkeysoftware.Models.DataBaseModels;
+using Auth_Turkeysoftware.Repositories;
+using Auth_Turkeysoftware.Repositories.Context;
+using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Serilog;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Logging provider
+Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.Async(a => a.Console(outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u4}] {Message:l}{NewLine}{Exception}"))
+            //.WriteTo.Async(a => a.File("logs/auth_turkeysoftware-log.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7,
+            //                outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u4}] {Message:l}{NewLine}{Exception}"))
+            .CreateLogger();
+
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument();
+builder.Services.AddScoped<ILoggedUserService, LoggedUserService>();
+builder.Services.AddScoped<ILoggedUserRepository, LoggedUserRepository>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 //builder.Services.AddOpenApi();
 
 // Entity Framework
-var connectionString = builder.Configuration.GetConnectionString("DatabaseConnectionInLan");
+var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // Identity
