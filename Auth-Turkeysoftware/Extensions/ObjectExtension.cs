@@ -23,7 +23,10 @@ namespace Auth_Turkeysoftware.Extensions
                     {
                         if (property.GetValue(obj) is string value)
                         {
-                            property.SetValue(obj, value[..maxLengthAttribute.Length]);
+                            if (value.Length > maxLengthAttribute.Length)
+                            {
+                                property.SetValue(obj, value.Substring(0, maxLengthAttribute.Length));
+                            }
                         }
                     }
                 }

@@ -4,6 +4,7 @@ using Auth_Turkeysoftware.Repositories.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Auth_Turkeysoftware.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250303213901_Inicial")]
+    partial class Inicial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -110,6 +113,11 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("dt_inclusao");
 
+                    b.Property<string>("DeviceUsed")
+                        .HasMaxLength(30)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("nm_device");
+
                     b.Property<string>("FkIdUsuario")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -126,11 +134,6 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("VARCHAR")
                         .HasColumnName("ds_pais");
-
-                    b.Property<string>("Platform")
-                        .HasMaxLength(30)
-                        .HasColumnType("VARCHAR")
-                        .HasColumnName("nm_platform");
 
                     b.Property<string>("Provedora")
                         .HasMaxLength(60)
@@ -151,11 +154,6 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("VARCHAR")
                         .HasColumnName("ds_estado");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(150)
-                        .HasColumnType("VARCHAR")
-                        .HasColumnName("ds_userAgent");
 
                     b.HasKey("IdSessao");
 

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Auth_Turkeysoftware.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250301063605_Secundario")]
-    partial class Secundario
+    [Migration("20250304004020_Segundo")]
+    partial class Segundo
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -109,25 +109,18 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnName("dt_alteracao");
 
                     b.Property<DateTime?>("DataInclusao")
+                        .IsRequired()
                         .HasColumnType("datetime(6)")
                         .HasColumnName("dt_inclusao");
 
-                    b.Property<string>("DeviceUsed")
-                        .HasMaxLength(30)
-                        .HasColumnType("VARCHAR")
-                        .HasColumnName("nm_device");
-
-                    b.Property<string>("EmailUsuario")
-                        .HasMaxLength(256)
-                        .HasColumnType("VARCHAR")
-                        .HasColumnName("ds_email");
-
                     b.Property<string>("FkIdUsuario")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("VARCHAR")
                         .HasColumnName("fk_id_usuario");
 
                     b.Property<string>("IP")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("VARCHAR")
                         .HasColumnName("ds_ip");
@@ -137,16 +130,23 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("VARCHAR")
                         .HasColumnName("ds_pais");
 
+                    b.Property<string>("Platform")
+                        .HasMaxLength(30)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("nm_platform");
+
                     b.Property<string>("Provedora")
                         .HasMaxLength(60)
                         .HasColumnType("VARCHAR")
                         .HasColumnName("ds_provedora");
 
                     b.Property<string>("RefreshToken")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("ds_refresh_token");
 
                     b.Property<string>("TokenStatus")
+                        .IsRequired()
                         .HasColumnType("varchar(1)")
                         .HasColumnName("st_token");
 
@@ -155,7 +155,15 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("VARCHAR")
                         .HasColumnName("ds_estado");
 
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(100)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("ds_userAgent");
+
                     b.HasKey("IdSessao");
+
+                    b.HasIndex(new[] { "FkIdUsuario", "RefreshToken" }, "IX_USUAR_TOKEN")
+                        .IsUnique();
 
                     b.ToTable("TB_USUAR_SESSION");
                 });

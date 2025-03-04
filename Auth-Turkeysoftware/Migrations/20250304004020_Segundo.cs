@@ -5,16 +5,21 @@
 namespace Auth_Turkeysoftware.Migrations
 {
     /// <inheritdoc />
-    public partial class Secundario : Migration
+    public partial class Segundo : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
+            migrationBuilder.RenameColumn(
                 name: "nm_device",
                 table: "TB_USUAR_SESSION",
-                type: "VARCHAR(30)",
-                maxLength: 30,
+                newName: "nm_platform");
+
+            migrationBuilder.AddColumn<string>(
+                name: "ds_userAgent",
+                table: "TB_USUAR_SESSION",
+                type: "VARCHAR(100)",
+                maxLength: 100,
                 nullable: true)
                 .Annotation("MySql:CharSet", "utf8mb4");
         }
@@ -23,8 +28,13 @@ namespace Auth_Turkeysoftware.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "nm_device",
+                name: "ds_userAgent",
                 table: "TB_USUAR_SESSION");
+
+            migrationBuilder.RenameColumn(
+                name: "nm_platform",
+                table: "TB_USUAR_SESSION",
+                newName: "nm_device");
         }
     }
 }

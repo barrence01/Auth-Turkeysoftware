@@ -6,12 +6,13 @@ using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Auth_Turkeysoftware.Controllers.Filters;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
 using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 
 namespace Auth_Turkeysoftware.Controllers
 {
@@ -38,26 +39,12 @@ namespace Auth_Turkeysoftware.Controllers
             _loggedUserService = loggedUserService;
         }
 
-        [Authorize]
-        [HttpPost]
-        [Route("teste")]
-        public async Task<IActionResult> teste() {
-            Log.Information("Hello, world!");
-            await Task.Run(() =>
-            {
-                Log.Information("Doing magic asynchronously!");
-                // Simulate a long running task
-                Thread.Sleep(5000);
-            });
-            var email2 = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
-            Log.Information(email2);
-            return Ok(email2);
-        }
-
         [HttpPost]
         [Route("login")]
+        [TypeFilter(typeof(LoginFilter))]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
+
             var user = await _userManager.FindByNameAsync(model.Email);
 
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
@@ -79,35 +66,20 @@ namespace Auth_Turkeysoftware.Controllers
                 var accessToken = CreateAccessToken(authClaims);
                 var refreshToken = CreateRefreshToken(authClaims);
 
-                await _loggedUserService.AddLoggedUser(new LoggedUserModel { 
+                LoggedUserModel userModel;
+
+                userModel = await _loggedUserService.AddIpAddressDetails(new LoggedUserModel
+                {
                     FkIdUsuario = user.Id,
-                    EmailUsuario = user.Email,
                     RefreshToken = new JwtSecurityTokenHandler().WriteToken(refreshToken),
-                    IP = "4654654.54.4.6"
+                    IP = HttpContext.Items["IP"].ToString(),
+                    Platform = HttpContext.Items["Platform"].ToString(),
+                    UserAgent = HttpContext.Items["UserAgent"].ToString()
                 });
 
-                HttpContext.Response.Cookies.Append("RefreshToken", new JwtSecurityTokenHandler().WriteToken(refreshToken),
-                    new CookieOptions
-                    {
-                        HttpOnly = true,
-                        Secure = true,
-                        IsEssential = true,
-                        SameSite = SameSiteMode.Strict,
-                        Domain = "localhost",
-                        Path = "/api/Authentication/admin",
-                        MaxAge = refreshToken.ValidTo.TimeOfDay
-                    });
+                await _loggedUserService.AddLoggedUser(userModel);
 
-                HttpContext.Response.Cookies.Append("AccessToken", new JwtSecurityTokenHandler().WriteToken(accessToken),
-                    new CookieOptions
-                    {
-                        HttpOnly = true,
-                        Secure = true,
-                        IsEssential = true,
-                        SameSite = SameSiteMode.Strict,
-                        Domain = "localhost",
-                        MaxAge = accessToken.ValidTo.TimeOfDay
-                    });
+                AddTokenToCookies(refreshToken, accessToken);
 
                 return Ok();
             }
@@ -115,7 +87,7 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         [HttpPost]
-        [Route("register-admin")]
+        [Route("admin/register-admin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
         {
             var userExists = await _userManager.FindByNameAsync(model.Email);
@@ -187,17 +159,17 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         [HttpPost]
-        [Route("admin/refresh-access-token")]
+        [Route("refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
             try
             {
                 Request.Cookies.TryGetValue("RefreshToken", out string refreshToken);
-                if (refreshToken == null) {
-                    return Unauthorized("Token inválido.");
+                if (string.IsNullOrEmpty(refreshToken)) {
+                    return Unauthorized("Refresh Token não encontrado.");
                 }
 
-                var principalRefresh = GetPrincipalFromExpiredRefreshToken(refreshToken);
+                var principalRefresh = GetPrincipalFromRefreshToken(refreshToken);
 
                 string username = principalRefresh.Identity.Name;
 
@@ -209,33 +181,29 @@ namespace Auth_Turkeysoftware.Controllers
                 }
 
                 if (await _loggedUserService.IsBlackListed(user.Id, refreshToken)) {
-                    return Unauthorized("Token inválido.");
+                    return Unauthorized("Refresh Token inválido.");
                 }
 
+                var newRefreshToken = CreateRefreshToken(principalRefresh.Claims.ToList());
                 var newAccessToken = CreateAccessToken(principalRefresh.Claims.ToList());
 
-                HttpContext.Response.Cookies.Append("AccessToken", new JwtSecurityTokenHandler().WriteToken(newAccessToken),
-                    new CookieOptions
-                    {
-                        HttpOnly = true,
-                        Secure = true,
-                        IsEssential = true,
-                        SameSite = SameSiteMode.Strict,
-                        Domain = "localhost",
-                        MaxAge = newAccessToken.ValidTo.TimeOfDay
-                    });
+
+                await _loggedUserService.UpdateSessionRefreshToken(user.Id, refreshToken,
+                                                                   new JwtSecurityTokenHandler().WriteToken(newRefreshToken));
+
+                AddTokenToCookies(newRefreshToken, newAccessToken); ;
 
                 return Ok();
             } catch(Exception e) {
-                Log.Warning($"RefreshToken não gerado: {e.Message}");
+                Log.Error($"RefreshToken não gerado: {e.Message}");
                 return Unauthorized("Token inválido.");
             }
         }
 
         [Authorize]
         [HttpPost]
-        [Route("admin/revoke-session/{IdSessao}")]
-        public async Task<IActionResult> Revoke([FromRoute] int IdSessao)
+        [Route("admin/revoke-session/{idSessao}")]
+        public async Task<IActionResult> Revoke([FromRoute] int idSessao)
         {
             var userEmail = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
             var user = await _userManager.FindByNameAsync(userEmail);
@@ -247,13 +215,9 @@ namespace Auth_Turkeysoftware.Controllers
                 return Unauthorized("Não foi possivel revogar o token.");
             }
 
-            await _loggedUserService.AddTokenInBlackList(new LoggedUserModel
-            {
-                IdSessao = IdSessao,
-                FkIdUsuario = user.Id
-            });
+            await _loggedUserService.InvalidateUserSession(idSessao, user.Id);
 
-            return NoContent();
+            return Ok();
         }
 
         private JwtSecurityToken CreateAccessToken(List<Claim> authClaims)
@@ -268,7 +232,6 @@ namespace Auth_Turkeysoftware.Controllers
 
             var token = new JwtSecurityToken(
                 issuer: getTokenSettings("Issuer"),
-                audience: "Audience",
                 expires: DateTime.Now.AddMinutes(accessTokenValidityInMinutes),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
@@ -290,7 +253,6 @@ namespace Auth_Turkeysoftware.Controllers
 
             var token = new JwtSecurityToken(
                 issuer: getTokenSettings("Issuer"),
-                audience: "Audience",
                 expires: DateTime.Now.AddMinutes(refreshTokenValidityInMinutes),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
@@ -299,7 +261,7 @@ namespace Auth_Turkeysoftware.Controllers
             return token;
         }
 
-        private ClaimsPrincipal GetPrincipalFromExpiredRefreshToken(string? refreshToken)
+        private ClaimsPrincipal GetPrincipalFromRefreshToken(string? refreshToken)
         {
             var tokenValidationParameters = new TokenValidationParameters
             {
@@ -319,7 +281,7 @@ namespace Auth_Turkeysoftware.Controllers
             if (securityToken is not JwtSecurityToken jwtSecurityToken ||
                       !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
                                      StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Token inválido.");
+                throw new SecurityTokenException("Tipo de token inválido.");
 
             return principal;
         }
@@ -339,6 +301,7 @@ namespace Auth_Turkeysoftware.Controllers
                 throw new BusinessRuleException("Não foi possível obter a configuração de token específicada.");
             return value;
         }
+
         private string getAccessSecretKey()
         {
             string? secretKey = _configuration["JwtBearerToken:AccessSecretKey"];
@@ -353,6 +316,56 @@ namespace Auth_Turkeysoftware.Controllers
             if (secretKey == null)
                 throw new BusinessRuleException("Não foi possível obter a chave do token.");
             return secretKey;
+        }
+
+        private void AddTokenToCookies(JwtSecurityToken refreshToken, JwtSecurityToken accessToken) {
+            DeletePreviousTokenFromCookies(refreshToken, accessToken);
+
+            HttpContext.Response.Cookies.Append("RefreshToken", new JwtSecurityTokenHandler().WriteToken(refreshToken),
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Strict,
+                    Domain = "localhost",
+                    Path = "/api/Authentication/refresh-token",
+                    MaxAge = refreshToken.ValidTo.TimeOfDay
+                });
+
+            HttpContext.Response.Cookies.Append("AccessToken", new JwtSecurityTokenHandler().WriteToken(accessToken),
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Strict,
+                    Domain = "localhost",
+                    MaxAge = accessToken.ValidTo.TimeOfDay
+                });
+        }
+
+        private void DeletePreviousTokenFromCookies(JwtSecurityToken refreshToken, JwtSecurityToken accessToken) {
+            HttpContext.Response.Cookies.Delete("RefreshToken", 
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Strict,
+                    Domain = "localhost",
+                    Path = "/api/Authentication/refresh-token"
+                });
+
+            HttpContext.Response.Cookies.Delete("AccessToken", 
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Strict,
+                    Domain = "localhost"
+                });
         }
     }
 }

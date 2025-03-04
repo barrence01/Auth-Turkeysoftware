@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Auth_Turkeysoftware.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250301035300_Inicial")]
-    partial class Inicial
+    [Migration("20250304012634_Terceiro")]
+    partial class Terceiro
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,7 +28,7 @@ namespace Auth_Turkeysoftware.Migrations
             modelBuilder.HasSequence<int>("usuario_logado_sequence")
                 .IsCyclic();
 
-            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModel.ApplicationUser", b =>
+            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("varchar(255)");
@@ -100,7 +100,6 @@ namespace Auth_Turkeysoftware.Migrations
                 {
                     b.Property<int>("IdSessao")
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(9)
                         .HasColumnType("int")
                         .HasColumnName("id_sessao")
                         .HasDefaultValueSql("NEXT VALUE FOR usuario_logado_sequence");
@@ -110,20 +109,18 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnName("dt_alteracao");
 
                     b.Property<DateTime?>("DataInclusao")
+                        .IsRequired()
                         .HasColumnType("datetime(6)")
                         .HasColumnName("dt_inclusao");
 
-                    b.Property<string>("EmailUsuario")
-                        .HasMaxLength(256)
-                        .HasColumnType("VARCHAR")
-                        .HasColumnName("ds_email");
-
                     b.Property<string>("FkIdUsuario")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("VARCHAR")
                         .HasColumnName("fk_id_usuario");
 
                     b.Property<string>("IP")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("VARCHAR")
                         .HasColumnName("ds_ip");
@@ -133,16 +130,23 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("VARCHAR")
                         .HasColumnName("ds_pais");
 
+                    b.Property<string>("Platform")
+                        .HasMaxLength(30)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("nm_platform");
+
                     b.Property<string>("Provedora")
                         .HasMaxLength(60)
                         .HasColumnType("VARCHAR")
                         .HasColumnName("ds_provedora");
 
                     b.Property<string>("RefreshToken")
+                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("ds_refresh_token");
 
                     b.Property<string>("TokenStatus")
+                        .IsRequired()
                         .HasColumnType("varchar(1)")
                         .HasColumnName("st_token");
 
@@ -151,7 +155,15 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("VARCHAR")
                         .HasColumnName("ds_estado");
 
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(150)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("ds_userAgent");
+
                     b.HasKey("IdSessao");
+
+                    b.HasIndex(new[] { "FkIdUsuario", "RefreshToken" }, "IX_USUAR_TOKEN")
+                        .IsUnique();
 
                     b.ToTable("TB_USUAR_SESSION");
                 });
@@ -299,7 +311,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModel.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -308,7 +320,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModel.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -323,7 +335,7 @@ namespace Auth_Turkeysoftware.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModel.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -332,7 +344,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModel.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

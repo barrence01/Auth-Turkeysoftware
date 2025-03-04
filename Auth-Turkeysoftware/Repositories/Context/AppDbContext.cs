@@ -29,11 +29,5 @@ namespace Auth_Turkeysoftware.Repositories.Context
 
             base.OnModelCreating(builder);
         }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.LogTo(Log.Warning);
-            base.OnConfiguring(optionsBuilder);
-        }
     }
 }

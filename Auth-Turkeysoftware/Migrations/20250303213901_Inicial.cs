@@ -79,16 +79,14 @@ namespace Auth_Turkeysoftware.Migrations
                 name: "TB_USUAR_SESSION",
                 columns: table => new
                 {
-                    id_sessao = table.Column<int>(type: "int", maxLength: 9, nullable: false, defaultValueSql: "NEXT VALUE FOR usuario_logado_sequence"),
-                    fk_id_usuario = table.Column<string>(type: "VARCHAR(255)", maxLength: 255, nullable: true)
+                    id_sessao = table.Column<int>(type: "int", nullable: false, defaultValueSql: "NEXT VALUE FOR usuario_logado_sequence"),
+                    fk_id_usuario = table.Column<string>(type: "VARCHAR(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ds_email = table.Column<string>(type: "VARCHAR(256)", maxLength: 256, nullable: true)
+                    ds_refresh_token = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ds_refresh_token = table.Column<string>(type: "longtext", nullable: true)
+                    st_token = table.Column<string>(type: "varchar(1)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    st_token = table.Column<string>(type: "varchar(1)", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    dt_inclusao = table.Column<DateTime>(type: "datetime(6)", nullable: true),
+                    dt_inclusao = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     dt_alteracao = table.Column<DateTime>(type: "datetime(6)", nullable: true),
                     ds_pais = table.Column<string>(type: "VARCHAR(60)", maxLength: 60, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -96,7 +94,9 @@ namespace Auth_Turkeysoftware.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ds_provedora = table.Column<string>(type: "VARCHAR(60)", maxLength: 60, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    ds_ip = table.Column<string>(type: "VARCHAR(50)", maxLength: 50, nullable: true)
+                    ds_ip = table.Column<string>(type: "VARCHAR(50)", maxLength: 50, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    nm_device = table.Column<string>(type: "VARCHAR(30)", maxLength: 30, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
@@ -267,6 +267,12 @@ namespace Auth_Turkeysoftware.Migrations
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_USUAR_TOKEN",
+                table: "TB_USUAR_SESSION",
+                columns: new[] { "fk_id_usuario", "ds_refresh_token" },
                 unique: true);
         }
 

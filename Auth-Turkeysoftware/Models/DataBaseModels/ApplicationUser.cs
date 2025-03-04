@@ -16,8 +16,9 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
     /// </remarks>
     public class ApplicationUser : IdentityUser
     {
-        [MaxLength(120)]
+        
         [Column(TypeName = "VARCHAR")]
+        [MaxLength(120)]
         public string? Name { get; set; }
     }
 }

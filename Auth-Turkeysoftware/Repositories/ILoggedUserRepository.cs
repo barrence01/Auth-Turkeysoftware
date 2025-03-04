@@ -8,10 +8,14 @@ namespace Auth_Turkeysoftware.Repositories
 
         Task<LoggedUserModel?> FindBlackListedTokenByUserIdAndToken(string UserId, string UserToken);
 
-        Task RemoveOlderThan30DaysFromBlackList(LoggedUserModel loggedUserModel);
+        Task UpdateTokenToBlackListByIdAndIdUsuario(int idSessao, string idUsuario);
 
-        Task UpdateTokenToBlackList(LoggedUserModel loggedUserModel);
+        Task UpdateSessionRefreshToken(string idUsuario, string oldRefreshToken, string newRefreshToken);
+
+        Task RemoveRecordsOlderThan30Days(LoggedUserModel userLoggedUserModel);
 
         Task<List<LoggedUserModel>> GetActiveUserSessionsByUserId(string UserId);
+
+        Task LongRunningQuery(int seconds);
     }
 }

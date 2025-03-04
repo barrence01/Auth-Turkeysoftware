@@ -68,3 +68,23 @@ SHOW GRANTS for admin@'william-laptop';
 GRANT ALL PRIVILEGES ON auth_turkey.* TO admin@'william-laptop';
 SELECT * FROM mysql.global_priv; -- Consulta todos os usuarios cadastrados
 DROP USER 'admin'@'laptop-william';
+
+
+
+# MariaDB performance
+
+// Exibe multiplas métricas
+SHOW STATUS LIKE '%connect%';
+
+// Exibe conexões abertas
+SHOW STATUS LIKE '%connect%';
+
+// Exibe detalhes de cada conexão aberta
+show processlist;
+
+
+
+# Connection Pooling
+
+// O .NET por padrão possui uma implementação de pooling.
+// Para toda conexão criada, o .NET mantém ela aberta por 3 minutos para ser reutilizada.
