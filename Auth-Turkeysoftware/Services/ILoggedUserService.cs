@@ -1,4 +1,5 @@
-﻿using Auth_Turkeysoftware.Models.DataBaseModels;
+﻿using Auth_Turkeysoftware.Models;
+using Auth_Turkeysoftware.Models.DataBaseModels;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace Auth_Turkeysoftware.Services
@@ -8,12 +9,14 @@ namespace Auth_Turkeysoftware.Services
 
         Task AddLoggedUser(LoggedUserModel loggedUserModel);
 
-        Task InvalidateUserSession(int idSessao, string idUsuario);
+        Task InvalidateUserSession(string idSessao, string idUsuario);
 
-        Task<bool> IsBlackListed(string userId, string UserToken);
+        Task<bool> IsTokenBlackListed(string idUsuario, string idSessao, string userToken);
 
-        Task UpdateSessionRefreshToken(string id, string refreshToken, string newRefreshToken);
+        Task UpdateSessionRefreshToken(string idUsuario, string idSessao, string refreshToken, string newRefreshToken);
 
         Task<LoggedUserModel> AddIpAddressDetails(LoggedUserModel loggedUserModel);
+
+        Task<PaginationModel<List<UserSessionModel>>> GetUserActiveSessions(string UserId, int pagina);
     }
 }

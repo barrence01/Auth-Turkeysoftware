@@ -4,10 +4,10 @@ namespace Auth_Turkeysoftware.Models
 {
     public class LoginModel
     {
-        [Required(ErrorMessage = "Email is required")]
-        public string? Email { get; set; }
+        [Required(ErrorMessage = "Email é obrigatório")]
+        public string Email { get; set; }
 
-        [Required(ErrorMessage = "Password is required")]
-        public string? Password { get; set; }
+        [Required(ErrorMessage = "Password é obrigatório")]
+        public string Password { get; set; }
     }
 }

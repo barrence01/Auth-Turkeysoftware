@@ -12,6 +12,10 @@ using Serilog.Events;
 using Microsoft.AspNetCore.HttpOverrides;
 using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Services.ExternalServices;
+using Auth_Turkeysoftware.Models;
+using Auth_Turkeysoftware.Services.MailService;
+using MySqlConnector;
+using Auth_Turkeysoftware.Models.Identity;
 
 // Logging provider
 Log.Logger = new LoggerConfiguration()
@@ -40,6 +44,10 @@ try
     builder.Services.AddScoped<ILoggedUserRepository, LoggedUserRepository>();
     builder.Services.AddScoped<IExternalApiService, ExternalApiService>();
 
+    // Mail Service
+    builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+    builder.Services.AddTransient<IEmailService, EmailService>();
+
     //Filters
     builder.Services.AddScoped<LoginFilter>();
 
@@ -53,7 +61,17 @@ try
     // Identity
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                     .AddEntityFrameworkStores<AppDbContext>()
+                    .AddErrorDescriber<CustomIdentityErrorDescriber>()
                     .AddDefaultTokenProviders();
+
+    builder.Services.Configure<IdentityOptions>(options =>
+    {
+        options.User.RequireUniqueEmail = true;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+        options.Lockout.MaxFailedAccessAttempts = 10;
+        options.Lockout.AllowedForNewUsers = true;
+    });
+
 
     // Authentication
     //var jwtAuthorites = builder.Configuration.GetSection("JwtBearerToken:JwtAuthorities").GetChildren().Select(c => c.GetValue<string>("Issuer")).ToList();
@@ -71,12 +89,13 @@ try
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters()
         {
+            ValidateAudience = false,
             ValidateIssuer = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ClockSkew = TimeSpan.Zero,
 
-            
+
             ValidIssuer = builder.Configuration["JwtBearerToken:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtBearerToken:AccessSecretKey"]))
             //ValidIssuers = jwtAuthorites,
@@ -87,7 +106,7 @@ try
         {
             OnMessageReceived = context =>
             {
-                context.Token = context.Request.Cookies["AccessToken"];
+                context.Token = context.Request.Cookies["TurkeySoftware-AccessToken"];
                 return Task.CompletedTask;
             },
         };
@@ -103,6 +122,16 @@ try
         ForwardedHeaders.XForwardedProto
     });
 
+#if !DEBUG
+    // Verifica se o banco de dados está em conformidade com as migrações, caso não esteja, executará o migrations para sincronizar a base.
+    await using (var scope = app.Services.CreateAsyncScope())
+    {
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<AppDbContext>();
+        await context.Database.MigrateAsync();
+    }
+#endif
+
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
@@ -117,6 +146,9 @@ try
     app.MapControllers();
 
     app.Run();
+}
+catch (HostAbortedException) {
+    Log.Information("Aplicação foi finalizada.");
 }
 catch (Exception ex)
 {

@@ -2,18 +2,17 @@
 using System.ComponentModel.DataAnnotations;
 using YamlDotNet.Core.Tokens;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata;
 using Auth_Turkeysoftware.Extensions;
 
 namespace Auth_Turkeysoftware.Models.DataBaseModels
 {
     [Table("TB_USUAR_SESSION")]
-    [Index(nameof(FkIdUsuario), nameof(RefreshToken), IsUnique = true, Name = "IX_USUAR_TOKEN")]
+    [Index(nameof(FkIdUsuario), Name = "IX_COD_USUAR_SESSION")]
     public class LoggedUserModel
     {
         [Key]
         [Column("id_sessao")]
-        public int IdSessao { get; set; }
+        public string IdSessao { get; set; }
 
         [Column("fk_id_usuario", TypeName = "VARCHAR")]
         [MaxLength(255)]

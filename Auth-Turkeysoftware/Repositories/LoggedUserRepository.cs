@@ -1,9 +1,9 @@
 ﻿using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
+using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Models.DataBaseModels;
 using Auth_Turkeysoftware.Repositories.Context;
 using Microsoft.EntityFrameworkCore;
-using MySqlConnector;
 using Serilog;
 
 namespace Auth_Turkeysoftware.Repositories
@@ -34,16 +34,17 @@ namespace Auth_Turkeysoftware.Repositories
             }
             catch (DbUpdateException e)
             {
-                Log.Error($"Houve um erro de acesso ao banco de dados durante a inclusão da sessão do usuário:\n", e);
+                Log.Error(e, "Houve um erro de acesso ao banco de dados durante a inclusão da sessão do usuário.");
                 throw new BusinessRuleException("Não foi possível salvar o registro de login do usuário.");
             }
         }
 
-        public async Task<LoggedUserModel?> FindBlackListedTokenByUserIdAndToken(string UserId, string UserToken)
+        public async Task<LoggedUserModel?> FindRefreshToken(string userId, string sessionId, string userToken)
         {
             return await dataBaseContext.LoggedUser
                                         .AsNoTracking()
-                                        .Where(p => p.FkIdUsuario == UserId && p.RefreshToken == UserToken && p.TokenStatus == (char)StatusTokenEnum.INATIVO)
+                                        .Where(p => p.IdSessao == sessionId && p.FkIdUsuario == userId
+                                                 && p.RefreshToken == userToken)
                                         .Select(p => new LoggedUserModel
                                         {
                                             IdSessao = p.IdSessao
@@ -51,11 +52,12 @@ namespace Auth_Turkeysoftware.Repositories
                                         .FirstOrDefaultAsync();
         }
 
-        public async Task UpdateTokenToBlackListByIdAndIdUsuario(int idSessao, string idUsuario)
+        public async Task InvalidateUserSessionByIdSessaoAndIdUsuario(string idSessao, string idUsuario)
         {
             try
             {
                 var sessao = await dataBaseContext.LoggedUser
+                                              .AsNoTracking()
                                               .Where(p => p.IdSessao == idSessao
                                                        && p.FkIdUsuario == idUsuario)
                                               .Select(p => new LoggedUserModel
@@ -65,7 +67,7 @@ namespace Auth_Turkeysoftware.Repositories
                 if (sessao == null)
                     throw new BusinessRuleException("Não foi possível encontrar a sessão à ser revogada.");
 
-                dataBaseContext.Attach(sessao); // Reseta colunas para não alterada no contexto
+                dataBaseContext.Attach(sessao); // Reseta colunas para 'não alterada' no contexto
 
                 sessao.TokenStatus = (char)StatusTokenEnum.INATIVO;
                 sessao.DataAlteracao = DateTime.Now;
@@ -79,12 +81,14 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        public async Task UpdateSessionRefreshToken(string idUsuario, string oldRefreshToken, string newRefreshToken)
+        public async Task UpdateSessionRefreshToken(string idUsuario, string idSessao, string oldRefreshToken, string newRefreshToken)
         {
             try
             {
                 var sessao = await dataBaseContext.LoggedUser
-                                              .Where(p => p.FkIdUsuario == idUsuario
+                                              .AsNoTracking()
+                                              .Where(p => p.IdSessao == idSessao
+                                                       && p.FkIdUsuario == idUsuario
                                                        && p.RefreshToken == oldRefreshToken
                                                        && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
                                               .Select(p => new LoggedUserModel
@@ -92,9 +96,10 @@ namespace Auth_Turkeysoftware.Repositories
                                                   IdSessao = p.IdSessao
                                               }).FirstOrDefaultAsync();
                 if (sessao == null)
-                    throw new BusinessRuleException("Não foi possível encontrar uma sessão válida que esteja utilizando o refresh token informado.");
+                    throw new InvalidSessionException("Não foi possível encontrar uma sessão válida que esteja utilizando o refresh token informado.");
 
-                dataBaseContext.Attach(sessao); // Reseta colunas para não alterada no contexto
+                // Reseta colunas para não alterada no contexto
+                dataBaseContext.Attach(sessao);
                 sessao.DataAlteracao = DateTime.Now;
                 sessao.RefreshToken = newRefreshToken;
 
@@ -107,40 +112,42 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        public async Task RemoveRecordsOlderThan30Days(LoggedUserModel userLoggedUserModel)
+        public async Task<List<UserSessionModel>> GetUserActiveSessionsByUserId(string UserId, int pagina, int qtdRegistrosPorPagina)
         {
             DateTime dataAtual = DateTime.Now;
-            DateTime dataLimite = dataAtual.AddDays(-30);
-            var itensParaRemover = await dataBaseContext.LoggedUser
-                                                        .Where(p => p.DataAlteracao < dataLimite)
-                                                        .ToArrayAsync();
-            dataBaseContext.LoggedUser.RemoveRange(itensParaRemover);
-            await dataBaseContext.SaveChangesAsync();
-        }
+            DateTime dataLimite = dataAtual.AddDays(-7);
 
-        public async Task<List<LoggedUserModel>> GetActiveUserSessionsByUserId(string UserId)
-        {
             return await dataBaseContext.LoggedUser
-                                        .Where(p => p.FkIdUsuario == UserId && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
-                                        .Select(p => new LoggedUserModel
+                                        .AsNoTracking()
+                                        .Where(p => p.FkIdUsuario == UserId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
+                                                 && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
+                                        .Select(p => new UserSessionModel
                                         {
                                             IdSessao = p.IdSessao,
                                             TokenStatus = p.TokenStatus,
                                             DataInclusao = p.DataInclusao,
+                                            UltimaVezOnline = p.DataAlteracao ?? p.DataInclusao,
+                                            IP = p.IP,
+                                            Platform = p.Platform,
                                             Pais = p.Pais,
-                                            UF = p.UF,
-                                            IP = p.IP
+                                            UF = p.UF
                                         }).OrderByDescending(p => p.DataInclusao)
+                                        .Skip((pagina - 1) * qtdRegistrosPorPagina)
+                                        .Take(qtdRegistrosPorPagina)
                                         .ToListAsync();
         }
 
-        public async Task LongRunningQuery(int seconds)
+        public async Task<long> GetUserActiveSessionsByUserIdCount(string UserId)
         {
-            Log.Error("Antes do metódo");
-            var pSeconds = new MySqlParameter("@seconds", seconds);
-            await dataBaseContext.Database.ExecuteSqlRawAsync("SELECT SLEEP(@seconds)", pSeconds);
-            //await dataBaseContext.Database.CloseConnectionAsync();
-            Log.Error("Depois do método");
+            DateTime dataAtual = DateTime.Now;
+            DateTime dataLimite = dataAtual.AddDays(-7);
+
+            return await dataBaseContext.LoggedUser
+                                        .AsNoTracking()
+                                        .Where(p => p.FkIdUsuario == UserId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
+                                                 && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
+                                        .OrderByDescending(p => p.DataInclusao)
+                                        .CountAsync();
         }
     }
 }

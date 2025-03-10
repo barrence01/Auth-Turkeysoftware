@@ -15,10 +15,6 @@ namespace Auth_Turkeysoftware.Migrations
             migrationBuilder.AlterDatabase()
                 .Annotation("MySql:CharSet", "utf8mb4");
 
-            migrationBuilder.CreateSequence<int>(
-                name: "usuario_logado_sequence",
-                cyclic: true);
-
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -44,7 +40,11 @@ namespace Auth_Turkeysoftware.Migrations
                 {
                     Id = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Name = table.Column<string>(type: "VARCHAR(120)", maxLength: 120, nullable: true)
+                    Name = table.Column<string>(type: "VARCHAR(128)", maxLength: 128, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Empresa = table.Column<string>(type: "VARCHAR(128)", maxLength: 128, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Aplicacao = table.Column<string>(type: "VARCHAR(64)", maxLength: 64, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -79,7 +79,8 @@ namespace Auth_Turkeysoftware.Migrations
                 name: "TB_USUAR_SESSION",
                 columns: table => new
                 {
-                    id_sessao = table.Column<int>(type: "int", nullable: false, defaultValueSql: "NEXT VALUE FOR usuario_logado_sequence"),
+                    id_sessao = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     fk_id_usuario = table.Column<string>(type: "VARCHAR(255)", maxLength: 255, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ds_refresh_token = table.Column<string>(type: "longtext", nullable: false)
@@ -96,7 +97,9 @@ namespace Auth_Turkeysoftware.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ds_ip = table.Column<string>(type: "VARCHAR(50)", maxLength: 50, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    nm_device = table.Column<string>(type: "VARCHAR(30)", maxLength: 30, nullable: true)
+                    nm_platform = table.Column<string>(type: "VARCHAR(30)", maxLength: 30, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ds_userAgent = table.Column<string>(type: "VARCHAR(150)", maxLength: 150, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },
                 constraints: table =>
@@ -268,12 +271,6 @@ namespace Auth_Turkeysoftware.Migrations
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_USUAR_TOKEN",
-                table: "TB_USUAR_SESSION",
-                columns: new[] { "fk_id_usuario", "ds_refresh_token" },
-                unique: true);
         }
 
         /// <inheritdoc />
@@ -302,9 +299,6 @@ namespace Auth_Turkeysoftware.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
-
-            migrationBuilder.DropSequence(
-                name: "usuario_logado_sequence");
         }
     }
 }

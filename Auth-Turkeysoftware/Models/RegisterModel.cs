@@ -6,15 +6,19 @@ namespace Auth_Turkeysoftware.Models
     {
 
         [EmailAddress]
-        [Required(ErrorMessage = "Email is required")]
+        [Required(ErrorMessage = "Email é obrigatório")]
         public string? Email { get; set; }
 
-        [Required(ErrorMessage = "Password is required")]
+        [Required(ErrorMessage = "Password é obrigatório")]
         public string? Password { get; set; }
 
         [StringLength(100)]
         public string? Name { get; set; }
 
         public string? PhoneNumber { get; set; }
+
+        public string? Empresa { get; set; }
+
+        public string? Aplicacao { get; set; }
     }
 }

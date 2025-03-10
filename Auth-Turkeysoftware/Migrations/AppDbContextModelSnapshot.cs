@@ -22,9 +22,6 @@ namespace Auth_Turkeysoftware.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.HasSequence<int>("usuario_logado_sequence")
-                .IsCyclic();
-
             modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -32,6 +29,10 @@ namespace Auth_Turkeysoftware.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<string>("Aplicacao")
+                        .HasMaxLength(64)
+                        .HasColumnType("VARCHAR");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -44,6 +45,10 @@ namespace Auth_Turkeysoftware.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("Empresa")
+                        .HasMaxLength(128)
+                        .HasColumnType("VARCHAR");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("tinyint(1)");
 
@@ -51,7 +56,7 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(120)
+                        .HasMaxLength(128)
                         .HasColumnType("VARCHAR");
 
                     b.Property<string>("NormalizedEmail")
@@ -95,11 +100,9 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.LoggedUserModel", b =>
                 {
-                    b.Property<int>("IdSessao")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("id_sessao")
-                        .HasDefaultValueSql("NEXT VALUE FOR usuario_logado_sequence");
+                    b.Property<string>("IdSessao")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("id_sessao");
 
                     b.Property<DateTime?>("DataAlteracao")
                         .HasColumnType("datetime(6)")
@@ -159,8 +162,7 @@ namespace Auth_Turkeysoftware.Migrations
 
                     b.HasKey("IdSessao");
 
-                    b.HasIndex(new[] { "FkIdUsuario", "RefreshToken" }, "IX_USUAR_TOKEN")
-                        .IsUnique();
+                    b.HasIndex(new[] { "FkIdUsuario" }, "IX_COD_USUAR_SESSION");
 
                     b.ToTable("TB_USUAR_SESSION");
                 });

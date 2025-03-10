@@ -1,14 +1,19 @@
-﻿using Auth_Turkeysoftware.Models.DataBaseModels;
+﻿using Auth_Turkeysoftware.Controllers.Base;
+using Auth_Turkeysoftware.Enums;
+using Auth_Turkeysoftware.Models;
+using Auth_Turkeysoftware.Models.DataBaseModels;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Serilog;
+using System.Security.Claims;
 
 namespace Auth_Turkeysoftware.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TestController : ControllerBase
+    public class TestController : AuthControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -19,7 +24,7 @@ namespace Auth_Turkeysoftware.Controllers
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration,
-            ILoggedUserService loggedUserService)
+            ILoggedUserService loggedUserService) : base(configuration)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -27,6 +32,7 @@ namespace Auth_Turkeysoftware.Controllers
             _loggedUserService = loggedUserService;
         }
 
+#if DEBUG
         [HttpPost]
         [Route("teste/{segundos}")]
         public async Task<IActionResult> teste(int segundos)
@@ -45,5 +51,92 @@ namespace Auth_Turkeysoftware.Controllers
             //Log.Information();
             return Ok();
         }
+
+        [HttpPost]
+        [Route("teste/create-default-user")]
+        public async Task<IActionResult> CreateDefaultUser()
+        {
+            RegisterModel? model = null;
+            string email = "desenv@email.com";
+
+            model = new RegisterModel()
+            {
+                Name = "desenv",
+                Email = email,
+                Password = "Pass123@",
+                Aplicacao = "TKS",
+                Empresa = "TurkeySoftware",
+                PhoneNumber = "00000000"
+            };
+
+            var user = await _userManager.FindByNameAsync(email);
+
+            if ( user == null) {
+                await this.RegisterMaster(model);
+            }
+            else {
+                await _userManager.ResetAccessFailedCountAsync(user);
+                var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                await _userManager.ResetPasswordAsync(user, resetToken, model.Password);
+            }
+
+            return Ok("Usuario Criado com Sucesso", model);
+        }
+
+        [HttpPost]
+        [Route("admin/register-master")]
+        public async Task<IActionResult> RegisterMaster([FromBody] RegisterModel model)
+        {
+            var userExists = await _userManager.FindByNameAsync(model.Email);
+
+            if (userExists != null)
+            {
+                return BadRequest("Usuário já existe!");
+            }
+
+            ApplicationUser user = new()
+            {
+                Email = model.Email,
+                UserName = model.Email,
+                Name = model.Name,
+                PhoneNumber = model.PhoneNumber,
+                Empresa = model.Empresa,
+                Aplicacao = model.Aplicacao
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (!result.Succeeded)
+            {
+                Log.Error($"Houve uma falha na criação de usuário: {result}");
+                return BadRequest("Criação de usuário falhou!", result.Errors);
+            }
+
+            await CheckAndInsertDefaultRoles();
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, UserRolesEnum.Master.ToString())
+            };
+
+            await _userManager.AddToRoleAsync(user, UserRolesEnum.Master.ToString());
+            await _userManager.AddClaimsAsync(user, claims);
+
+            return Ok("Usuário criado com sucesso!");
+        }
+
+        private async Task<bool> CheckAndInsertDefaultRoles()
+        {
+            foreach (string userRole in Enum.GetNames(typeof(UserRolesEnum)))
+            {
+                if (!await _roleManager.RoleExistsAsync(userRole.ToString()))
+                    await _roleManager.CreateAsync(new IdentityRole(userRole.ToString()));
+            }
+            return true;
+        }
+    #endif
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Auth_Turkeysoftware.Services.ExternalServices
+﻿using Serilog;
+
+namespace Auth_Turkeysoftware.Services.ExternalServices
 {
     public sealed class HttpClientSingleton
     {
@@ -8,25 +10,54 @@
         {
             _httpClient = new HttpClient
             {
-                Timeout = TimeSpan.FromSeconds(1)
+                Timeout = TimeSpan.FromSeconds(10)
             };
         }
 
-        public static async Task<string> GetAsync(string url)
+        public static async Task<string?> GetAsync(string url)
         {
             try
             {
+                Log.Information($"Requisição Externa. Executando método GET: {url}");
                 using var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsStringAsync();
             }
             catch (TaskCanceledException)
             {
-                return "Request timed out.";
+                Log.Information($"A requisição ultrapassou o limite de tempo.: {url}");
+                return null;
             }
             catch (HttpRequestException ex)
             {
-                return $"Request error: {ex.Message}";
+                Log.Error($"Ocorreu um erro durante a requisição: {url}");
+                Log.Error(ex.Message);
+                return null;
+            }
+        }
+
+        public static async Task<string?> GetAsync(string url, TimeSpan timeout)
+        {
+            using (var cts = new CancellationTokenSource(timeout))
+            {
+                try
+                {
+                    Log.Information($"Requisição Externa. Executando método GET: {url}");
+                    using var response = await _httpClient.GetAsync(url, cts.Token);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadAsStringAsync();
+                }
+                catch (TaskCanceledException)
+                {
+                    Log.Information($"A requisição ultrapassou o limite de tempo.: {url}");
+                    return null;
+                }
+                catch (HttpRequestException ex)
+                {
+                    Log.Error($"Ocorreu um erro durante a requisição: {url}");
+                    Log.Error(ex.Message);
+                    return null;
+                }
             }
         }
     }

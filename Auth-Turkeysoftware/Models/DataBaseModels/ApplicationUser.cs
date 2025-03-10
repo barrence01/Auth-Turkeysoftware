@@ -16,9 +16,22 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
     /// </remarks>
     public class ApplicationUser : IdentityUser
     {
-        
+        public ApplicationUser()
+        {
+            Id = Guid.CreateVersion7().ToString("N");
+            SecurityStamp = Guid.CreateVersion7().ToString("N");
+        }
+
         [Column(TypeName = "VARCHAR")]
-        [MaxLength(120)]
+        [MaxLength(128)]
         public string? Name { get; set; }
+
+        [Column(TypeName = "VARCHAR")]
+        [MaxLength(128)]
+        public string? Empresa { get; set; }
+
+        [Column(TypeName = "VARCHAR")]
+        [MaxLength(64)]
+        public string? Aplicacao { get; set; }
     }
 }

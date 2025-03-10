@@ -50,12 +50,12 @@ namespace Auth_Turkeysoftware.Controllers.Filters
         /// </summary>
         /// <param name="request">The HTTP request.</param>
         /// <returns>A tuple containing the IP, Platform, and UserAgent values.</returns>
-        private async Task<(string ip, string platform, string userAgent)> GetValuesFromRequestBodyAsync(HttpRequest request)
+        private async Task<(string? ip, string? platform, string? userAgent)> GetValuesFromRequestBodyAsync(HttpRequest request)
         {
             // Allow the request body to be read multiple times
             request.EnableBuffering();
 
-            string requestBody = null;
+            string? requestBody = null;
 
             // Read the body content as a string
             using (var reader = new StreamReader(request.Body))
@@ -64,9 +64,9 @@ namespace Auth_Turkeysoftware.Controllers.Filters
                 request.Body.Position = 0; // Reset the position for further processing
             }
 
-            string ip = null;
-            string platform = null;
-            string userAgent = null;
+            string? ip = null;
+            string? platform = null;
+            string? userAgent = null;
 
             if (!string.IsNullOrEmpty(requestBody))
             {
