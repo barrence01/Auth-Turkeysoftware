@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Security.Claims;
 using Auth_Turkeysoftware.Controllers.Base;
-using Auth_Turkeysoftware.Services;
 
 namespace Auth_Turkeysoftware.Controllers
 {
@@ -27,51 +26,6 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         [HttpPost]
-        [Route("admin/register-admin")]
-        public async Task<IActionResult> RegisterAdmin([FromBody] RegisterModel model)
-        {
-            var userExists = await _userManager.FindByNameAsync(model.Email);
-
-            if (userExists != null)
-            {
-                return BadRequest("Usuário já existe!");
-            }
-
-            ApplicationUser user = new()
-            {
-                Email = model.Email,
-                UserName = model.Email,
-                Name = model.Name,
-                PhoneNumber = model.PhoneNumber,
-                Empresa = model.Empresa,
-                Aplicacao = model.Aplicacao
-            };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (!result.Succeeded)
-            {
-                Log.Error($"Houve uma falha na criação de usuário: {result}");
-                return BadRequest("Criação de usuário falhou!", result.Errors);
-            }
-
-            await CheckAndInsertDefaultRoles();
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, UserRolesEnum.Admin.ToString())
-            };
-
-            await _userManager.AddToRoleAsync(user, UserRolesEnum.Admin.ToString());
-            await _userManager.AddClaimsAsync(user, claims);
-
-            return Ok("Usuário criado com sucesso!");
-        }
-
-        [HttpPost]
         [Route("register-user")]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
         {
@@ -87,9 +41,7 @@ namespace Auth_Turkeysoftware.Controllers
                 Email = model.Email,
                 UserName = model.Email,
                 Name = model.Name,
-                PhoneNumber = model.PhoneNumber,
-                Empresa = model.Empresa,
-                Aplicacao = model.Aplicacao
+                PhoneNumber = model.PhoneNumber
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);

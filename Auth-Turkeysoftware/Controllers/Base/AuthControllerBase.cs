@@ -85,5 +85,29 @@ namespace Auth_Turkeysoftware.Controllers.Base
                 throw new BusinessRuleException("Não foi possível obter a chave do token.");
             return secretKey;
         }
+
+        protected void DeletePreviousTokenFromCookies()
+        {
+            HttpContext.Response.Cookies.Delete(REFRESH_TOKEN,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Strict,
+                    Domain = "localhost",
+                    Path = "/api/auth/Login/refresh-token"
+                });
+
+            HttpContext.Response.Cookies.Delete(ACCESS_TOKEN,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.Strict,
+                    Domain = "localhost"
+                });
+        }
     }
 }

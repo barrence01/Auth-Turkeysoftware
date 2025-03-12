@@ -25,13 +25,5 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
         [Column(TypeName = "VARCHAR")]
         [MaxLength(128)]
         public string? Name { get; set; }
-
-        [Column(TypeName = "VARCHAR")]
-        [MaxLength(128)]
-        public string? Empresa { get; set; }
-
-        [Column(TypeName = "VARCHAR")]
-        [MaxLength(64)]
-        public string? Aplicacao { get; set; }
     }
 }

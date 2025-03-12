@@ -8,11 +8,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
-using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json;
 
 namespace Auth_Turkeysoftware.Controllers
 {
@@ -36,6 +34,11 @@ namespace Auth_Turkeysoftware.Controllers
             _loggedUserService = loggedUserService;
         }
 
+        /// <summary>
+        /// Realiza o login do usuário com base no modelo fornecido.
+        /// </summary>
+        /// <param name="model">Modelo contendo email e senha do usuário.</param>
+        /// <returns>Retorna 200 se OK.</returns>
         [HttpPost]
         [Route("login")]
         [TypeFilter(typeof(LoginFilter))]
@@ -94,6 +97,10 @@ namespace Auth_Turkeysoftware.Controllers
             }
         }
 
+        /// <summary>
+        /// Gera um novo par de tokens de acesso e refresh token com base no refresh token fornecido.
+        /// </summary>
+        /// <returns>Retorna 200 se OK.</returns>
         [HttpPost]
         [Route("refresh-token")]
         public async Task<IActionResult> RefreshToken()
@@ -111,6 +118,7 @@ namespace Auth_Turkeysoftware.Controllers
                     Log.Warning($"RefreshToken não gerado: Não foi possível encontrar o Username informado. UserName: {principalRefresh.Identity.Name}");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
+
                 string? idSessao = principalRefresh.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
                 if (idSessao == null) {
                     Log.Warning($"RefreshToken não gerado: Não foi possível identificar o claim de sessão. UserName: {principalRefresh.Identity.Name}");
@@ -163,13 +171,13 @@ namespace Auth_Turkeysoftware.Controllers
             if (securityToken is not JwtSecurityToken jwtSecurityToken ||
                       !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
                                      StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Tipo de token inválido.");
+                throw new SecurityTokenException("Token inválido.");
             return principal;
         }
 
         private void AddTokensToCookies(JwtSecurityToken refreshToken, JwtSecurityToken accessToken)
         {
-            DeletePreviousTokenFromCookies(refreshToken, accessToken);
+            DeletePreviousTokenFromCookies();
 
             HttpContext.Response.Cookies.Append(REFRESH_TOKEN, new JwtSecurityTokenHandler().WriteToken(refreshToken),
                 new CookieOptions
@@ -192,30 +200,6 @@ namespace Auth_Turkeysoftware.Controllers
                     SameSite = SameSiteMode.Strict,
                     Domain = "localhost",
                     MaxAge = accessToken.ValidTo.TimeOfDay
-                });
-        }
-
-        private void DeletePreviousTokenFromCookies(JwtSecurityToken refreshToken, JwtSecurityToken accessToken)
-        {
-            HttpContext.Response.Cookies.Delete(REFRESH_TOKEN,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    IsEssential = true,
-                    SameSite = SameSiteMode.Strict,
-                    Domain = "localhost",
-                    Path = "/api/auth/Login/refresh-token"
-                });
-
-            HttpContext.Response.Cookies.Delete(ACCESS_TOKEN,
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    IsEssential = true,
-                    SameSite = SameSiteMode.Strict,
-                    Domain = "localhost"
                 });
         }
     }

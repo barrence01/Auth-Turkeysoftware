@@ -64,8 +64,6 @@ namespace Auth_Turkeysoftware.Controllers
                 Name = "desenv",
                 Email = email,
                 Password = "Pass123@",
-                Aplicacao = "TKS",
-                Empresa = "TurkeySoftware",
                 PhoneNumber = "00000000"
             };
 
@@ -99,9 +97,7 @@ namespace Auth_Turkeysoftware.Controllers
                 Email = model.Email,
                 UserName = model.Email,
                 Name = model.Name,
-                PhoneNumber = model.PhoneNumber,
-                Empresa = model.Empresa,
-                Aplicacao = model.Aplicacao
+                PhoneNumber = model.PhoneNumber
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -119,10 +115,10 @@ namespace Auth_Turkeysoftware.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, UserRolesEnum.Master.ToString())
+                new Claim(ClaimTypes.Role, UserRolesEnum.Admin.ToString())
             };
 
-            await _userManager.AddToRoleAsync(user, UserRolesEnum.Master.ToString());
+            await _userManager.AddToRoleAsync(user, UserRolesEnum.Admin.ToString());
             await _userManager.AddClaimsAsync(user, claims);
 
             return Ok("Usuário criado com sucesso!");

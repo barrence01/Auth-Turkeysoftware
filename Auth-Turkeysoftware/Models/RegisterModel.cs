@@ -16,9 +16,5 @@ namespace Auth_Turkeysoftware.Models
         public string? Name { get; set; }
 
         public string? PhoneNumber { get; set; }
-
-        public string? Empresa { get; set; }
-
-        public string? Aplicacao { get; set; }
     }
 }
