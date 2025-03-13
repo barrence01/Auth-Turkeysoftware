@@ -15,7 +15,7 @@ namespace Auth_Turkeysoftware.Services
 
         Task UpdateSessionRefreshToken(string idUsuario, string idSessao, string refreshToken, string newRefreshToken);
 
-        Task<LoggedUserModel> AddIpAddressDetails(LoggedUserModel loggedUserModel);
+        Task<LoggedUserModel> GetGeolocationByIpAddress(LoggedUserModel loggedUserModel);
 
         Task<PaginationModel<List<UserSessionModel>>> GetUserActiveSessions(string UserId, int pagina);
     }

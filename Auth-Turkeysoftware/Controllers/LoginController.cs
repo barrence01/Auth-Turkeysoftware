@@ -4,6 +4,7 @@ using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Models.DataBaseModels;
 using Auth_Turkeysoftware.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -42,6 +43,7 @@ namespace Auth_Turkeysoftware.Controllers
         [HttpPost]
         [Route("login")]
         [TypeFilter(typeof(LoginFilter))]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             try
@@ -75,7 +77,7 @@ namespace Auth_Turkeysoftware.Controllers
                 var refreshToken = GenerateRefreshToken(userClaims);
 
                 LoggedUserModel userModel;
-                userModel = await _loggedUserService.AddIpAddressDetails(new LoggedUserModel
+                userModel = await _loggedUserService.GetGeolocationByIpAddress(new LoggedUserModel
                 {
                     IdSessao = newIdSessao,
                     FkIdUsuario = user.Id,
@@ -103,6 +105,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <returns>Retorna 200 se OK.</returns>
         [HttpPost]
         [Route("refresh-token")]
+        [AllowAnonymous]
         public async Task<IActionResult> RefreshToken()
         {
             try

@@ -14,7 +14,6 @@ using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Services.ExternalServices;
 using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Services.MailService;
-using MySqlConnector;
 using Auth_Turkeysoftware.Models.Identity;
 
 // Logging provider
@@ -22,7 +21,11 @@ Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Override("Microsoft.AspNetCore.Hosting", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.AspNetCore.Mvc", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.AspNetCore.Routing", LogEventLevel.Warning)
-            .MinimumLevel.Information()
+            #if !DEBUG
+                .MinimumLevel.Warning()
+            #else
+                .MinimumLevel.Information()
+            #endif
             .WriteTo.Async(a => a.Console(outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u4}] {Message:l}{NewLine}{Exception}"))
             #if !DEBUG
             .WriteTo.Async(a => a.File("logs/auth_turkeysoftware-log.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7,
@@ -32,7 +35,6 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-
     var builder = WebApplication.CreateBuilder(args);
 
     // Add services to the container.
@@ -54,9 +56,12 @@ try
     // Entity Framework
     var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
 
-    // Uso de AddDbContextPool para reutilizar as mesmas instancias de DbContext
-    // Devido a isso, não será possível usar o OnConfiguring do DbContext
-    builder.Services.AddDbContextPool<AppDbContext>(options => options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    builder.Services.AddDbContextPool<AppDbContext>(options =>
+    {
+        options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
+                options => options.EnableRetryOnFailure()
+        );
+    });
 
     // Identity
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -73,9 +78,6 @@ try
     });
 
 
-    // Authentication
-    //var jwtAuthorites = builder.Configuration.GetSection("JwtBearerToken:JwtAuthorities").GetChildren().Select(c => c.GetValue<string>("Issuer")).ToList();
-    //Console.WriteLine(string.Concat("Valid Issuers: ", string.Join(",", jwtAuthorites)));
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -86,7 +88,7 @@ try
     .AddJwtBearer(options =>
     {
         options.SaveToken = true;
-        options.RequireHttpsMetadata = false;
+        options.RequireHttpsMetadata = true;
         options.TokenValidationParameters = new TokenValidationParameters()
         {
             ValidateAudience = false,
@@ -98,21 +100,39 @@ try
 
             ValidIssuer = builder.Configuration["JwtBearerToken:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtBearerToken:AccessSecretKey"]))
-            //ValidIssuers = jwtAuthorites,
-            //ValidAudience = builder.Configuration["JwtBearerToken:Audience"],
-            //IssuerSigningKeys = builder.Configuration["JwtBearerToken:SignKey"],
         };
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
-                context.Token = context.Request.Cookies["TurkeySoftware-AccessToken"];
+                var token = context.Request.Cookies["TurkeySoftware-AccessToken"];
+                if (string.IsNullOrEmpty(token))
+                    context.Token = null;
+                else
+                    context.Token = token;
+
                 return Task.CompletedTask;
             },
+            OnAuthenticationFailed = context =>
+            {
+                if (context.Exception is SecurityTokenExpiredException)
+                    context.Response.Cookies.Delete("TurkeySoftware-AccessToken");
+
+                return Task.CompletedTask;
+            }
         };
     });
 
     var app = builder.Build();
+
+    // Log the URL and Port Information
+    var url = builder.Configuration["ASPNETCORE_URLS"] ?? "http://localhost:5000";
+    var port = Environment.GetEnvironmentVariable("ASPNETCORE_PORT") ?? "5000";
+
+    Log.Warning("Application starting up...");
+    Log.Warning("Server URL: {URL}, Port: {Port}", url, port);
+    Log.Warning("To access swagger add path '/swagger/index.html'. Example: https://localhost:7157/swagger/index.html");
+
 
     app.UseSerilogRequestLogging();
 

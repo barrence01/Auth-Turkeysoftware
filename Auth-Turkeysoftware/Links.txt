@@ -83,8 +83,42 @@ SHOW STATUS LIKE '%connect%';
 show processlist;
 
 
+#Configurações de performance MariaDB. Referencia: https://mariadb.com/kb/en/mariadb-memory-allocation/ e https://mariadb.com/kb/en/server-system-variables
+Arquivo de configuração: 
+	Windows: C:\Program Files\MariaDB 11.7\data
+	Linux: /etc/my.cnf
+
+Para ver os stats do key_buffer
+	SHOW GLOBAL STATUS LIKE 'Key%';
+
+Para ver os stats do Query_Cacher:
+	SHOW VARIABLES LIKE 'have_query_cache';
+	SHOW GLOBAL STATUS LIKE 'Qc%';
+
+	Configuração razoavel:
+		# Set query_cache_size to a specific size (e.g., 64MB)
+		query_cache_size = 64M
+
+		# Optionally, you can also set the query_cache_type to enable or disable the cache.
+		query_cache_type = 1  # Enable caching (0 to disable, 1 to enable, 2 for DEMAND)
+
+Arquivo ini:
+[mysqld]
+datadir=C:/Program Files/MariaDB 11.7/data
+port=3306
+innodb_buffer_pool_size=4084M
+query_cache_type = 1
+query_cache_size=64M
+character-set-server=utf8mb4
+[client]
+port=3306
+plugin-dir=C:\Program Files\MariaDB 11.7/lib/plugin
+
 
 # Connection Pooling
 
 // O .NET por padrão possui uma implementação de pooling.
 // Para toda conexão criada, o .NET mantém ela aberta por 3 minutos para ser reutilizada.
+
+
+

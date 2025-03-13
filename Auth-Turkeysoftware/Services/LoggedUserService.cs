@@ -5,11 +5,6 @@ using Auth_Turkeysoftware.Repositories;
 using Auth_Turkeysoftware.Services.ExternalServices;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text.Json;
 
 namespace Auth_Turkeysoftware.Services
 {
@@ -17,16 +12,12 @@ namespace Auth_Turkeysoftware.Services
     {
         private readonly ILoggedUserRepository _loggedUserRepository;
 
-        private readonly UserManager<ApplicationUser> _userManager;
-
         private readonly IExternalApiService _externalApiService;
 
         public LoggedUserService(ILoggedUserRepository loggedUserRepository,
-                                 UserManager<ApplicationUser> userManager,
                                  IExternalApiService externalApiService)
         {
             _loggedUserRepository = loggedUserRepository;
-            _userManager = userManager;
             _externalApiService = externalApiService;
         }
 
@@ -54,17 +45,17 @@ namespace Auth_Turkeysoftware.Services
             await _loggedUserRepository.UpdateSessionRefreshToken(idUsuario, idSessao, refreshToken, newRefreshToken);
         }
 
-        public async Task<LoggedUserModel> AddIpAddressDetails(LoggedUserModel loggedUserModel)
+        public async Task<LoggedUserModel> GetGeolocationByIpAddress(LoggedUserModel loggedUserModel)
         {
             if (!string.IsNullOrWhiteSpace(loggedUserModel.IP))
             {
-                IpDetailsModel ipDetailsModel = await _externalApiService.GetIpDetails(loggedUserModel.IP);
-                if (ipDetailsModel != null && ipDetailsModel.Status == "success")
-                {
-                    loggedUserModel.Provedora = ipDetailsModel.Org;
-                    loggedUserModel.UF = ipDetailsModel.Region;
-                    loggedUserModel.Pais = ipDetailsModel.Country;
-                }
+                //IpDetailsModel ipDetailsModel = await _externalApiService.GetIpDetails(loggedUserModel.IP);
+                //if (ipDetailsModel != null && ipDetailsModel.Status == "success")
+                //{
+                //    loggedUserModel.Provedora = ipDetailsModel.Org;
+                //    loggedUserModel.UF = ipDetailsModel.Region;
+                //    loggedUserModel.Pais = ipDetailsModel.Country;
+                //}
             }
 
             return loggedUserModel;
