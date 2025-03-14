@@ -1,4 +1,5 @@
 ﻿using Auth_Turkeysoftware.Models;
+using Auth_Turkeysoftware.Models.DTOs;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
@@ -17,7 +18,7 @@ namespace Auth_Turkeysoftware.Services.MailService
             _emailSettings = emailSettings.Value;
         }
 
-        public async Task<bool> SendEmailAsync(EmailRequestModel emailRequest)
+        public async Task<bool> SendEmailAsync(SendEmailDTO emailRequest)
         {
             try
             {

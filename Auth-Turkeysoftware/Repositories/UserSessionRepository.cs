@@ -1,29 +1,29 @@
 ﻿using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Models.DataBaseModels;
+using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Repositories.Context;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace Auth_Turkeysoftware.Repositories
 {
-    public class LoggedUserRepository : ILoggedUserRepository
+    public class UserSessionRepository : IUserSessionRepository
     {
         private static readonly string ERROR_UPDATE_DB = "Houve um erro de acesso ao banco de dados durante a atualização da sessão do usuário";
         internal AppDbContext dataBaseContext;
 
-        public LoggedUserRepository(AppDbContext dataBaseContext)
+        public UserSessionRepository(AppDbContext dataBaseContext)
         {
             this.dataBaseContext = dataBaseContext;
         }
 
-        public async Task AddLoggedUser(LoggedUserModel loggedUser)
+        public async Task AddLoggedUser(UserSessionModel loggedUser)
         {
             try
             {
                 loggedUser.TokenStatus = (char)StatusTokenEnum.ATIVO;
-                loggedUser.DataInclusao = DateTime.Now;
+                loggedUser.DataInclusao = DateTime.Now.ToUniversalTime();
                 if (!loggedUser.IsValidForInclusion())
                 {
                     throw new BusinessRuleException("Os campos EmailUsuario, RefreshToken e IP são obrigatórios.");
@@ -39,15 +39,16 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        public async Task<LoggedUserModel?> FindRefreshToken(string userId, string sessionId, string userToken)
+        public async Task<UserSessionModel?> FindRefreshToken(string userId, string sessionId, string userToken)
         {
             return await dataBaseContext.LoggedUser
                                         .AsNoTracking()
                                         .Where(p => p.IdSessao == sessionId && p.FkIdUsuario == userId
                                                  && p.RefreshToken == userToken)
-                                        .Select(p => new LoggedUserModel
+                                        .Select(p => new UserSessionModel
                                         {
-                                            IdSessao = p.IdSessao
+                                            IdSessao = p.IdSessao,
+                                            TokenStatus = p.TokenStatus
                                         })
                                         .FirstOrDefaultAsync();
         }
@@ -60,17 +61,17 @@ namespace Auth_Turkeysoftware.Repositories
                                               .AsNoTracking()
                                               .Where(p => p.IdSessao == idSessao
                                                        && p.FkIdUsuario == idUsuario)
-                                              .Select(p => new LoggedUserModel
+                                              .Select(p => new UserSessionModel
                                               {
                                                   IdSessao = p.IdSessao
                                               }).FirstOrDefaultAsync();
                 if (sessao == null)
                     throw new BusinessRuleException("Não foi possível encontrar a sessão à ser revogada.");
 
-                dataBaseContext.Attach(sessao); // Reseta colunas para 'não alterada' no contexto
+                dataBaseContext.Attach(sessao);
 
                 sessao.TokenStatus = (char)StatusTokenEnum.INATIVO;
-                sessao.DataAlteracao = DateTime.Now;
+                sessao.DataAlteracao = DateTime.Now.ToUniversalTime();
 
                 await dataBaseContext.SaveChangesAsync();
             }
@@ -91,7 +92,7 @@ namespace Auth_Turkeysoftware.Repositories
                                                        && p.FkIdUsuario == idUsuario
                                                        && p.RefreshToken == oldRefreshToken
                                                        && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
-                                              .Select(p => new LoggedUserModel
+                                              .Select(p => new UserSessionModel
                                               {
                                                   IdSessao = p.IdSessao
                                               }).FirstOrDefaultAsync();
@@ -100,7 +101,7 @@ namespace Auth_Turkeysoftware.Repositories
 
                 // Reseta colunas para não alterada no contexto
                 dataBaseContext.Attach(sessao);
-                sessao.DataAlteracao = DateTime.Now;
+                sessao.DataAlteracao = DateTime.Now.ToUniversalTime();
                 sessao.RefreshToken = newRefreshToken;
 
                 await dataBaseContext.SaveChangesAsync();
@@ -112,16 +113,16 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        public async Task<List<UserSessionModel>> GetUserActiveSessionsByUserId(string UserId, int pagina, int qtdRegistrosPorPagina)
+        public async Task<List<UserSessionDTO>> GetUserActiveSessionsByUserId(string UserId, int pagina, int qtdRegistrosPorPagina)
         {
-            DateTime dataAtual = DateTime.Now;
-            DateTime dataLimite = dataAtual.AddDays(-7);
+            DateTime dataAtual = DateTime.Now.ToUniversalTime();
+            DateTime dataLimite = dataAtual.AddDays(-7).ToUniversalTime();
 
             return await dataBaseContext.LoggedUser
                                         .AsNoTracking()
                                         .Where(p => p.FkIdUsuario == UserId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
                                                  && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
-                                        .Select(p => new UserSessionModel
+                                        .Select(p => new UserSessionDTO
                                         {
                                             IdSessao = p.IdSessao,
                                             TokenStatus = p.TokenStatus,
@@ -139,8 +140,8 @@ namespace Auth_Turkeysoftware.Repositories
 
         public async Task<long> GetUserActiveSessionsByUserIdCount(string UserId)
         {
-            DateTime dataAtual = DateTime.Now;
-            DateTime dataLimite = dataAtual.AddDays(-7);
+            DateTime dataAtual = DateTime.Now.ToUniversalTime();
+            DateTime dataLimite = dataAtual.AddDays(-7).ToUniversalTime();
 
             return await dataBaseContext.LoggedUser
                                         .AsNoTracking()

@@ -15,6 +15,7 @@ using Auth_Turkeysoftware.Services.ExternalServices;
 using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Services.MailService;
 using Auth_Turkeysoftware.Models.Identity;
+using Auth_Turkeysoftware.Enums;
 
 // Logging provider
 Log.Logger = new LoggerConfiguration()
@@ -42,9 +43,12 @@ try
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApiDocument();
-    builder.Services.AddScoped<ILoggedUserService, LoggedUserService>();
-    builder.Services.AddScoped<ILoggedUserRepository, LoggedUserRepository>();
+    builder.Services.AddScoped<IUserSessionService, UserSessionService>();
+    builder.Services.AddScoped<IUserSessionRepository, UserSessionRepository>();
     builder.Services.AddScoped<IExternalApiService, ExternalApiService>();
+    builder.Services.AddScoped<ISendEmailService, SendEmailService>();
+    builder.Services.AddScoped<IAdministrationService, AdministrationService>();
+    builder.Services.AddScoped<IAdministrationRepository, AdministrationRepository>();
 
     // Mail Service
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -53,14 +57,16 @@ try
     //Filters
     builder.Services.AddScoped<LoginFilter>();
 
+
     // Entity Framework
     var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
 
     builder.Services.AddDbContextPool<AppDbContext>(options =>
     {
-        options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString),
-                options => options.EnableRetryOnFailure()
-        );
+        options.UseNpgsql(connectionString, npgsqlOptions =>
+        {
+            npgsqlOptions.EnableRetryOnFailure();
+        });
     });
 
     // Identity
@@ -123,16 +129,17 @@ try
         };
     });
 
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy("AcessoElevado", policy =>
+                policy.RequireRole(UserRolesEnum.Master.ToString(), UserRolesEnum.Admin.ToString()));
+    });
+
     var app = builder.Build();
 
     // Log the URL and Port Information
     var url = builder.Configuration["ASPNETCORE_URLS"] ?? "http://localhost:5000";
     var port = Environment.GetEnvironmentVariable("ASPNETCORE_PORT") ?? "5000";
-
-    Log.Warning("Application starting up...");
-    Log.Warning("Server URL: {URL}, Port: {Port}", url, port);
-    Log.Warning("To access swagger add path '/swagger/index.html'. Example: https://localhost:7157/swagger/index.html");
-
 
     app.UseSerilogRequestLogging();
 
@@ -165,7 +172,12 @@ try
 
     app.MapControllers();
 
-    app.Run();
+    Log.Warning("Application starting up...");
+    Log.Warning("Server URL: {URL}, Port: {Port}", url, port);
+    Log.Warning("To access swagger add path '/swagger/index.html'.");
+    Log.Warning("Example: https://localhost:7157/swagger/index.html");
+
+   app.Run();
 }
 catch (HostAbortedException) {
     Log.Information("Aplicação foi finalizada.");

@@ -1,6 +1,6 @@
-﻿namespace Auth_Turkeysoftware.Models
+﻿namespace Auth_Turkeysoftware.Models.DTOs
 {
-    public class EmailRequestModel
+    public class SendEmailDTO
     {
         public List<string> To { get; set; } = new List<string>();
         public string Subject { get; set; } = string.Empty;

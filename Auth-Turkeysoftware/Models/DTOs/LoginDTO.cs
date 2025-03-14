@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Auth_Turkeysoftware.Models
+namespace Auth_Turkeysoftware.Models.DTOs
 {
-    public class LoginModel
+    public class LoginDTO
     {
         [Required(ErrorMessage = "Email é obrigatório")]
         public string Email { get; set; }

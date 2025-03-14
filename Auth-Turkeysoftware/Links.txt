@@ -83,7 +83,7 @@ SHOW STATUS LIKE '%connect%';
 show processlist;
 
 
-#Configurações de performance MariaDB. Referencia: https://mariadb.com/kb/en/mariadb-memory-allocation/ e https://mariadb.com/kb/en/server-system-variables
+#Configurações de performance MariaDB. Referencia: https://mariadb.com/kb/en/mariadb-memory-allocation/ e https://mariadb.com/kb/en/server-system-variables e https://dba.stackexchange.com/questions/323176/mariadb-mysterious-delay-at-each-query
 Arquivo de configuração: 
 	Windows: C:\Program Files\MariaDB 11.7\data
 	Linux: /etc/my.cnf
@@ -102,17 +102,23 @@ Para ver os stats do Query_Cacher:
 		# Optionally, you can also set the query_cache_type to enable or disable the cache.
 		query_cache_type = 1  # Enable caching (0 to disable, 1 to enable, 2 for DEMAND)
 
+innodb_buffer_pool_size - Tamanho da memória do innoDB
+innodb_buffer_pool_instances - Em quantas partes dividirá o innoDB, adiciona multithread tbm
+
 Arquivo ini:
 [mysqld]
 datadir=C:/Program Files/MariaDB 11.7/data
 port=3306
 innodb_buffer_pool_size=4084M
+innodb_buffer_pool_instances=4
 query_cache_type = 1
 query_cache_size=64M
 character-set-server=utf8mb4
 [client]
 port=3306
 plugin-dir=C:\Program Files\MariaDB 11.7/lib/plugin
+
+
 
 
 # Connection Pooling
@@ -122,3 +128,19 @@ plugin-dir=C:\Program Files\MariaDB 11.7/lib/plugin
 
 
 
+#postgreSQL referencia: https://www.enterprisedb.com/postgres-tutorials/how-tune-postgresql-memory
+programa > SQL Shell
+
+SELECT * FROM pg_roles WHERE rolname = 'admin';
+
+
+Obter contador de conexões
+	SELECT count(*) FROM pg_stat_activity;
+	SELECT sum(numbackends) FROM pg_stat_database;
+
+Obter usuarios conectados
+	SELECT * FROM pg_stat_activity;
+
+Restart postgreSQL
+net stop postgresql
+net start postgresql

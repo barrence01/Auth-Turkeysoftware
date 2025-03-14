@@ -8,7 +8,7 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
 {
     [Table("TB_USUAR_SESSION")]
     [Index(nameof(FkIdUsuario), Name = "IX_COD_USUAR_SESSION")]
-    public class LoggedUserModel
+    public class UserSessionModel
     {
         [Key]
         [Column("id_sessao")]
@@ -19,7 +19,7 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
         [Required]
         public string? FkIdUsuario { get; set; }
 
-        [Column("ds_refresh_token", TypeName = "longtext")]
+        [Column("ds_refresh_token", TypeName = "text")]
         [Required]
         public string? RefreshToken { get; set; }
 
@@ -35,19 +35,19 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
         [Column("dt_alteracao")]
         public DateTime? DataAlteracao { get; set; }
 
-        [Column("ds_pais", TypeName = "VARCHAR")]
+        [Column("nm_pais", TypeName = "VARCHAR")]
         [MaxLength(60)]
         public string? Pais { get; set; }
 
-        [Column("ds_estado", TypeName = "VARCHAR")]
+        [Column("nm_estado", TypeName = "VARCHAR")]
         [MaxLength(60)]
         public string? UF { get; set; }
 
-        [Column("ds_provedora", TypeName = "VARCHAR")]
+        [Column("nm_provedora", TypeName = "VARCHAR")]
         [MaxLength(60)]
         public string? Provedora { get; set; }
 
-        [Column("ds_ip", TypeName = "VARCHAR")]
+        [Column("nr_ip", TypeName = "VARCHAR")]
         [MaxLength(50)]
         [Required]
         public string? IP { get; set; }
@@ -60,7 +60,7 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
         [MaxLength(150)]
         public string? UserAgent { get; set; }
 
-        public LoggedUserModel() { }
+        public UserSessionModel() { }
 
         public bool IsValidForInclusion()
         {

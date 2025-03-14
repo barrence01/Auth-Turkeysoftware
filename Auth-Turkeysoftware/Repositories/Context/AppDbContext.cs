@@ -9,18 +9,19 @@ namespace Auth_Turkeysoftware.Repositories.Context
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-        public DbSet<LoggedUserModel> LoggedUser { get; set; }
+        public DbSet<UserSessionModel> LoggedUser { get; set; }
+
+        public DbSet<AdminActionLogModel> AdminActionLog { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
-            //builder.HasSequence<int>("usuario_logado_sequence")
-                   //.IsCyclic()
-                   //.StartsAt(1)
-                   //.IncrementsBy(1);
+            builder.HasSequence<long>("admin_action_sequence")
+                   .StartsAt(1)
+                   .IncrementsBy(1);
 
-            //builder.Entity<LoggedUserModel>()
-                   //.Property(e => e.IdSessao)
-                   //.HasDefaultValueSql("NEXT VALUE FOR usuario_logado_sequence");
+            builder.Entity<AdminActionLogModel>()
+                   .Property(e => e.IdAction)
+                   .HasDefaultValueSql("nextval('\"admin_action_sequence\"')");
 
             base.OnModelCreating(builder);
         }

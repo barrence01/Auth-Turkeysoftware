@@ -18,10 +18,10 @@ namespace Auth_Turkeysoftware.Repositories
         /// </summary>
         /// <param name="userLoggedUserModel"></param>
         /// <returns></returns>
-        public async Task RemoveRecordsOlderThan7Days(LoggedUserModel userLoggedUserModel)
+        public async Task RemoveRecordsOlderThan7Days(UserSessionModel userLoggedUserModel)
         {
-            DateTime dataAtual = DateTime.Now;
-            DateTime dataLimite = dataAtual.AddDays(-7);
+            DateTime dataAtual = DateTime.Now.ToUniversalTime();
+            DateTime dataLimite = dataAtual.AddDays(-7).ToUniversalTime();
             var itensParaRemover = await dataBaseContext.LoggedUser
                                                         .Where(p => p.DataAlteracao < dataLimite
                                                                  || (p.DataInclusao < dataLimite && p.DataAlteracao == null))

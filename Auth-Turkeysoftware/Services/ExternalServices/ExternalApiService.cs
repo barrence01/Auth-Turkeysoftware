@@ -1,4 +1,4 @@
-﻿using Auth_Turkeysoftware.Models;
+﻿using Auth_Turkeysoftware.Models.DTOs;
 using Serilog;
 using System;
 using System.Text.Json;
@@ -7,7 +7,7 @@ namespace Auth_Turkeysoftware.Services.ExternalServices
 {
     public class ExternalApiService : IExternalApiService
     {
-        public async Task<IpDetailsModel?> GetIpDetails(string address)
+        public async Task<IpDetailsDTO?> GetIpDetails(string address)
         {
             Log.Information("Executando método GetIpDetails :: ExternalApiService");
             try
@@ -18,7 +18,7 @@ namespace Auth_Turkeysoftware.Services.ExternalServices
                     return null;
 
                 Log.Information($"Response: {json}");
-                return JsonSerializer.Deserialize<IpDetailsModel>(json);
+                return JsonSerializer.Deserialize<IpDetailsDTO>(json);
             }
             catch (JsonException ex)
             {

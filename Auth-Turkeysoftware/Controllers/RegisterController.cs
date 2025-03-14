@@ -1,25 +1,24 @@
 ﻿using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Models.DataBaseModels;
-using Auth_Turkeysoftware.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Security.Claims;
 using Auth_Turkeysoftware.Controllers.Base;
+using Auth_Turkeysoftware.Models.DTOs;
 
 namespace Auth_Turkeysoftware.Controllers
 {
     [Route("api/auth/[controller]")]
     [ApiController]
-    public class RegisterController : AuthControllerBase
+    public class RegisterController : CommonControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
         public RegisterController (
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager,
-            IConfiguration configuration) : base(configuration)
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -27,7 +26,7 @@ namespace Auth_Turkeysoftware.Controllers
 
         [HttpPost]
         [Route("register-user")]
-        public async Task<IActionResult> RegisterUser([FromBody] RegisterModel model)
+        public async Task<IActionResult> RegisterUser([FromBody] RegisterDTO model)
         {
             var userExists = await _userManager.FindByNameAsync(model.Email);
 

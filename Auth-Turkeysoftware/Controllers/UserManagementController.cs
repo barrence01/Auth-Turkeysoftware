@@ -1,7 +1,7 @@
 ﻿using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Models.DataBaseModels;
+using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -11,24 +11,21 @@ using System.Security.Claims;
 
 namespace Auth_Turkeysoftware.Controllers
 {
-    [Route("api/Auth/[controller]")]
+    [Route("api/auth/[controller]")]
     [ApiController]
     [Authorize]
     public class UserManagementController : AuthControllerBase
     {
         private const string ERROR_USUARIO_INVALIDO = "Usuário inválido.";
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly ILoggedUserService _loggedUserService;
+        private readonly IUserSessionService _loggedUserService;
 
         public UserManagementController(
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager,
             IConfiguration configuration,
-            ILoggedUserService loggedUserService) : base(configuration)
+            IUserSessionService loggedUserService) : base(configuration)
         {
             _userManager = userManager;
-            _roleManager = roleManager;
             _loggedUserService = loggedUserService;
         }
 
@@ -66,7 +63,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// Obtém todas as sessões ativas do usuário.
         /// </summary>
         /// <param name="pagina">Número da página para paginação.</param>
-        /// <returns>Um <see cref="PaginationModel&lt;List&lt;UserSessionModel&gt;&gt;" /> contendo as sessões ativas do usuário.</returns>
+        /// <returns>Um <see cref="PaginationDTO&lt;List&lt;UserSessionDTO&gt;&gt;" /> contendo as sessões ativas do usuário.</returns>
         [HttpPost]
         [Route("all-sessions")]
         public async Task<IActionResult> GetAllSessions([FromQuery] int pagina)
@@ -94,7 +91,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <returns>Um 200 OK indicando o resultado da operação.</returns>
         [HttpPost]
         [Route("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel model)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO model)
         {
             if (model == null)
                 return BadRequest("Invalid request");

@@ -1,9 +1,9 @@
-﻿using Auth_Turkeysoftware.Models;
+﻿using Auth_Turkeysoftware.Models.DTOs;
 
 namespace Auth_Turkeysoftware.Services.ExternalServices
 {
     public interface IExternalApiService
     {
-       Task<IpDetailsModel> GetIpDetails(string ipAddress);
+       Task<IpDetailsDTO> GetIpDetails(string ipAddress);
     }
 }

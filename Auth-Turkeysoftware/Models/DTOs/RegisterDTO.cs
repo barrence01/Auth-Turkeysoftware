@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Auth_Turkeysoftware.Models
+namespace Auth_Turkeysoftware.Models.DTOs
 {
-    public class RegisterModel
+    public class RegisterDTO
     {
 
         [EmailAddress]

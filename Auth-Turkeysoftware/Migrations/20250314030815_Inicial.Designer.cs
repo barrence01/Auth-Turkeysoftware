@@ -3,60 +3,88 @@ using System;
 using Auth_Turkeysoftware.Repositories.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace Auth_Turkeysoftware.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250309184359_Segundo")]
-    partial class Segundo
+    [Migration("20250314030815_Inicial")]
+    partial class Inicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.13")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("ProductVersion", "9.0.3")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.HasSequence("admin_action_sequence");
+
+            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.AdminActionLogModel", b =>
+                {
+                    b.Property<long>("IdAction")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id_action")
+                        .HasDefaultValueSql("nextval('\"admin_action_sequence\"')");
+
+                    b.Property<string>("Argumentos")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ds_argumentos");
+
+                    b.Property<DateTime>("DataInclusao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dt_inclusao");
+
+                    b.Property<string>("FkIdUsuario")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("fk_id_usuario");
+
+                    b.Property<string>("NomeMetodo")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("nm_metodo_executado");
+
+                    b.HasKey("IdAction");
+
+                    b.ToTable("TB_LOG_ADMIN_ACTION");
+                });
 
             modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Aplicacao")
-                        .HasMaxLength(64)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("integer");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Empresa")
-                        .HasMaxLength(128)
-                        .HasColumnType("VARCHAR");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetime(6)");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .HasMaxLength(128)
@@ -64,30 +92,30 @@ namespace Auth_Turkeysoftware.Migrations
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("tinyint(1)");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
@@ -101,19 +129,18 @@ namespace Auth_Turkeysoftware.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.LoggedUserModel", b =>
+            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.UserSessionModel", b =>
                 {
                     b.Property<string>("IdSessao")
-                        .HasColumnType("varchar(255)")
+                        .HasColumnType("text")
                         .HasColumnName("id_sessao");
 
                     b.Property<DateTime?>("DataAlteracao")
-                        .HasColumnType("datetime(6)")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("dt_alteracao");
 
-                    b.Property<DateTime?>("DataInclusao")
-                        .IsRequired()
-                        .HasColumnType("datetime(6)")
+                    b.Property<DateTime>("DataInclusao")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("dt_inclusao");
 
                     b.Property<string>("FkIdUsuario")
@@ -126,12 +153,12 @@ namespace Auth_Turkeysoftware.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("VARCHAR")
-                        .HasColumnName("ds_ip");
+                        .HasColumnName("nr_ip");
 
                     b.Property<string>("Pais")
                         .HasMaxLength(60)
                         .HasColumnType("VARCHAR")
-                        .HasColumnName("ds_pais");
+                        .HasColumnName("nm_pais");
 
                     b.Property<string>("Platform")
                         .HasMaxLength(30)
@@ -141,22 +168,21 @@ namespace Auth_Turkeysoftware.Migrations
                     b.Property<string>("Provedora")
                         .HasMaxLength(60)
                         .HasColumnType("VARCHAR")
-                        .HasColumnName("ds_provedora");
+                        .HasColumnName("nm_provedora");
 
                     b.Property<string>("RefreshToken")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("text")
                         .HasColumnName("ds_refresh_token");
 
-                    b.Property<string>("TokenStatus")
-                        .IsRequired()
-                        .HasColumnType("varchar(1)")
+                    b.Property<char>("TokenStatus")
+                        .HasColumnType("character(1)")
                         .HasColumnName("st_token");
 
                     b.Property<string>("UF")
                         .HasMaxLength(60)
                         .HasColumnType("VARCHAR")
-                        .HasColumnName("ds_estado");
+                        .HasColumnName("nm_estado");
 
                     b.Property<string>("UserAgent")
                         .HasMaxLength(150)
@@ -173,19 +199,19 @@ namespace Auth_Turkeysoftware.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("varchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
@@ -200,19 +226,19 @@ namespace Auth_Turkeysoftware.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -225,19 +251,19 @@ namespace Auth_Turkeysoftware.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -249,17 +275,17 @@ namespace Auth_Turkeysoftware.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -271,10 +297,10 @@ namespace Auth_Turkeysoftware.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -286,16 +312,16 @@ namespace Auth_Turkeysoftware.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("varchar(255)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
-                        .HasColumnType("longtext");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 

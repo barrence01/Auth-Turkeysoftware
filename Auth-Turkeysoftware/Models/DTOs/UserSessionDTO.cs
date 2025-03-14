@@ -1,6 +1,6 @@
-﻿namespace Auth_Turkeysoftware.Models
+﻿namespace Auth_Turkeysoftware.Models.DTOs
 {
-    public class UserSessionModel
+    public class UserSessionDTO
     {
         public string? IdSessao { get; set; }
 

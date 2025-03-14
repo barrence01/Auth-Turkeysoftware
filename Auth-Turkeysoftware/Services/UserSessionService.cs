@@ -1,6 +1,6 @@
 ﻿using Auth_Turkeysoftware.Enums;
-using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Models.DataBaseModels;
+using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Repositories;
 using Auth_Turkeysoftware.Services.ExternalServices;
 using Microsoft.AspNetCore.Identity;
@@ -8,20 +8,20 @@ using Serilog;
 
 namespace Auth_Turkeysoftware.Services
 {
-    public class LoggedUserService : ILoggedUserService
+    public class UserSessionService : IUserSessionService
     {
-        private readonly ILoggedUserRepository _loggedUserRepository;
+        private readonly IUserSessionRepository _loggedUserRepository;
 
         private readonly IExternalApiService _externalApiService;
 
-        public LoggedUserService(ILoggedUserRepository loggedUserRepository,
+        public UserSessionService(IUserSessionRepository loggedUserRepository,
                                  IExternalApiService externalApiService)
         {
             _loggedUserRepository = loggedUserRepository;
             _externalApiService = externalApiService;
         }
 
-        public async Task AddLoggedUser(LoggedUserModel loggedUserModel)
+        public async Task AddLoggedUser(UserSessionModel loggedUserModel)
         {
             await _loggedUserRepository.AddLoggedUser(loggedUserModel);
         }
@@ -45,11 +45,11 @@ namespace Auth_Turkeysoftware.Services
             await _loggedUserRepository.UpdateSessionRefreshToken(idUsuario, idSessao, refreshToken, newRefreshToken);
         }
 
-        public async Task<LoggedUserModel> GetGeolocationByIpAddress(LoggedUserModel loggedUserModel)
+        public async Task<UserSessionModel> GetGeolocationByIpAddress(UserSessionModel loggedUserModel)
         {
             if (!string.IsNullOrWhiteSpace(loggedUserModel.IP))
             {
-                //IpDetailsModel ipDetailsModel = await _externalApiService.GetIpDetails(loggedUserModel.IP);
+                //IpDetailsDTO ipDetailsModel = await _externalApiService.GetIpDetails(loggedUserModel.IP);
                 //if (ipDetailsModel != null && ipDetailsModel.Status == "success")
                 //{
                 //    loggedUserModel.Provedora = ipDetailsModel.Org;
@@ -61,7 +61,7 @@ namespace Auth_Turkeysoftware.Services
             return loggedUserModel;
         }
 
-        public async Task<PaginationModel<List<UserSessionModel>>> GetUserActiveSessions(string UserId, int pagina)
+        public async Task<PaginationDTO<List<UserSessionDTO>>> GetUserActiveSessions(string UserId, int pagina)
         {
             if (pagina <= 0)
                 pagina = 1;
@@ -71,13 +71,13 @@ namespace Auth_Turkeysoftware.Services
             int totalPaginas = (int)Math.Ceiling((double)totalRegistros / (double)qtdRegistrosPorPagina);
 
             if (totalRegistros <= 0 || pagina > totalPaginas) {
-                return new PaginationModel<List<UserSessionModel>>(totalRegistros, totalPaginas,
+                return new PaginationDTO<List<UserSessionDTO>>(totalRegistros, totalPaginas,
                                                                    pagina, qtdRegistrosPorPagina, []);
             }
 
             var sessions = await _loggedUserRepository.GetUserActiveSessionsByUserId(UserId, pagina, qtdRegistrosPorPagina);
 
-            return new PaginationModel<List<UserSessionModel>>(totalRegistros, totalPaginas,
+            return new PaginationDTO<List<UserSessionDTO>>(totalRegistros, totalPaginas,
                                                                pagina, qtdRegistrosPorPagina, sessions);
         }
     }

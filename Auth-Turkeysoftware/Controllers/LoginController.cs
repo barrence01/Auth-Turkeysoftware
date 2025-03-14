@@ -1,8 +1,8 @@
 ﻿using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Models.DataBaseModels;
+using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -22,13 +22,13 @@ namespace Auth_Turkeysoftware.Controllers
         private const string ERROR_SESSAO_INVALIDA = "Não foi possível autorizar o token recebido.";
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly ILoggedUserService _loggedUserService;
+        private readonly IUserSessionService _loggedUserService;
 
         public LoginController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration configuration,
-            ILoggedUserService loggedUserService) : base(configuration)
+            IUserSessionService loggedUserService) : base(configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -44,7 +44,7 @@ namespace Auth_Turkeysoftware.Controllers
         [Route("login")]
         [TypeFilter(typeof(LoginFilter))]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginModel model)
+        public async Task<IActionResult> Login([FromBody] LoginDTO model)
         {
             try
             {
@@ -76,8 +76,8 @@ namespace Auth_Turkeysoftware.Controllers
                 var accessToken = GenerateAccessToken(userClaims);
                 var refreshToken = GenerateRefreshToken(userClaims);
 
-                LoggedUserModel userModel;
-                userModel = await _loggedUserService.GetGeolocationByIpAddress(new LoggedUserModel
+                UserSessionModel userModel;
+                userModel = await _loggedUserService.GetGeolocationByIpAddress(new UserSessionModel
                 {
                     IdSessao = newIdSessao,
                     FkIdUsuario = user.Id,

@@ -1,26 +1,25 @@
 ﻿using Auth_Turkeysoftware.Models.DataBaseModels;
-using Auth_Turkeysoftware.Services.MailService;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Auth_Turkeysoftware.Controllers.Base;
-using Auth_Turkeysoftware.Models;
 using Serilog;
+using Auth_Turkeysoftware.Services;
 
 namespace Auth_Turkeysoftware.Controllers
 {
-    [Route("api/auth/[controller]")]
+    [Route("api/recovery/[controller]")]
     [ApiController]
-    public class AccountRecoveryController : AuthControllerBase
+    public class AccountRecoveryController : CommonControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IEmailService _emailService;
 
-        public AccountRecoveryController(UserManager<ApplicationUser> userManager, IEmailService emailService,
-                                         IConfiguration configuration) : base(configuration)
+        private readonly SendEmailService _sendEmailService;
+
+        public AccountRecoveryController(UserManager<ApplicationUser> userManager, SendEmailService sendEmailService)
         {
             _userManager = userManager;
-            _emailService = emailService;
+            _sendEmailService = sendEmailService;
         }
 
         /// <summary>
@@ -36,20 +35,10 @@ namespace Auth_Turkeysoftware.Controllers
             if (user == null)
                 return BadRequest("Endereço de e-mail inválido.");
 
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var resetLink = $"https://yourfrontend.com/reset-password?token={Uri.EscapeDataString(token)}&email={request.Email}";
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            var emailRequest = new EmailRequestModel
-            {
-                Body = $"Clique no link para resetar sua senha: {resetLink}",
-                Subject = "Recuperação de senha - TurkeySoftware",
-                To = new List<string>()
-            };
-
-            emailRequest.To.Add(request.Email);
-
-            await _emailService.SendEmailAsync(emailRequest);
-
+            await _sendEmailService.SendPasswordResetEmail(resetToken, request.Email);
+         
             return Ok("E-mail de recuperação de senha enviado.");
         }
 

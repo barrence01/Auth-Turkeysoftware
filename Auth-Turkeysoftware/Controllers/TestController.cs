@@ -1,7 +1,7 @@
 ﻿using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Enums;
-using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Models.DataBaseModels;
+using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -18,13 +18,13 @@ namespace Auth_Turkeysoftware.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
-        private readonly ILoggedUserService _loggedUserService;
+        private readonly IUserSessionService _loggedUserService;
 
         public TestController(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             IConfiguration configuration,
-            ILoggedUserService loggedUserService) : base(configuration)
+            IUserSessionService loggedUserService) : base(configuration)
         {
             _userManager = userManager;
             _roleManager = roleManager;
@@ -56,10 +56,10 @@ namespace Auth_Turkeysoftware.Controllers
         [Route("teste/create-default-user")]
         public async Task<IActionResult> CreateDefaultUser()
         {
-            RegisterModel? model = null;
+            RegisterDTO? model = null;
             string email = "desenv@email.com";
 
-            model = new RegisterModel()
+            model = new RegisterDTO()
             {
                 Name = "desenv",
                 Email = email,
@@ -83,7 +83,7 @@ namespace Auth_Turkeysoftware.Controllers
 
         [HttpPost]
         [Route("admin/register-master")]
-        public async Task<IActionResult> RegisterMaster([FromBody] RegisterModel model)
+        public async Task<IActionResult> RegisterMaster([FromBody] RegisterDTO model)
         {
             var userExists = await _userManager.FindByNameAsync(model.Email);
 

@@ -1,8 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Auth_Turkeysoftware.Models
+namespace Auth_Turkeysoftware.Models.DTOs
 {
-    public class IpDetailsModel
+    public class IpDetailsDTO
     {
         [JsonPropertyName("status")]
         public string? Status { get; set; }
