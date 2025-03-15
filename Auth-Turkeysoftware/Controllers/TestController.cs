@@ -17,18 +17,16 @@ namespace Auth_Turkeysoftware.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IConfiguration _configuration;
         private readonly IUserSessionService _loggedUserService;
 
         public TestController(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            IConfiguration configuration,
-            IUserSessionService loggedUserService) : base(configuration)
+            JwtSettingsSingleton jwtSettingsSingleton,
+            IUserSessionService loggedUserService) : base(jwtSettingsSingleton)
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _configuration = configuration;
             _loggedUserService = loggedUserService;
         }
 

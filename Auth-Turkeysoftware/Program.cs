@@ -16,6 +16,7 @@ using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Services.MailService;
 using Auth_Turkeysoftware.Models.Identity;
 using Auth_Turkeysoftware.Enums;
+using Auth_Turkeysoftware.Models.Configurations;
 
 // Logging provider
 Log.Logger = new LoggerConfiguration()
@@ -51,6 +52,10 @@ try
     builder.Services.AddScoped<IAdministrationService, AdministrationService>();
     builder.Services.AddScoped<IAdministrationRepository, AdministrationRepository>();
     builder.Services.AddSingleton<HttpClientSingleton>();
+
+    // Singleton JwtSettings
+    builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+    builder.Services.AddSingleton<JwtSettingsSingleton>();
 
     // Mail Service
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -105,9 +110,9 @@ try
             ValidateIssuerSigningKey = true,
             ClockSkew = TimeSpan.Zero,
 
-            ValidAudience = builder.Configuration["JwtBearerToken:Audience"],
-            ValidIssuer = builder.Configuration["JwtBearerToken:Issuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtBearerToken:AccessSecretKey"]))
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:AccessSecretKey"]))
         };
         options.Events = new JwtBearerEvents
         {
@@ -130,7 +135,7 @@ try
                                                         Secure = true,
                                                         IsEssential = true,
                                                         SameSite = SameSiteMode.None,
-                                                        Domain = builder.Configuration.GetSection("JwtBearerToken:Domain").Value,
+                                                        Domain = builder.Configuration.GetSection("JwtSettings:Domain").Value,
                                                         Path = "/"
                                                     });
                 return Task.CompletedTask;
@@ -149,7 +154,7 @@ try
         options.AddPolicy(name: "AllowLocalhost",
                           policy =>
                           {
-                              policy.WithOrigins(@"http://localhost:3000", @"http://localhost:7157")
+                              policy.WithOrigins(@"http://localhost:3000", @"http://localhost:7157", @"http://localhost:3001")
                               .AllowCredentials()
                               .AllowAnyHeader()
                               .AllowAnyMethod();

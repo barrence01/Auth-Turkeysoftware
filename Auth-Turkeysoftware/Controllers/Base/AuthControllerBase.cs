@@ -1,5 +1,4 @@
-﻿using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models;
+﻿using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,28 +12,21 @@ namespace Auth_Turkeysoftware.Controllers.Base
     {
         protected const string ACCESS_TOKEN = "TurkeySoftware-AccessToken";
         protected const string REFRESH_TOKEN = "TurkeySoftware-RefreshToken";
-        protected readonly IConfiguration _configuration;
+        protected readonly JwtSettingsSingleton _jwtSettings;
 
-        protected AuthControllerBase(IConfiguration configuration)
+        protected AuthControllerBase(JwtSettingsSingleton jwtSettingsSingleton)
         {
-            _configuration = configuration;
+            _jwtSettings = jwtSettingsSingleton;
         }
 
         protected JwtSecurityToken GenerateAccessToken(IList<Claim> authClaims)
         {
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(getAccessSecretKey()));
-
-            bool result = int.TryParse(getTokenSettings("AccessTokenValidityInMinutes"), out int accessTokenValidityInMinutes);
-
-            if (!result)
-            {
-                throw new BusinessRuleException("Não foi possível converter TokenValidityInMinutes para númerico.");
-            }
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetJwtAccessSecretKey()));
 
             var token = new JwtSecurityToken(
-                issuer: getTokenSettings("Issuer"),
-                audience: getTokenSettings("Audience"),
-                expires: DateTime.Now.AddMinutes(accessTokenValidityInMinutes),
+                issuer: GetJwtIssuer(),
+                audience: GetJwtAudience(),
+                expires: DateTime.Now.AddMinutes(GetAccessTokenValidityInMinutes()),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                 );
@@ -44,48 +36,17 @@ namespace Auth_Turkeysoftware.Controllers.Base
 
         protected JwtSecurityToken GenerateRefreshToken(IList<Claim> authClaims)
         {
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(getRefreshSecretKey()));
-
-            bool result = int.TryParse(getTokenSettings("RefreshTokenValidityInMinutes"), out int refreshTokenValidityInMinutes);
-
-            if (!result)
-            {
-                throw new BusinessRuleException("Não foi possível converter TokenValidityInMinutes para númerico.");
-            }
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetJwtRefreshSecretKey()));
 
             var token = new JwtSecurityToken(
-                issuer: getTokenSettings("Issuer"),
-                audience: getTokenSettings("Audience"),
-                expires: DateTime.Now.AddMinutes(refreshTokenValidityInMinutes),
+                issuer: GetJwtIssuer(),
+                audience: GetJwtAudience(),
+                expires: DateTime.Now.AddMinutes(GetRefreshTokenValidityInMinutes()),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                 );
 
             return token;
-        }
-
-        protected string getTokenSettings(string key)
-        {
-            string? value = _configuration[string.Concat("JwtBearerToken:", key)];
-            if (value == null)
-                throw new BusinessRuleException("Não foi possível obter a configuração de token específicada.");
-            return value;
-        }
-
-        protected string getAccessSecretKey()
-        {
-            string? secretKey = _configuration["JwtBearerToken:AccessSecretKey"];
-            if (secretKey == null)
-                throw new BusinessRuleException("Não foi possível obter a chave do token.");
-            return secretKey;
-        }
-
-        protected string getRefreshSecretKey()
-        {
-            string? secretKey = _configuration["JwtBearerToken:RefreshSecretKey"];
-            if (secretKey == null)
-                throw new BusinessRuleException("Não foi possível obter a chave do token.");
-            return secretKey;
         }
 
         protected void DeletePreviousTokenFromCookies()
@@ -97,8 +58,8 @@ namespace Auth_Turkeysoftware.Controllers.Base
                     Secure = true,
                     IsEssential = true,
                     SameSite = SameSiteMode.None,
-                    Domain = getTokenSettings("Domain"),
-                    Path = "/api/auth/Login/refresh-token"
+                    Domain = GetJwtDomain(),
+                    Path = GetRefreshTokenPath()
                 });
 
             HttpContext.Response.Cookies.Delete(ACCESS_TOKEN,
@@ -108,8 +69,8 @@ namespace Auth_Turkeysoftware.Controllers.Base
                     Secure = true,
                     IsEssential = true,
                     SameSite = SameSiteMode.None,
-                    Domain = getTokenSettings("Domain"),
-                    Path = "/"
+                    Domain = GetJwtDomain(),
+                    Path = GetAccessTokenPath()
                 });
         }
         protected void AddTokensToCookies(JwtSecurityToken refreshToken, JwtSecurityToken accessToken)
@@ -123,8 +84,8 @@ namespace Auth_Turkeysoftware.Controllers.Base
                     Secure = true,
                     IsEssential = true,
                     SameSite = SameSiteMode.None,
-                    Domain = getTokenSettings("Domain"),
-                    Path = "/api/auth/Login/refresh-token",
+                    Domain = GetJwtDomain(),
+                    Path = GetRefreshTokenPath(),
                     MaxAge = refreshToken.ValidTo.TimeOfDay
                 });
 
@@ -135,8 +96,8 @@ namespace Auth_Turkeysoftware.Controllers.Base
                     Secure = true,
                     IsEssential = true,
                     SameSite = SameSiteMode.None,
-                    Domain = getTokenSettings("Domain"),
-                    Path = "/",
+                    Domain = GetJwtDomain(),
+                    Path = GetAccessTokenPath(),
                     MaxAge = accessToken.ValidTo.TimeOfDay
                 });
         }
@@ -145,11 +106,11 @@ namespace Auth_Turkeysoftware.Controllers.Base
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateAudience = true,
-                ValidAudience = getTokenSettings("Audience"),
+                ValidAudience = GetJwtAudience(),
                 ValidateIssuer = true,
-                ValidIssuer = getTokenSettings("Issuer"),
+                ValidIssuer = GetJwtIssuer(),
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(getRefreshSecretKey())),
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetJwtRefreshSecretKey())),
                 ValidateLifetime = true
             };
 
@@ -163,6 +124,49 @@ namespace Auth_Turkeysoftware.Controllers.Base
                                      StringComparison.InvariantCultureIgnoreCase))
                 throw new SecurityTokenException("Token inválido.");
             return principal;
+        }
+
+        private string GetJwtAccessSecretKey()
+        {
+            return _jwtSettings.GetJwtSettings().AccessSecretKey;
+        }
+
+        private string GetJwtRefreshSecretKey()
+        {
+            return _jwtSettings.GetJwtSettings().RefreshSecretKey;
+        }
+
+        protected string GetJwtDomain()
+        {
+            return _jwtSettings.GetJwtSettings().Domain;
+        }
+
+        protected string GetJwtIssuer()
+        {
+            return _jwtSettings.GetJwtSettings().Domain;
+        }
+
+        protected string GetJwtAudience()
+        {
+            return _jwtSettings.GetJwtSettings().Domain;
+        }
+
+        protected int GetRefreshTokenValidityInMinutes()
+        {
+            return _jwtSettings.GetJwtSettings().RefreshTokenValidityInMinutes;
+        }
+
+        protected int GetAccessTokenValidityInMinutes()
+        {
+            return _jwtSettings.GetJwtSettings().AccessTokenValidityInMinutes;
+        }
+        protected string GetRefreshTokenPath()
+        {
+            return _jwtSettings.GetJwtSettings().RefreshTokenPath;
+        }
+        protected string GetAccessTokenPath()
+        {
+            return _jwtSettings.GetJwtSettings().AccessTokenPath;
         }
     }
 }

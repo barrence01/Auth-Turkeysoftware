@@ -23,8 +23,8 @@ namespace Auth_Turkeysoftware.Controllers
 
         public UsersController(
             UserManager<ApplicationUser> userManager,
-            IConfiguration configuration,
-            IUserSessionService userSessionService) : base(configuration)
+            JwtSettingsSingleton jwtSettingsSingleton,
+            IUserSessionService userSessionService) : base(jwtSettingsSingleton)
         {
             _userManager = userManager;
             _userSessionService = userSessionService;

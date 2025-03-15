@@ -24,8 +24,8 @@ namespace Auth_Turkeysoftware.Controllers
 
         public AdministrationController(
             UserManager<ApplicationUser> userManager,
-            IConfiguration configuration,
-            IAdministrationService admnistrationActionService) : base(configuration)
+            JwtSettingsSingleton jwtSettingsSingleton,
+            IAdministrationService admnistrationActionService) : base(jwtSettingsSingleton)
         {
             _userManager = userManager;
             _admnistrationService = admnistrationActionService;

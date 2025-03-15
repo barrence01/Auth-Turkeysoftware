@@ -39,6 +39,7 @@
   <ItemGroup>
     <Folder Include="logs\" />
     <Folder Include="Migrations\" />
+    <Folder Include="Test\" />
   </ItemGroup>
 
 </Project>

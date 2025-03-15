@@ -29,9 +29,9 @@ namespace Auth_Turkeysoftware.Controllers
         public LoginController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            IConfiguration configuration,
+            JwtSettingsSingleton jwtSettingsSingleton,
             IUserSessionService loggedUserService,
-            ILogger<LoginController> logger) : base(configuration)
+            ILogger<LoginController> logger) : base(jwtSettingsSingleton)
         {
             _userManager = userManager;
             _signInManager = signInManager;
