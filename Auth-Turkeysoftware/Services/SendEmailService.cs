@@ -1,7 +1,5 @@
 ﻿using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Services.MailService;
-using Org.BouncyCastle.Asn1.Ocsp;
-using YamlDotNet.Core.Tokens;
 
 namespace Auth_Turkeysoftware.Services
 {

@@ -2,5 +2,6 @@
 {
     public interface ISendEmailService
     {
+        Task SendPasswordResetEmail(string resetToken, string userEmail);
     }
 }

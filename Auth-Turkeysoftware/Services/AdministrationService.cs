@@ -1,10 +1,5 @@
-﻿using Auth_Turkeysoftware.Models.DataBaseModels;
+﻿using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Repositories;
-using Auth_Turkeysoftware.Repositories.Context;
-using Serilog;
-using System.Diagnostics;
-using System.Reflection;
-using System.Text.Json;
 
 namespace Auth_Turkeysoftware.Services
 {
@@ -12,30 +7,42 @@ namespace Auth_Turkeysoftware.Services
     {
         private readonly IAdministrationRepository _administrationRepository;
 
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IUserSessionRepository _userSessionRepository;
 
         public AdministrationService(IAdministrationRepository administrationRepository,
-                                     IHttpContextAccessor httpContextAccessor)
+                                     IUserSessionRepository userSessionRepository)
         {
             _administrationRepository = administrationRepository;
-            _httpContextAccessor = httpContextAccessor;
+            _userSessionRepository = userSessionRepository;
         }
 
-        public async Task InvalidateAllUserSession(string userId)
+        public async Task InvalidateUserSession(string userId, string userSessionId)
         {
-            await _administrationRepository.InvalidateAllUserSessionByEmail(userId);
-            await AddToLog(nameof(InvalidateAllUserSession), userId);
+            if (string.IsNullOrEmpty(userSessionId))
+                await _administrationRepository.InvalidateAllUserSessionByEmail(userId);
+            else
+                await _userSessionRepository.InvalidateUserSessionByIdSessaoAndIdUsuario(userId, userSessionId);
         }
-        public async Task AddToLog(string methodName, params object[] arguments)
+
+        public async Task<PaginationDTO<List<UserSessionDTO>>> GetUserAllSessions(string userId, int pagina)
         {
-            string username = _httpContextAccessor.HttpContext?.User?.Identity?.Name ?? "Anonymous";
+            if (pagina <= 0)
+                pagina = 1;
 
-            string argumentsJson = JsonSerializer.Serialize(arguments);
+            int qtdRegistrosPorPagina = 20;
+            long totalRegistros = await _userSessionRepository.GetUserActiveSessionsByUserIdCount(userId);
+            int totalPaginas = (int)Math.Ceiling((double)totalRegistros / (double)qtdRegistrosPorPagina);
 
-            Log.Information("Invoking method: {MethodName} with arguments: {ArgumentsJson} for user: {UserName}",
-                methodName, argumentsJson, username);
+            if (totalRegistros <= 0 || pagina > totalPaginas)
+            {
+                return new PaginationDTO<List<UserSessionDTO>>(totalRegistros, totalPaginas,
+                                                                   pagina, qtdRegistrosPorPagina, []);
+            }
 
-            await _administrationRepository.AddToLog(username, methodName, argumentsJson);
+            var sessions = await _userSessionRepository.GetUserActiveSessionsByUserId(userId, pagina, qtdRegistrosPorPagina);
+
+            return new PaginationDTO<List<UserSessionDTO>>(totalRegistros, totalPaginas,
+                                                               pagina, qtdRegistrosPorPagina, sessions);
         }
     }
 }

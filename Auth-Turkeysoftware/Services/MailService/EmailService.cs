@@ -5,7 +5,6 @@ using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
-using Serilog;
 
 namespace Auth_Turkeysoftware.Services.MailService
 {
@@ -13,9 +12,13 @@ namespace Auth_Turkeysoftware.Services.MailService
     {
         private readonly EmailSettings _emailSettings;
 
-        public EmailService(IOptions<EmailSettings> emailSettings)
+        ILogger<EmailService> _logger;
+
+        public EmailService(IOptions<EmailSettings> emailSettings,
+            ILogger<EmailService> logger)
         {
             _emailSettings = emailSettings.Value;
+            _logger = logger;
         }
 
         public async Task<bool> SendEmailAsync(SendEmailDTO emailRequest)
@@ -47,7 +50,7 @@ namespace Auth_Turkeysoftware.Services.MailService
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Não foi possível enviar o email solicitado.");
+                _logger.LogError(ex, "Não foi possível enviar o email solicitado.");
                 return false;
             }
         }

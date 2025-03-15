@@ -3,6 +3,7 @@ using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Extensions;
 using Auth_Turkeysoftware.Models.DataBaseModels;
 using Auth_Turkeysoftware.Repositories.Context;
+using Auth_Turkeysoftware.Services.ExternalServices;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using System.Reflection;
@@ -13,10 +14,12 @@ namespace Auth_Turkeysoftware.Repositories
     {
         private static readonly string ERROR_UPDATE_DB = "Houve um erro de acesso ao banco de dados durante a atualização da sessão do usuário";
         internal AppDbContext dataBaseContext;
+        private readonly ILogger<AdministrationRepository> _logger;
 
-        public AdministrationRepository(AppDbContext dataBaseContext)
+        public AdministrationRepository(AppDbContext dataBaseContext, ILogger<AdministrationRepository> logger)
         {
             this.dataBaseContext = dataBaseContext;
+            this._logger = logger;
         }
 
         public async Task InvalidateAllUserSessionByEmail(string userId)
@@ -42,17 +45,9 @@ namespace Auth_Turkeysoftware.Repositories
             }
             catch (DbUpdateException e)
             {
-                Log.Error(e, ERROR_UPDATE_DB);
+                _logger.LogError(e, ERROR_UPDATE_DB);
                 throw new BusinessRuleException("Não foi possível dar update no registro de login do usuário.");
             }
-        }
-
-        public async Task AddToLog(string username, string methodName, string arguments) {
-            var logEntry = new AdminActionLogModel(username, methodName, arguments);
-            logEntry.TruncateAllFields();
-
-            dataBaseContext.AdminActionLog.Add(logEntry);
-            await dataBaseContext.SaveChangesAsync();
         }
     }
 }

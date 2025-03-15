@@ -1,28 +1,35 @@
 ﻿using Auth_Turkeysoftware.Models.DTOs;
-using Serilog;
-using System;
 using System.Text.Json;
 
 namespace Auth_Turkeysoftware.Services.ExternalServices
 {
     public class ExternalApiService : IExternalApiService
     {
+        private readonly ILogger<ExternalApiService> _logger;
+
+        private readonly HttpClientSingleton _httpClientSingleton;
+
+        public ExternalApiService(ILogger<ExternalApiService> logger, HttpClientSingleton httpClientSingleton) { 
+            _logger = logger;
+            _httpClientSingleton = httpClientSingleton;
+        }
+
         public async Task<IpDetailsDTO?> GetIpDetails(string address)
         {
-            Log.Information("Executando método GetIpDetails :: ExternalApiService");
+            _logger.LogInformation("Executando método GetIpDetails :: ExternalApiService");
             try
             {
                 string url = string.Concat(@"http://ip-api.com/json/", address);
-                string? json = await HttpClientSingleton.GetAsync(url, TimeSpan.FromSeconds(0.5));
+                string? json = await _httpClientSingleton.GetAsync(url, TimeSpan.FromSeconds(0.5));
                 if (string.IsNullOrEmpty(json))
                     return null;
 
-                Log.Information($"Response: {json}");
+                _logger.LogInformation($"Response: {json}");
                 return JsonSerializer.Deserialize<IpDetailsDTO>(json);
             }
             catch (JsonException ex)
             {
-                Log.Error(ex, "Não foi possível converter o JSON para o objeto IpDetailsModel.");
+                _logger.LogError(ex, "Não foi possível converter o JSON para o objeto IpDetailsModel.");
                 return null;
             }
         }

@@ -24,15 +24,19 @@ namespace Auth_Turkeysoftware.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IUserSessionService _loggedUserService;
 
+        private readonly ILogger<LoginController> _logger;
+
         public LoginController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration configuration,
-            IUserSessionService loggedUserService) : base(configuration)
+            IUserSessionService loggedUserService,
+            ILogger<LoginController> logger) : base(configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _loggedUserService = loggedUserService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -50,20 +54,20 @@ namespace Auth_Turkeysoftware.Controllers
             {
                 var user = await _userManager.FindByNameAsync(model.Email);
                 if (user == null)
-                    return Unauthorized("Email ou senha inválido!");
+                    return BadRequest("Email ou senha inválido!");
 
                 var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true);
 
                 if (result.IsLockedOut) {
-                    return Unauthorized("Sua conta foi bloqueada por excesso de tentativas de login.");
+                    return BadRequest("Sua conta foi bloqueada por excesso de tentativas de login.");
                 }
                 if (result.IsNotAllowed) {
                     if (!user.EmailConfirmed || !user.PhoneNumberConfirmed || user.TwoFactorEnabled) {
-                        return Unauthorized("É necessário confirmar a conta antes de fazer login.");
+                        return BadRequest("É necessário confirmar a conta antes de fazer login.");
                     }
                 }
                 if (!result.Succeeded) {
-                    return Unauthorized("Email ou senha inválido!");
+                    return BadRequest("Email ou senha inválido!");
                 }
 
                 var userRoles = await _userManager.GetRolesAsync(user);
@@ -118,18 +122,18 @@ namespace Auth_Turkeysoftware.Controllers
 
                 var user = await _userManager.FindByNameAsync(principalRefresh.Identity.Name);
                 if (user == null) {
-                    Log.Warning($"RefreshToken não gerado: Não foi possível encontrar o Username informado. UserName: {principalRefresh.Identity.Name}");
+                    _logger.LogWarning($"RefreshToken não gerado: Não foi possível encontrar o Username informado. UserName: {principalRefresh.Identity.Name}");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
                 string? idSessao = principalRefresh.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
                 if (idSessao == null) {
-                    Log.Warning($"RefreshToken não gerado: Não foi possível identificar o claim de sessão. UserName: {principalRefresh.Identity.Name}");
+                    _logger.LogWarning($"RefreshToken não gerado: Não foi possível identificar o claim de sessão. UserName: {principalRefresh.Identity.Name}");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
                 if (await _loggedUserService.IsTokenBlackListed(user.Id, idSessao, refreshToken)) {
-                    Log.Warning($"RefreshToken não gerado: O refresh token já foi utilizado anteriormente.  UserName: {principalRefresh.Identity.Name}");
+                    _logger.LogWarning($"RefreshToken não gerado: O refresh token já foi utilizado anteriormente.  UserName: {principalRefresh.Identity.Name}");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
@@ -144,66 +148,14 @@ namespace Auth_Turkeysoftware.Controllers
             }
             catch (BusinessRuleException e)
             {
-                Log.Error($"RefreshToken não gerado: {e.Message}");
+                _logger.LogError($"RefreshToken não gerado: {e.Message}");
                 return Unauthorized(ERROR_SESSAO_INVALIDA);
             }
             catch (Exception e)
             {
-                Log.Error(e, "Erro desconhecido.");
+                _logger.LogError(e, "Erro desconhecido.");
                 return Unauthorized(ERROR_SESSAO_INVALIDA);
             }
-        }
-
-        private ClaimsPrincipal GetPrincipalFromRefreshToken(string? refreshToken)
-        {
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false,
-                ValidateIssuer = true,
-                ValidIssuer = getTokenSettings("Issuer"),
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(getRefreshSecretKey())),
-                ValidateLifetime = true
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-
-            var principal = tokenHandler.ValidateToken(refreshToken, tokenValidationParameters, out SecurityToken securityToken);
-
-            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
-                      !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
-                                     StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Token inválido.");
-            return principal;
-        }
-
-        private void AddTokensToCookies(JwtSecurityToken refreshToken, JwtSecurityToken accessToken)
-        {
-            DeletePreviousTokenFromCookies();
-
-            HttpContext.Response.Cookies.Append(REFRESH_TOKEN, new JwtSecurityTokenHandler().WriteToken(refreshToken),
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    IsEssential = true,
-                    SameSite = SameSiteMode.Strict,
-                    Domain = "localhost",
-                    Path = "/api/auth/Login/refresh-token",
-                    MaxAge = refreshToken.ValidTo.TimeOfDay
-                });
-
-            HttpContext.Response.Cookies.Append(ACCESS_TOKEN, new JwtSecurityTokenHandler().WriteToken(accessToken),
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    IsEssential = true,
-                    SameSite = SameSiteMode.Strict,
-                    Domain = "localhost",
-                    MaxAge = accessToken.ValidTo.TimeOfDay
-                });
         }
     }
 }

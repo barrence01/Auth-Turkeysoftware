@@ -27,10 +27,10 @@ Log.Logger = new LoggerConfiguration()
             #else
                 .MinimumLevel.Information()
             #endif
-            .WriteTo.Async(a => a.Console(outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u4}] {Message:l}{NewLine}{Exception}"))
+            .WriteTo.Async(a => a.Console(outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u4}] [{SourceContext}] :: {Message:l}{NewLine}{Exception}"))
             #if !DEBUG
             .WriteTo.Async(a => a.File("logs/auth_turkeysoftware-log.txt", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7,
-                            outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u4}] {Message:l}{NewLine}{Exception}"))
+                            outputTemplate: "[{Timestamp:HH:mm:ss}] [{Level:u4}] [{SourceContext}] :: {Message:l}{NewLine}{Exception}"))
             #endif
             .CreateLogger();
 
@@ -38,8 +38,9 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    builder.Host.UseSerilog();
+
     // Add services to the container.
-    builder.Services.AddSerilog();
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApiDocument();
@@ -49,6 +50,7 @@ try
     builder.Services.AddScoped<ISendEmailService, SendEmailService>();
     builder.Services.AddScoped<IAdministrationService, AdministrationService>();
     builder.Services.AddScoped<IAdministrationRepository, AdministrationRepository>();
+    builder.Services.AddSingleton<HttpClientSingleton>();
 
     // Mail Service
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -56,7 +58,7 @@ try
 
     //Filters
     builder.Services.AddScoped<LoginFilter>();
-
+    builder.Services.AddScoped<AdminActionLoggingFilterAsync>();
 
     // Entity Framework
     var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
@@ -75,6 +77,7 @@ try
                     .AddErrorDescriber<CustomIdentityErrorDescriber>()
                     .AddDefaultTokenProviders();
 
+    // Configurar requisitos para login de usuário
     builder.Services.Configure<IdentityOptions>(options =>
     {
         options.User.RequireUniqueEmail = true;
@@ -90,20 +93,19 @@ try
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-    // Jwt Bearer
     .AddJwtBearer(options =>
     {
         options.SaveToken = true;
         options.RequireHttpsMetadata = true;
         options.TokenValidationParameters = new TokenValidationParameters()
         {
-            ValidateAudience = false,
+            ValidateAudience = true,
             ValidateIssuer = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             ClockSkew = TimeSpan.Zero,
 
-
+            ValidAudience = builder.Configuration["JwtBearerToken:Audience"],
             ValidIssuer = builder.Configuration["JwtBearerToken:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtBearerToken:AccessSecretKey"]))
         };
@@ -122,8 +124,15 @@ try
             OnAuthenticationFailed = context =>
             {
                 if (context.Exception is SecurityTokenExpiredException)
-                    context.Response.Cookies.Delete("TurkeySoftware-AccessToken");
-
+                    context.Response.Cookies.Delete("TurkeySoftware-AccessToken", new CookieOptions
+                                                    {
+                                                        HttpOnly = true,
+                                                        Secure = true,
+                                                        IsEssential = true,
+                                                        SameSite = SameSiteMode.None,
+                                                        Domain = builder.Configuration.GetSection("JwtBearerToken:Domain").Value,
+                                                        Path = "/"
+                                                    });
                 return Task.CompletedTask;
             }
         };
@@ -135,11 +144,21 @@ try
                 policy.RequireRole(UserRolesEnum.Master.ToString(), UserRolesEnum.Admin.ToString()));
     });
 
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(name: "AllowLocalhost",
+                          policy =>
+                          {
+                              policy.WithOrigins(@"http://localhost:3000", @"http://localhost:7157")
+                              .AllowCredentials()
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                          });
+    });
+
     var app = builder.Build();
 
-    // Log the URL and Port Information
-    var url = builder.Configuration["ASPNETCORE_URLS"] ?? "http://localhost:5000";
-    var port = Environment.GetEnvironmentVariable("ASPNETCORE_PORT") ?? "5000";
+    app.UseCors("AllowLocalhost");
 
     app.UseSerilogRequestLogging();
 
@@ -171,6 +190,10 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
+
+    // Log the URL and Port Information
+    var url = builder.Configuration["ASPNETCORE_URLS"];
+    var port = Environment.GetEnvironmentVariable("ASPNETCORE_PORT");
 
     Log.Warning("Application starting up...");
     Log.Warning("Server URL: {URL}, Port: {Port}", url, port);

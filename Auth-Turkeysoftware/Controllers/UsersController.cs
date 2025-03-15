@@ -7,26 +7,122 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace Auth_Turkeysoftware.Controllers
 {
-    [Route("api/auth/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class UserManagementController : AuthControllerBase
+    public class UsersController : AuthControllerBase
     {
         private const string ERROR_USUARIO_INVALIDO = "Usuário inválido.";
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IUserSessionService _loggedUserService;
+        private readonly IUserSessionService _userSessionService;
 
-        public UserManagementController(
+        public UsersController(
             UserManager<ApplicationUser> userManager,
             IConfiguration configuration,
-            IUserSessionService loggedUserService) : base(configuration)
+            IUserSessionService userSessionService) : base(configuration)
         {
             _userManager = userManager;
-            _loggedUserService = loggedUserService;
+            _userSessionService = userSessionService;
+        }
+
+        [HttpGet]
+        [Route("get-info")]
+        public async Task<IActionResult> GetUserInfo() { 
+
+            string userName = User.FindFirst(ClaimTypes.Name).Value;
+            var user = await _userManager.FindByNameAsync(userName);
+            return Ok(new UserInfoDTO
+                     {
+                         Name = user.Name,
+                         Email = user.UserName,
+                         Phone = user.PhoneNumber,
+                         EmailConfirmed = user.EmailConfirmed,
+                         PhoneConfirmed = user.PhoneNumberConfirmed,
+                         TwoFactorEnabled = user.TwoFactorEnabled
+                     });
+        }
+
+        /// <summary>
+        /// Obtém todas as sessões ativas do usuário.
+        /// </summary>
+        /// <param name="pagina">Número da página para paginação.</param>
+        /// <returns>Um <see cref="PaginationDTO&lt;List&lt;UserSessionDTO&gt;&gt;" /> contendo as sessões ativas do usuário.</returns>
+        [HttpGet]
+        [Route("all-sessions")]
+        public async Task<IActionResult> GetAllSessions([FromQuery] int pagina)
+        {
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+                if (userId == null)
+                    return Unauthorized(ERROR_USUARIO_INVALIDO);
+
+                var userActiveSessions = await _userSessionService.GetUserActiveSessions(userId, pagina);
+
+                return Ok(userActiveSessions);
+            }
+            catch (BusinessRuleException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Altera a senha do usuário.
+        /// </summary>
+        /// <param name="model">Modelo contendo a senha atual e a nova senha.</param>
+        /// <returns>Um 200 OK indicando o resultado da operação.</returns>
+        [HttpPost]
+        [Route("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDTO model)
+        {
+            if (model == null)
+                return BadRequest("Invalid request");
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var userEmail = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
+            var user = await _userManager.FindByNameAsync(userEmail);
+            if (user == null || userId == null)
+                return Unauthorized(ERROR_USUARIO_INVALIDO);
+
+            if (user.Id != userId)
+                return Unauthorized(ERROR_USUARIO_INVALIDO);
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+
+            if (!result.Succeeded) {
+                return BadRequest(result.Errors);
+            }
+
+            return Ok("Senha alterada com sucesso.");
+        }
+
+        [HttpPost]
+        [Route("logout")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SignOut()
+        {
+            if (!User.Identity.IsAuthenticated) {
+                return Ok();
+            }
+
+            var userName = User.FindFirst(ClaimTypes.Name).Value;
+            string? idSessao = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+
+            DeletePreviousTokenFromCookies();
+
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user == null)
+                return Ok(ERROR_USUARIO_INVALIDO);
+
+            await _userSessionService.InvalidateUserSession(idSessao, user.Id);
+
+            return Ok();
         }
 
         /// <summary>
@@ -49,7 +145,7 @@ namespace Auth_Turkeysoftware.Controllers
                 if (user.Id != userId)
                     return Unauthorized(ERROR_USUARIO_INVALIDO);
 
-                await _loggedUserService.InvalidateUserSession(idSessao, user.Id);
+                await _userSessionService.InvalidateUserSession(idSessao, user.Id);
 
                 return Ok();
             }
@@ -57,62 +153,6 @@ namespace Auth_Turkeysoftware.Controllers
             {
                 return BadRequest(e.Message);
             }
-        }
-
-        /// <summary>
-        /// Obtém todas as sessões ativas do usuário.
-        /// </summary>
-        /// <param name="pagina">Número da página para paginação.</param>
-        /// <returns>Um <see cref="PaginationDTO&lt;List&lt;UserSessionDTO&gt;&gt;" /> contendo as sessões ativas do usuário.</returns>
-        [HttpPost]
-        [Route("all-sessions")]
-        public async Task<IActionResult> GetAllSessions([FromQuery] int pagina)
-        {
-            try
-            {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
-                if (userId == null)
-                    return Unauthorized(ERROR_USUARIO_INVALIDO);
-
-                var userActiveSessions = await _loggedUserService.GetUserActiveSessions(userId, pagina);
-
-                return Ok(userActiveSessions);
-            }
-            catch (BusinessRuleException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-        /// <summary>
-        /// Altera a senha do usuário.
-        /// </summary>
-        /// <param name="model">Modelo contendo a senha atual e a nova senha.</param>
-        /// <returns>Um 200 OK indicando o resultado da operação.</returns>
-        [HttpPost]
-        [Route("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO model)
-        {
-            if (model == null)
-                return BadRequest("Invalid request");
-
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier).Value;
-            var userEmail = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
-            var user = await _userManager.FindByNameAsync(userEmail);
-            if (user == null || userId == null)
-                return Unauthorized(ERROR_USUARIO_INVALIDO);
-
-            if (user.Id != userId)
-                return Unauthorized(ERROR_USUARIO_INVALIDO);
-
-            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
-
-            if (!result.Succeeded)
-            {
-                return BadRequest(result.Errors);
-            }
-
-            return Ok("Senha alterada com sucesso.");
         }
 
         /// <summary>

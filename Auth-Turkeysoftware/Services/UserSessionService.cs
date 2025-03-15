@@ -3,37 +3,35 @@ using Auth_Turkeysoftware.Models.DataBaseModels;
 using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Repositories;
 using Auth_Turkeysoftware.Services.ExternalServices;
-using Microsoft.AspNetCore.Identity;
-using Serilog;
 
 namespace Auth_Turkeysoftware.Services
 {
     public class UserSessionService : IUserSessionService
     {
-        private readonly IUserSessionRepository _loggedUserRepository;
+        private readonly IUserSessionRepository _userSessionRepository;
 
         private readonly IExternalApiService _externalApiService;
 
         public UserSessionService(IUserSessionRepository loggedUserRepository,
                                  IExternalApiService externalApiService)
         {
-            _loggedUserRepository = loggedUserRepository;
+            _userSessionRepository = loggedUserRepository;
             _externalApiService = externalApiService;
         }
 
         public async Task AddLoggedUser(UserSessionModel loggedUserModel)
         {
-            await _loggedUserRepository.AddLoggedUser(loggedUserModel);
+            await _userSessionRepository.AddLoggedUser(loggedUserModel);
         }
 
         public async Task InvalidateUserSession(string idSessao, string idUsuario)
         {
-            await _loggedUserRepository.InvalidateUserSessionByIdSessaoAndIdUsuario(idSessao, idUsuario);
+            await _userSessionRepository.InvalidateUserSessionByIdSessaoAndIdUsuario(idSessao, idUsuario);
         }
 
         public async Task<bool> IsTokenBlackListed(string userId, string sessionId, string userToken)
         {
-            var result = await _loggedUserRepository.FindRefreshToken(userId, sessionId, userToken);
+            var result = await _userSessionRepository.FindRefreshToken(userId, sessionId, userToken);
             if (result == null || result.TokenStatus == (char)StatusTokenEnum.INATIVO)
                 return true;
 
@@ -42,32 +40,32 @@ namespace Auth_Turkeysoftware.Services
 
         public async Task UpdateSessionRefreshToken(string idUsuario, string idSessao, string refreshToken, string newRefreshToken)
         {
-            await _loggedUserRepository.UpdateSessionRefreshToken(idUsuario, idSessao, refreshToken, newRefreshToken);
+            await _userSessionRepository.UpdateSessionRefreshToken(idUsuario, idSessao, refreshToken, newRefreshToken);
         }
 
         public async Task<UserSessionModel> GetGeolocationByIpAddress(UserSessionModel loggedUserModel)
         {
-            if (!string.IsNullOrWhiteSpace(loggedUserModel.IP))
-            {
-                //IpDetailsDTO ipDetailsModel = await _externalApiService.GetIpDetails(loggedUserModel.IP);
-                //if (ipDetailsModel != null && ipDetailsModel.Status == "success")
-                //{
-                //    loggedUserModel.Provedora = ipDetailsModel.Org;
-                //    loggedUserModel.UF = ipDetailsModel.Region;
-                //    loggedUserModel.Pais = ipDetailsModel.Country;
-                //}
-            }
+            //if (!string.IsNullOrWhiteSpace(loggedUserModel.IP))
+            //{
+            //    IpDetailsDTO ipDetailsModel = await _externalApiService.GetIpDetails(loggedUserModel.IP);
+            //    if (ipDetailsModel != null && ipDetailsModel.Status == "success")
+            //    {
+            //        loggedUserModel.Provedora = ipDetailsModel.Org;
+            //        loggedUserModel.UF = ipDetailsModel.Region;
+            //        loggedUserModel.Pais = ipDetailsModel.Country;
+            //    }
+            //}
 
             return loggedUserModel;
         }
 
-        public async Task<PaginationDTO<List<UserSessionDTO>>> GetUserActiveSessions(string UserId, int pagina)
+        public async Task<PaginationDTO<List<UserSessionDTO>>> GetUserActiveSessions(string userId, int pagina)
         {
             if (pagina <= 0)
                 pagina = 1;
 
             int qtdRegistrosPorPagina = 20;
-            long totalRegistros = await _loggedUserRepository.GetUserActiveSessionsByUserIdCount(UserId);
+            long totalRegistros = await _userSessionRepository.GetUserActiveSessionsByUserIdCount(userId);
             int totalPaginas = (int)Math.Ceiling((double)totalRegistros / (double)qtdRegistrosPorPagina);
 
             if (totalRegistros <= 0 || pagina > totalPaginas) {
@@ -75,7 +73,7 @@ namespace Auth_Turkeysoftware.Services
                                                                    pagina, qtdRegistrosPorPagina, []);
             }
 
-            var sessions = await _loggedUserRepository.GetUserActiveSessionsByUserId(UserId, pagina, qtdRegistrosPorPagina);
+            var sessions = await _userSessionRepository.GetUserActiveSessionsByUserId(userId, pagina, qtdRegistrosPorPagina);
 
             return new PaginationDTO<List<UserSessionDTO>>(totalRegistros, totalPaginas,
                                                                pagina, qtdRegistrosPorPagina, sessions);

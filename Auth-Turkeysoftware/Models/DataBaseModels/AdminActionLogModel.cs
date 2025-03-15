@@ -16,8 +16,8 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
         [Required]
         public string FkIdUsuario { get; set; }
 
-        [Column("nm_metodo_executado")]
-        [MaxLength(128)]
+        [Column("nm_classe_metodo_executado")]
+        [MaxLength(255)]
         [Required]
         public string NomeMetodo { get; set; }
 
@@ -31,9 +31,9 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
 
         public AdminActionLogModel() { }
 
-        public AdminActionLogModel(string idAdmin, string metodo, string argumentos) {
+        public AdminActionLogModel(string idAdmin, string nomeMetodo, string argumentos) {
             FkIdUsuario = idAdmin;
-            NomeMetodo = metodo;
+            NomeMetodo = nomeMetodo;
             Argumentos = argumentos;
             DataInclusao = DateTime.Now.ToUniversalTime();
         }

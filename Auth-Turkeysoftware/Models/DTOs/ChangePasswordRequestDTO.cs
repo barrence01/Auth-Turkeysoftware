@@ -2,7 +2,7 @@
 
 namespace Auth_Turkeysoftware.Models.DTOs
 {
-    public class ChangePasswordDTO
+    public class ChangePasswordRequestDTO
     {
         [Required(ErrorMessage = "É necessário fornecer a senha atual")]
         public string CurrentPassword { get; set; } = string.Empty;
@@ -12,6 +12,6 @@ namespace Auth_Turkeysoftware.Models.DTOs
 
         [Required(ErrorMessage = "É necessário repetir a senha")]
         [Compare(nameof(NewPassword), ErrorMessage = "As senhas não combinam")]
-        public string NewPasswordRepeated { get; set; } = string.Empty;
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 }

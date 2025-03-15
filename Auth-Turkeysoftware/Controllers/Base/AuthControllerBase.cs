@@ -33,6 +33,7 @@ namespace Auth_Turkeysoftware.Controllers.Base
 
             var token = new JwtSecurityToken(
                 issuer: getTokenSettings("Issuer"),
+                audience: getTokenSettings("Audience"),
                 expires: DateTime.Now.AddMinutes(accessTokenValidityInMinutes),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
@@ -54,6 +55,7 @@ namespace Auth_Turkeysoftware.Controllers.Base
 
             var token = new JwtSecurityToken(
                 issuer: getTokenSettings("Issuer"),
+                audience: getTokenSettings("Audience"),
                 expires: DateTime.Now.AddMinutes(refreshTokenValidityInMinutes),
                 claims: authClaims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
@@ -94,8 +96,8 @@ namespace Auth_Turkeysoftware.Controllers.Base
                     HttpOnly = true,
                     Secure = true,
                     IsEssential = true,
-                    SameSite = SameSiteMode.Strict,
-                    Domain = "localhost",
+                    SameSite = SameSiteMode.None,
+                    Domain = getTokenSettings("Domain"),
                     Path = "/api/auth/Login/refresh-token"
                 });
 
@@ -105,9 +107,62 @@ namespace Auth_Turkeysoftware.Controllers.Base
                     HttpOnly = true,
                     Secure = true,
                     IsEssential = true,
-                    SameSite = SameSiteMode.Strict,
-                    Domain = "localhost"
+                    SameSite = SameSiteMode.None,
+                    Domain = getTokenSettings("Domain"),
+                    Path = "/"
                 });
+        }
+        protected void AddTokensToCookies(JwtSecurityToken refreshToken, JwtSecurityToken accessToken)
+        {
+            DeletePreviousTokenFromCookies();
+
+            HttpContext.Response.Cookies.Append(REFRESH_TOKEN, new JwtSecurityTokenHandler().WriteToken(refreshToken),
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.None,
+                    Domain = getTokenSettings("Domain"),
+                    Path = "/api/auth/Login/refresh-token",
+                    MaxAge = refreshToken.ValidTo.TimeOfDay
+                });
+
+            HttpContext.Response.Cookies.Append(ACCESS_TOKEN, new JwtSecurityTokenHandler().WriteToken(accessToken),
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.None,
+                    Domain = getTokenSettings("Domain"),
+                    Path = "/",
+                    MaxAge = accessToken.ValidTo.TimeOfDay
+                });
+        }
+        protected ClaimsPrincipal GetPrincipalFromRefreshToken(string? refreshToken)
+        {
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = true,
+                ValidAudience = getTokenSettings("Audience"),
+                ValidateIssuer = true,
+                ValidIssuer = getTokenSettings("Issuer"),
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(getRefreshSecretKey())),
+                ValidateLifetime = true
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+
+            var principal = tokenHandler.ValidateToken(refreshToken, tokenValidationParameters, out SecurityToken securityToken);
+
+            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
+                      !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
+                                     StringComparison.InvariantCultureIgnoreCase))
+                throw new SecurityTokenException("Token inválido.");
+            return principal;
         }
     }
 }

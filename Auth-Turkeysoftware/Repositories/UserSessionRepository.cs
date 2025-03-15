@@ -3,6 +3,7 @@ using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.DataBaseModels;
 using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Repositories.Context;
+using Auth_Turkeysoftware.Services.ExternalServices;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -12,10 +13,12 @@ namespace Auth_Turkeysoftware.Repositories
     {
         private static readonly string ERROR_UPDATE_DB = "Houve um erro de acesso ao banco de dados durante a atualização da sessão do usuário";
         internal AppDbContext dataBaseContext;
+        private readonly ILogger<UserSessionRepository> _logger;
 
-        public UserSessionRepository(AppDbContext dataBaseContext)
+        public UserSessionRepository(AppDbContext dataBaseContext, ILogger<UserSessionRepository> logger)
         {
             this.dataBaseContext = dataBaseContext;
+            this._logger = logger;
         }
 
         public async Task AddLoggedUser(UserSessionModel loggedUser)
@@ -34,7 +37,7 @@ namespace Auth_Turkeysoftware.Repositories
             }
             catch (DbUpdateException e)
             {
-                Log.Error(e, "Houve um erro de acesso ao banco de dados durante a inclusão da sessão do usuário.");
+                _logger.LogError(e, "Houve um erro de acesso ao banco de dados durante a inclusão da sessão do usuário.");
                 throw new BusinessRuleException("Não foi possível salvar o registro de login do usuário.");
             }
         }
@@ -77,7 +80,7 @@ namespace Auth_Turkeysoftware.Repositories
             }
             catch (DbUpdateException e)
             {
-                Log.Error(e, ERROR_UPDATE_DB);
+                _logger.LogError(e, ERROR_UPDATE_DB);
                 throw new BusinessRuleException("Não foi possível dar update no registro de login do usuário.");
             }
         }
@@ -108,7 +111,7 @@ namespace Auth_Turkeysoftware.Repositories
             }
             catch (DbUpdateException e)
             {
-                Log.Error(e, ERROR_UPDATE_DB);
+                _logger.LogError(e, ERROR_UPDATE_DB);
                 throw new BusinessRuleException("Não foi possível dar update no registro de login do usuário.");
             }
         }
