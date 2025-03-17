@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Security.Claims;
 using Auth_Turkeysoftware.Controllers.Base;
-using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Models.RequestDTOs;
 
 namespace Auth_Turkeysoftware.Controllers
 {
-    [Route("api/auth/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class RegisterController : CommonControllerBase
     {
@@ -26,7 +26,7 @@ namespace Auth_Turkeysoftware.Controllers
 
         [HttpPost]
         [Route("register-user")]
-        public async Task<IActionResult> RegisterUser([FromBody] RegisterDTO model)
+        public async Task<IActionResult> RegisterUser([FromBody] RegisterRequestDTO model)
         {
             var userExists = await _userManager.FindByNameAsync(model.Email);
 
@@ -57,10 +57,10 @@ namespace Auth_Turkeysoftware.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, UserRolesEnum.User.ToString())
+                new Claim(ClaimTypes.Role, nameof(UserRolesEnum.User))
             };
 
-            await _userManager.AddToRoleAsync(user, UserRolesEnum.User.ToString());
+            await _userManager.AddToRoleAsync(user, nameof(UserRolesEnum.User));
             await _userManager.AddClaimsAsync(user, claims);
 
             return Ok("Usuário criado com sucesso!");

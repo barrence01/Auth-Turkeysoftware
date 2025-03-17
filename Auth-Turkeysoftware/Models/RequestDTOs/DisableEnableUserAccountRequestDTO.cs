@@ -1,11 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Auth_Turkeysoftware.Models.DTOs
+namespace Auth_Turkeysoftware.Models.RequestDTOs
 {
     public class DisableEnableUserAccountRequestDTO
     {
+        private string _email = string.Empty;
+
         [Required(ErrorMessage = "É necessário fornecer um email de usuário")]
-        public string Email { get; set; } = string.Empty;
+        public string Email
+        {
+            get => _email;
+            set => _email = value?.ToLower();
+        }
 
         public int operationMode { get; set; } = 0;
     }

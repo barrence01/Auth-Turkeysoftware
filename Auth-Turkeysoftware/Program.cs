@@ -61,7 +61,7 @@ try
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
     builder.Services.AddTransient<IEmailService, EmailService>();
 
-    //Filters
+    // Filters
     builder.Services.AddScoped<LoginFilter>();
     builder.Services.AddScoped<AdminActionLoggingFilterAsync>();
 
@@ -102,7 +102,7 @@ try
     {
         options.SaveToken = true;
         options.RequireHttpsMetadata = true;
-        options.TokenValidationParameters = new TokenValidationParameters()
+        options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateAudience = true,
             ValidateIssuer = true,
@@ -112,16 +112,16 @@ try
 
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:AccessSecretKey"]))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("JwtSettings:AccessSecretKey")
+                                                                               ?? throw new InvalidOperationException("AccessSecretKey is missing in configuration.")))
         };
+
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
                 var token = context.Request.Cookies["TurkeySoftware-AccessToken"];
-                if (string.IsNullOrEmpty(token))
-                    context.Token = null;
-                else
+                if (!string.IsNullOrEmpty(token))
                     context.Token = token;
 
                 return Task.CompletedTask;
@@ -147,6 +147,10 @@ try
     {
         options.AddPolicy("AcessoElevado", policy =>
                 policy.RequireRole(UserRolesEnum.Master.ToString(), UserRolesEnum.Admin.ToString()));
+
+        options.AddPolicy("DenyGuests", policy =>
+        policy.RequireAssertion(context =>
+            !context.User.HasClaim(c => c.Type == nameof(UserRolesEnum.Guest))));
     });
 
     builder.Services.AddCors(options =>

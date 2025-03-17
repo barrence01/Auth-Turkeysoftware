@@ -5,6 +5,7 @@
         None,
         Master,
         Admin,
-        User
+        User,
+        Guest
     }
 }

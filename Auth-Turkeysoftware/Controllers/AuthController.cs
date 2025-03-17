@@ -2,36 +2,34 @@
 using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.DataBaseModels;
-using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Models.RequestDTOs;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
-
 namespace Auth_Turkeysoftware.Controllers
 {
-    [Route("api/auth/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
-    public class LoginController : AuthControllerBase
+    [Authorize(Policy = "DenyGuests")]
+    public class AuthController : AuthControllerBase
     {
         private const string ERROR_SESSAO_INVALIDA = "Não foi possível autorizar o token recebido.";
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IUserSessionService _loggedUserService;
 
-        private readonly ILogger<LoginController> _logger;
+        private readonly ILogger<AuthController> _logger;
 
-        public LoginController(
+        public AuthController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             JwtSettingsSingleton jwtSettingsSingleton,
             IUserSessionService loggedUserService,
-            ILogger<LoginController> logger) : base(jwtSettingsSingleton)
+            ILogger<AuthController> logger) : base(jwtSettingsSingleton)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -48,7 +46,7 @@ namespace Auth_Turkeysoftware.Controllers
         [Route("login")]
         [TypeFilter(typeof(LoginFilter))]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginDTO model)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDTO model)
         {
             try
             {
@@ -77,15 +75,15 @@ namespace Auth_Turkeysoftware.Controllers
                 // Serve para não criar tokens com a mesma númeração e identificar a sessão
                 userClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, newIdSessao));
 
-                var accessToken = GenerateAccessToken(userClaims);
-                var refreshToken = GenerateRefreshToken(userClaims);
+                string accessToken = GenerateAccessToken(userClaims);
+                string refreshToken = GenerateRefreshToken(userClaims);
 
                 UserSessionModel userModel;
                 userModel = await _loggedUserService.GetGeolocationByIpAddress(new UserSessionModel
                 {
                     IdSessao = newIdSessao,
                     FkIdUsuario = user.Id,
-                    RefreshToken = new JwtSecurityTokenHandler().WriteToken(refreshToken),
+                    RefreshToken = refreshToken,
                     IP = HttpContext.Items["IP"]?.ToString() ?? string.Empty,
                     Platform = HttpContext.Items["Platform"]?.ToString() ?? string.Empty,
                     UserAgent = HttpContext.Items["UserAgent"]?.ToString() ?? string.Empty
@@ -118,7 +116,7 @@ namespace Auth_Turkeysoftware.Controllers
                 if (string.IsNullOrEmpty(refreshToken))
                     return Unauthorized("Refresh Token não encontrado.");
 
-                var principalRefresh = GetPrincipalFromRefreshToken(refreshToken);
+                var principalRefresh = await GetPrincipalFromRefreshToken(refreshToken);
 
                 var user = await _userManager.FindByNameAsync(principalRefresh.Identity.Name);
                 if (user == null) {
@@ -137,11 +135,10 @@ namespace Auth_Turkeysoftware.Controllers
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
-                var newRefreshToken = GenerateRefreshToken(principalRefresh.Claims.ToList());
-                var newAccessToken = GenerateAccessToken(principalRefresh.Claims.ToList());
+                string newRefreshToken = GenerateRefreshToken(principalRefresh.Claims.ToList());
+                string newAccessToken = GenerateAccessToken(principalRefresh.Claims.ToList());
 
-                await _loggedUserService.UpdateSessionRefreshToken(user.Id, idSessao, refreshToken,
-                                                                   new JwtSecurityTokenHandler().WriteToken(newRefreshToken));
+                await _loggedUserService.UpdateSessionRefreshToken(user.Id, idSessao, refreshToken, newRefreshToken);
 
                 AddTokensToCookies(newRefreshToken, newAccessToken);
                 return Ok();

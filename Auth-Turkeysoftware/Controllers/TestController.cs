@@ -1,7 +1,7 @@
 ﻿using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Models.DataBaseModels;
-using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Models.RequestDTOs;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -54,10 +54,10 @@ namespace Auth_Turkeysoftware.Controllers
         [Route("teste/create-default-user")]
         public async Task<IActionResult> CreateDefaultUser()
         {
-            RegisterDTO? model = null;
+            RegisterRequestDTO? model = null;
             string email = "desenv@email.com";
 
-            model = new RegisterDTO()
+            model = new RegisterRequestDTO()
             {
                 Name = "desenv",
                 Email = email,
@@ -81,7 +81,7 @@ namespace Auth_Turkeysoftware.Controllers
 
         [HttpPost]
         [Route("admin/register-master")]
-        public async Task<IActionResult> RegisterMaster([FromBody] RegisterDTO model)
+        public async Task<IActionResult> RegisterMaster([FromBody] RegisterRequestDTO model)
         {
             var userExists = await _userManager.FindByNameAsync(model.Email);
 
@@ -113,10 +113,10 @@ namespace Auth_Turkeysoftware.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, UserRolesEnum.Admin.ToString())
+                new Claim(ClaimTypes.Role, nameof(UserRolesEnum.Admin))
             };
 
-            await _userManager.AddToRoleAsync(user, UserRolesEnum.Admin.ToString());
+            await _userManager.AddToRoleAsync(user, nameof(UserRolesEnum.Admin));
             await _userManager.AddClaimsAsync(user, claims);
 
             return Ok("Usuário criado com sucesso!");

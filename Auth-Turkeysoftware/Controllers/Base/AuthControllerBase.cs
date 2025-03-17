@@ -1,7 +1,7 @@
 ﻿using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 using System.Text;
 
@@ -19,34 +19,40 @@ namespace Auth_Turkeysoftware.Controllers.Base
             _jwtSettings = jwtSettingsSingleton;
         }
 
-        protected JwtSecurityToken GenerateAccessToken(IList<Claim> authClaims)
+        protected string GenerateAccessToken(IList<Claim> authClaims)
         {
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetJwtAccessSecretKey()));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetJwtAccessSecretKey()));
+            var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var token = new JwtSecurityToken(
-                issuer: GetJwtIssuer(),
-                audience: GetJwtAudience(),
-                expires: DateTime.Now.AddMinutes(GetAccessTokenValidityInMinutes()),
-                claims: authClaims,
-                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                );
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(authClaims),
+                Expires = DateTime.UtcNow.AddMinutes(GetAccessTokenValidityInMinutes()),
+                Issuer = GetJwtIssuer(),
+                Audience = GetJwtAudience(),
+                SigningCredentials = signingCredentials
+            };
 
-            return token;
+            var handler = new JsonWebTokenHandler();
+            return handler.CreateToken(tokenDescriptor); ;
         }
 
-        protected JwtSecurityToken GenerateRefreshToken(IList<Claim> authClaims)
+        protected string GenerateRefreshToken(IList<Claim> authClaims)
         {
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetJwtRefreshSecretKey()));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(GetJwtRefreshSecretKey()));
+            var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var token = new JwtSecurityToken(
-                issuer: GetJwtIssuer(),
-                audience: GetJwtAudience(),
-                expires: DateTime.Now.AddMinutes(GetRefreshTokenValidityInMinutes()),
-                claims: authClaims,
-                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                );
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(authClaims),
+                Expires = DateTime.UtcNow.AddMinutes(GetRefreshTokenValidityInMinutes()),
+                Issuer = GetJwtIssuer(),
+                Audience = GetJwtAudience(),
+                SigningCredentials = signingCredentials
+            };
 
-            return token;
+            var handler = new JsonWebTokenHandler();
+            return handler.CreateToken(tokenDescriptor);
         }
 
         protected void DeletePreviousTokenFromCookies()
@@ -73,11 +79,11 @@ namespace Auth_Turkeysoftware.Controllers.Base
                     Path = GetAccessTokenPath()
                 });
         }
-        protected void AddTokensToCookies(JwtSecurityToken refreshToken, JwtSecurityToken accessToken)
+        protected void AddTokensToCookies(string refreshToken, string accessToken)
         {
             DeletePreviousTokenFromCookies();
 
-            HttpContext.Response.Cookies.Append(REFRESH_TOKEN, new JwtSecurityTokenHandler().WriteToken(refreshToken),
+            HttpContext.Response.Cookies.Append(REFRESH_TOKEN, refreshToken,
                 new CookieOptions
                 {
                     HttpOnly = true,
@@ -86,10 +92,10 @@ namespace Auth_Turkeysoftware.Controllers.Base
                     SameSite = SameSiteMode.None,
                     Domain = GetJwtDomain(),
                     Path = GetRefreshTokenPath(),
-                    MaxAge = refreshToken.ValidTo.TimeOfDay
+                    Expires = DateTime.UtcNow.AddMinutes(GetRefreshTokenValidityInMinutes())
                 });
 
-            HttpContext.Response.Cookies.Append(ACCESS_TOKEN, new JwtSecurityTokenHandler().WriteToken(accessToken),
+            HttpContext.Response.Cookies.Append(ACCESS_TOKEN, accessToken,
                 new CookieOptions
                 {
                     HttpOnly = true,
@@ -98,12 +104,12 @@ namespace Auth_Turkeysoftware.Controllers.Base
                     SameSite = SameSiteMode.None,
                     Domain = GetJwtDomain(),
                     Path = GetAccessTokenPath(),
-                    MaxAge = accessToken.ValidTo.TimeOfDay
+                    Expires = DateTime.UtcNow.AddMinutes(GetAccessTokenValidityInMinutes())
                 });
         }
-        protected ClaimsPrincipal GetPrincipalFromRefreshToken(string? refreshToken)
+        protected async Task<ClaimsPrincipal> GetPrincipalFromRefreshToken(string? refreshToken)
         {
-            var tokenValidationParameters = new TokenValidationParameters
+            var validationParameters = new TokenValidationParameters
             {
                 ValidateAudience = true,
                 ValidAudience = GetJwtAudience(),
@@ -114,16 +120,13 @@ namespace Auth_Turkeysoftware.Controllers.Base
                 ValidateLifetime = true
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
+            var handler = new JsonWebTokenHandler();
+            var result = await handler.ValidateTokenAsync(refreshToken, validationParameters);
 
+            if (!result.IsValid)
+                throw new SecurityTokenException("Invalid token.");
 
-            var principal = tokenHandler.ValidateToken(refreshToken, tokenValidationParameters, out SecurityToken securityToken);
-
-            if (securityToken is not JwtSecurityToken jwtSecurityToken ||
-                      !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
-                                     StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Token inválido.");
-            return principal;
+            return new ClaimsPrincipal(result.ClaimsIdentity);
         }
 
         private string GetJwtAccessSecretKey()

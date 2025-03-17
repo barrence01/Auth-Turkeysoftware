@@ -3,13 +3,19 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Auth_Turkeysoftware.Controllers.Base;
-using Serilog;
 using Auth_Turkeysoftware.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Auth_Turkeysoftware.Controllers
 {
-    [Route("api/recovery/[controller]")]
+    /// <summary>
+    /// Controller para recuperação de senha da conta do usuário.<br/>
+    /// O acesso à este controller é bloqueado para contas "Guest"
+    /// por serem gerenciados pela aplicação que criou a conta.
+    /// </summary>
+    [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = "DenyGuests")]
     public class AccountRecoveryController : CommonControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -31,13 +37,14 @@ namespace Auth_Turkeysoftware.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
-            var user = await _userManager.FindByNameAsync(request.Email);
+            string userEmail = request.Email.ToLower();
+            var user = await _userManager.FindByNameAsync(userEmail);
             if (user == null)
                 return BadRequest("Endereço de e-mail inválido.");
 
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            await _sendEmailService.SendPasswordResetEmail(resetToken, request.Email);
+            await _sendEmailService.SendPasswordResetEmail(resetToken, userEmail);
          
             return Ok("E-mail de recuperação de senha enviado.");
         }
@@ -50,7 +57,8 @@ namespace Auth_Turkeysoftware.Controllers
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
-            var user = await _userManager.FindByNameAsync(request.Email);
+            string userEmail = request.Email.ToLower();
+            var user = await _userManager.FindByNameAsync(userEmail);
             if (user == null)
                 return BadRequest("Endereço de e-mail inválido.");
 

@@ -3,7 +3,7 @@ using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.DataBaseModels;
-using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Models.RequestDTOs;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -15,14 +15,14 @@ namespace Auth_Turkeysoftware.Controllers
     [ApiController]
     [Authorize(Policy = "AcessoElevado")]
     [TypeFilter(typeof(AdminActionLoggingFilterAsync))]
-    public class AdministrationController : AuthControllerBase
+    public class AdminController : AuthControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IAdministrationService _admnistrationService;
 
         private const string USER_NOT_FOUND = "Não foi possível encontrar o usuário pelo email fornecido.";
 
-        public AdministrationController(
+        public AdminController(
             UserManager<ApplicationUser> userManager,
             JwtSettingsSingleton jwtSettingsSingleton,
             IAdministrationService admnistrationActionService) : base(jwtSettingsSingleton)
@@ -33,7 +33,7 @@ namespace Auth_Turkeysoftware.Controllers
 
         [HttpPost]
         [Route("revoke-user-sessions")]
-        public async Task<IActionResult> RevokeUserSessions([FromBody] RevokeUserSessionDTO request) {
+        public async Task<IActionResult> RevokeUserSessions([FromBody] RevokeUserSessionRequestDTO request) {
             try
             {
                 var user = await _userManager.FindByNameAsync(request.Email);
@@ -113,13 +113,17 @@ namespace Auth_Turkeysoftware.Controllers
             string returnMessage = "Nenhuma ação foi tomada.";
             if (request.operationMode == 0) {
                 await _userManager.SetLockoutEnabledAsync(user, true);
-                await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddYears(99));
+                await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddYears(99).ToUniversalTime());
                 returnMessage = "A conta foi bloqueada com sucesso.";
             }
             else if (request.operationMode == 1) {
                 await _userManager.SetLockoutEnabledAsync(user, false);
+                await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddDays(-1).ToUniversalTime());
                 await _userManager.ResetAccessFailedCountAsync(user);
                 returnMessage = "A conta foi desbloqueada com sucesso.";
+            } else
+            {
+                return BadRequest("Não foi possível completar a ação");
             }
             return Ok(returnMessage);
         }
@@ -134,7 +138,7 @@ namespace Auth_Turkeysoftware.Controllers
             }
 
             string returnMessage;
-            bool userLockoutStatus = user.LockoutEnabled;
+            bool userLockoutStatus = user.LockoutEnabled && user.LockoutEnd > DateTime.Now;
             if (userLockoutStatus) {
                 returnMessage = "A conta do usuário está bloqueada.";
             } else {

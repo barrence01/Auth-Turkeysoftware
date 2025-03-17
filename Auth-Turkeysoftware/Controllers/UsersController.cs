@@ -2,11 +2,11 @@
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.DataBaseModels;
 using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Models.RequestDTOs;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -105,7 +105,7 @@ namespace Auth_Turkeysoftware.Controllers
         [HttpPost]
         [Route("logout")]
         [AllowAnonymous]
-        public async Task<IActionResult> SignOut()
+        public async Task<IActionResult> Logout()
         {
             if (!User.Identity.IsAuthenticated) {
                 return Ok();

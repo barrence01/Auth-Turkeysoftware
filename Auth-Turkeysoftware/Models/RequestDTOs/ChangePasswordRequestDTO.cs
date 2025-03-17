@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Auth_Turkeysoftware.Models.DTOs
+namespace Auth_Turkeysoftware.Models.RequestDTOs
 {
     public class ChangePasswordRequestDTO
     {
