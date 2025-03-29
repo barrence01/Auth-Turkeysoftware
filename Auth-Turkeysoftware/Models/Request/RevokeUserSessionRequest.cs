@@ -13,6 +13,6 @@ namespace Auth_Turkeysoftware.Models.Request
             set => _email = value?.ToLower();
         }
 
-        public string UserSessionId { get; set; } = string.Empty;
+        public string SessionId { get; set; } = string.Empty;
     }
 }

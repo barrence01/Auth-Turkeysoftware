@@ -120,18 +120,15 @@ namespace Auth_Turkeysoftware.Controllers
 
                 var user = await _userManager.FindByNameAsync(principalRefresh.Identity.Name);
                 if (user == null) {
-                    _logger.LogWarning($"RefreshToken não gerado: Não foi possível encontrar o Username informado. UserName: {principalRefresh.Identity.Name}");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
                 string? idSessao = principalRefresh.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
                 if (idSessao == null) {
-                    _logger.LogWarning($"RefreshToken não gerado: Não foi possível identificar o claim de sessão. UserName: {principalRefresh.Identity.Name}");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
                 if (await _loggedUserService.IsTokenBlackListed(user.Id, idSessao, refreshToken)) {
-                    _logger.LogWarning($"RefreshToken não gerado: O refresh token já foi utilizado anteriormente.  UserName: {principalRefresh.Identity.Name}");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 

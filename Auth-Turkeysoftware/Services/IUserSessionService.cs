@@ -17,6 +17,6 @@ namespace Auth_Turkeysoftware.Services
 
         Task<UserSessionModel> GetGeolocationByIpAddress(UserSessionModel loggedUserModel);
 
-        Task<PaginationDTO<UserSessionResponse>> GetUserActiveSessions(string userId, int pagina);
+        Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pagina);
     }
 }

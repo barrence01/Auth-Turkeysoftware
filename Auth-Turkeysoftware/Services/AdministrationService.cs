@@ -17,20 +17,22 @@ namespace Auth_Turkeysoftware.Services
             _userSessionRepository = userSessionRepository;
         }
 
-        public async Task InvalidateUserSession(string userId, string userSessionId)
+        public async Task InvalidateUserSession(string userId, string sessionId)
         {
-            if (string.IsNullOrEmpty(userSessionId))
-                await _administrationRepository.InvalidateAllUserSessionByEmail(userId);
-            else
-                await _userSessionRepository.InvalidateUserSessionByIdSessaoAndIdUsuario(userId, userSessionId);
+                await _userSessionRepository.InvalidateUserSession(userId, sessionId);
         }
 
-        public async Task<PaginationDTO<UserSessionResponse>> GetUserActiveSessions(string userId, int pagina)
+        public async Task InvalidateAllUserSession(string userId)
+        {
+            await _userSessionRepository.InvalidateAllUserSessions(userId);
+        }
+
+        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessions(string userId, int pagina)
         {
             if (pagina <= 0)
                 pagina = 1;
 
-            return await _userSessionRepository.GetUserActiveSessionsByUserId(userId, pagina, 10);
+            return await _userSessionRepository.ListUserActiveSessionsPaginated(userId, pagina, 10);
         }
     }
 }

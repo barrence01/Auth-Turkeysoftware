@@ -1,11 +1,11 @@
 ﻿using Auth_Turkeysoftware.Enums;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Serilog;
 using System.Security.Claims;
 using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Auth_Turkeysoftware.Controllers
 {
@@ -15,23 +15,28 @@ namespace Auth_Turkeysoftware.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ILogger<RegisterController> _logger;
 
         public RegisterController (
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager)
+            RoleManager<IdentityRole> roleManager,
+            ILogger<RegisterController> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _logger = logger;
         }
 
         [HttpPost]
         [Route("register-user")]
+        [AllowAnonymous]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest model)
         {
             var userExists = await _userManager.FindByNameAsync(model.Email);
 
-            if (userExists != null)
+            if (userExists != null) {
                 return BadRequest("Usuário já existe!");
+            }
 
             ApplicationUser user = new()
             {
@@ -43,9 +48,8 @@ namespace Auth_Turkeysoftware.Controllers
 
             var result = await _userManager.CreateAsync(user, model.Password);
 
-            if (!result.Succeeded)
-            {
-                Log.Error($"Houve uma falha na criação de usuário: {result}");
+            if (!result.Succeeded) {
+                _logger.LogError($"Houve uma falha na criação de usuário: {result}");
                 return BadRequest("Criação de usuário falhou!", result.Errors);
             }
             await CheckAndInsertDefaultRoles();

@@ -24,9 +24,9 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         public string? RefreshToken { get; set; }
 
         [Column("st_token")]
-        [AllowedValues('A', 'I', 'B')]
+        [AllowedValues('A', 'I')]
         [Required]
-        [Comment("A - Ativo | I - Inativo | B - Bloqueado")]
+        [Comment("A - Ativo | I - Inativo")]
         public char? TokenStatus { get; set; }
 
         [Column("dt_inclusao")]

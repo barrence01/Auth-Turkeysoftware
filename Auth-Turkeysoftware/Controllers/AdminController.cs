@@ -34,30 +34,8 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         [HttpPost]
-        [Route("RevokeUserSessions")]
-        public async Task<IActionResult> RevokeUserSessions([FromBody] RevokeUserSessionRequest request) {
-            try
-            {
-                var user = await _userManager.FindByNameAsync(request.Email);
-
-                if (user == null) {
-                    return BadRequest(USER_NOT_FOUND);
-                }
-
-                await _admnistrationService.InvalidateUserSession(user.Id, request.UserSessionId);
-
-                return Ok();
-            }
-            catch (BusinessRuleException e)
-            {
-                return BadRequest(e.Message);
-            }
-        }
-
-
-        [HttpPost]
-        [Route("GetUserActiveSessions")]
-        public async Task<IActionResult> GetUserActiveSessionsByEmail([FromBody] GetAllUserSessionsRequest request)
+        [Route("ListUserActiveSessions")]
+        public async Task<IActionResult> ListUserActiveSessions([FromBody] ListAllUserSessionsRequest request)
         {
             try
             {
@@ -67,7 +45,7 @@ namespace Auth_Turkeysoftware.Controllers
                     return BadRequest(USER_NOT_FOUND);
                 }
 
-                var userActiveSessions = await _admnistrationService.GetUserActiveSessions(user.Id, request.pagina);
+                var userActiveSessions = await _admnistrationService.ListUserActiveSessions(user.Id, request.pagina);
 
                 return Ok(userActiveSessions);
             }
@@ -104,33 +82,76 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         [HttpPost]
-        [Route("DisableOrEnableUserAccount")]
-        public async Task<IActionResult> DisableOrEnableUserAccount([FromBody] DisableEnableUserAccountRequest request) {
+        [Route("LockUserAccount")]
+        public async Task<IActionResult> LockUserAccount([FromBody] EmailRequest request) {
 
             var user = await _userManager.FindByNameAsync(request.Email);
             if (user == null) {
                 return BadRequest(USER_NOT_FOUND);
             }
 
-            string returnMessage = "Nenhuma ação foi tomada.";
+            await _userManager.SetLockoutEnabledAsync(user, true);
+            await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddYears(99).ToUniversalTime());
 
-            switch (request.operationMode) {
-                case 0:
-                    await _userManager.SetLockoutEnabledAsync(user, true);
-                    await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddYears(99).ToUniversalTime());
-                    returnMessage = "A conta foi bloqueada com sucesso.";
-                    break;
-                case 1:
-                    await _userManager.SetLockoutEnabledAsync(user, false);
-                    await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddDays(-1).ToUniversalTime());
-                    await _userManager.ResetAccessFailedCountAsync(user);
-                    returnMessage = "A conta foi desbloqueada com sucesso.";
-                    break;
-                default:
-                    return BadRequest("Modo de operação desconhecido.");
+            return Ok("A conta foi bloqueada com sucesso.", new UserAccountStatusResponse(user.UserName, user.LockoutEnabled && user.LockoutEnd > DateTime.Now));
+        }
+
+        [HttpPost]
+        [Route("UnlockUserAccount")]
+        public async Task<IActionResult> UnlockUserAccount([FromBody] EmailRequest request)
+        {
+            var user = await _userManager.FindByNameAsync(request.Email);
+            if (user == null) {
+                return BadRequest(USER_NOT_FOUND);
             }
 
-            return Ok(returnMessage, new UserAccountStatusResponse(user.UserName, user.LockoutEnabled && user.LockoutEnd > DateTime.Now));
+            await _userManager.SetLockoutEnabledAsync(user, false);
+            await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddDays(-1).ToUniversalTime());
+            await _userManager.ResetAccessFailedCountAsync(user);
+
+            return Ok("A conta foi desbloqueada com sucesso.", new UserAccountStatusResponse(user.UserName, user.LockoutEnabled && user.LockoutEnd > DateTime.Now));
+        }
+
+        [HttpPost]
+        [Route("RevokeUserSession")]
+        public async Task<IActionResult> RevokeUserSession([FromBody] RevokeUserSessionRequest request)
+        {
+            try
+            {
+                var user = await _userManager.FindByNameAsync(request.Email);
+                if (user == null) {
+                    return BadRequest(USER_NOT_FOUND);
+                }
+
+                await _admnistrationService.InvalidateUserSession(user.Id, request.SessionId);
+
+                return Ok("Sessão revogada com sucesso.");
+            }
+            catch (BusinessRuleException e)
+            {
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpPost]
+        [Route("RevokeAllUserSession")]
+        public async Task<IActionResult> RevokeAllUserSession([FromBody] EmailRequest request)
+        {
+            try
+            {
+                var user = await _userManager.FindByNameAsync(request.Email);
+                if (user == null) {
+                    return BadRequest(USER_NOT_FOUND);
+                }
+
+                await _admnistrationService.InvalidateAllUserSession(user.Id);
+
+                return Ok();
+            }
+            catch (BusinessRuleException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         [HttpPost]

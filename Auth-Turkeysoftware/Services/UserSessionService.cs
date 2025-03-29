@@ -27,7 +27,12 @@ namespace Auth_Turkeysoftware.Services
 
         public async Task InvalidateUserSession(string idSessao, string idUsuario)
         {
-            await _userSessionRepository.InvalidateUserSessionByIdSessaoAndIdUsuario(idSessao, idUsuario);
+            await _userSessionRepository.InvalidateUserSession(idSessao, idUsuario);
+        }
+
+        public async Task InvalidateAllUserSession(string idUsuario, string idSessao)
+        {
+            await _userSessionRepository.InvalidateUserSession(idUsuario, idSessao);
         }
 
         public async Task<bool> IsTokenBlackListed(string userId, string sessionId, string userToken)
@@ -44,6 +49,14 @@ namespace Auth_Turkeysoftware.Services
             await _userSessionRepository.UpdateSessionRefreshToken(idUsuario, idSessao, refreshToken, newRefreshToken);
         }
 
+        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pagina)
+        {
+            if (pagina <= 0)
+                pagina = 1;
+
+            return await _userSessionRepository.ListUserActiveSessionsPaginated(userId, pagina, 10);
+        }
+
         public async Task<UserSessionModel> GetGeolocationByIpAddress(UserSessionModel loggedUserModel)
         {
             //if (!string.IsNullOrWhiteSpace(loggedUserModel.IP))
@@ -58,14 +71,6 @@ namespace Auth_Turkeysoftware.Services
             //}
 
             return loggedUserModel;
-        }
-
-        public async Task<PaginationDTO<UserSessionResponse>> GetUserActiveSessions(string userId, int pagina)
-        {
-            if (pagina <= 0)
-                pagina = 1;
-
-            return await _userSessionRepository.GetUserActiveSessionsByUserId(userId, pagina, 10);
         }
     }
 }

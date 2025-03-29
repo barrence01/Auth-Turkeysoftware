@@ -40,8 +40,9 @@ namespace Auth_Turkeysoftware.Controllers
         {
             string userEmail = request.Email.ToLower();
             var user = await _userManager.FindByNameAsync(userEmail);
-            if (user == null)
+            if (user == null) {
                 return BadRequest("Endereço de e-mail inválido.");
+            }
 
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
@@ -60,12 +61,14 @@ namespace Auth_Turkeysoftware.Controllers
         {
             string userEmail = request.Email.ToLower();
             var user = await _userManager.FindByNameAsync(userEmail);
-            if (user == null)
+            if (user == null) {
                 return BadRequest("Endereço de e-mail inválido.");
+            }
 
             var result = await _userManager.ResetPasswordAsync(user, request.ResetCode, request.NewPassword);
-            if (!result.Succeeded)
+            if (!result.Succeeded) {
                 return BadRequest(result.Errors.Select(e => e.Description));
+            }
 
             return Ok("Senha resetada com sucesso.");
         }

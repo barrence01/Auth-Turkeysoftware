@@ -57,7 +57,7 @@ namespace Auth_Turkeysoftware.Repositories
                                         .FirstOrDefaultAsync();
         }
 
-        public async Task InvalidateUserSessionByIdSessaoAndIdUsuario(string idSessao, string idUsuario)
+        public async Task InvalidateUserSession(string idUsuario, string idSessao)
         {
             try
             {
@@ -117,12 +117,12 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        public async Task<PaginationDTO<UserSessionResponse>> GetUserActiveSessionsByUserId(string userId, int pagina, int tamanhoPagina)
+        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pagina, int tamanhoPagina)
         {
             DateTime dataAtual = DateTime.Now.ToUniversalTime();
             DateTime dataLimite = dataAtual.AddDays(-7).ToUniversalTime();
 
-            long qtdRegistros = await this.GetUserActiveSessionsByUserIdCount(userId, dataLimite);
+            long qtdRegistros = await this.ListUserActiveSessionsCount(userId, dataLimite);
             int totalPaginas = (int)Math.Ceiling((double)qtdRegistros / (double)tamanhoPagina);
 
             if (qtdRegistros <= 0 || pagina >= totalPaginas)
@@ -152,7 +152,7 @@ namespace Auth_Turkeysoftware.Repositories
             return new PaginationDTO<UserSessionResponse>(sessoes, pagina, tamanhoPagina, qtdRegistros);
         }
 
-        public async Task<long> GetUserActiveSessionsByUserIdCount(string userId, DateTime dataLimite)
+        public async Task<long> ListUserActiveSessionsCount(string userId, DateTime dataLimite)
         {
             return await dataBaseContext.LoggedUser
                                         .AsNoTracking()
@@ -160,6 +160,13 @@ namespace Auth_Turkeysoftware.Repositories
                                                  && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
                                         .OrderByDescending(p => p.DataInclusao)
                                         .CountAsync();
+        }
+
+        public async Task InvalidateAllUserSessions(string userId)
+        {
+            await dataBaseContext.LoggedUser
+                                 .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
+                                 .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO));
         }
     }
 }

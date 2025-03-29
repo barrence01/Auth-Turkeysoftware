@@ -2,6 +2,6 @@
 {
     public interface IAdministrationRepository
     {
-        Task InvalidateAllUserSessionByEmail(string userId);
+
     }
 }

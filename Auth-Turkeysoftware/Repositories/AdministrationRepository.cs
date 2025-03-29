@@ -17,33 +17,5 @@ namespace Auth_Turkeysoftware.Repositories
             this.dataBaseContext = dataBaseContext;
             this._logger = logger;
         }
-
-        public async Task InvalidateAllUserSessionByEmail(string userId)
-        {
-            try
-            {
-                var sessao = await dataBaseContext.LoggedUser
-                                              .AsNoTracking()
-                                              .Where(p => p.FkIdUsuario == userId)
-                                              .Select(p => new UserSessionModel
-                                              {
-                                                  IdSessao = p.IdSessao
-                                              }).FirstOrDefaultAsync();
-                if (sessao == null)
-                    throw new BusinessRuleException("Não foi possível encontrar a sessão à ser revogada.");
-
-                dataBaseContext.Attach(sessao);
-
-                sessao.TokenStatus = (char)StatusTokenEnum.INATIVO;
-                sessao.DataAlteracao = DateTime.Now.ToUniversalTime();
-
-                await dataBaseContext.SaveChangesAsync();
-            }
-            catch (DbUpdateException e)
-            {
-                _logger.LogError(e, ERROR_UPDATE_DB);
-                throw new BusinessRuleException("Não foi possível dar update no registro de login do usuário.");
-            }
-        }
     }
 }

@@ -55,15 +55,16 @@ namespace Auth_Turkeysoftware.Controllers
         /// <returns>Um <see cref="PaginationDTO&lt;List&lt;UserSessionResponse&gt;&gt;" /> contendo as sessões ativas do usuário.</returns>
         [HttpGet]
         [Route("all-sessions")]
-        public async Task<IActionResult> GetAllSessions([FromQuery] int pagina)
+        public async Task<IActionResult> ListAllSessions([FromQuery] int pagina)
         {
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (userId == null)
-                    return Unauthorized(ERROR_USUARIO_INVALIDO);
+                if (userId == null) {
+                    return BadRequest(ERROR_USUARIO_INVALIDO);
+                }
 
-                var userActiveSessions = await _userSessionService.GetUserActiveSessions(userId, pagina);
+                var userActiveSessions = await _userSessionService.ListUserActiveSessionsPaginated(userId, pagina);
 
                 return Ok(userActiveSessions);
             }
@@ -82,22 +83,26 @@ namespace Auth_Turkeysoftware.Controllers
         [Route("change-password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest model)
         {
-            if (model == null)
+            if (model == null) {
                 return BadRequest("Invalid request");
+            }
 
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var userEmail = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
             var user = await _userManager.FindByNameAsync(userEmail);
-            if (user == null || userId == null)
-                return Unauthorized(ERROR_USUARIO_INVALIDO);
 
-            if (user.Id != userId)
-                return Unauthorized(ERROR_USUARIO_INVALIDO);
+            if (user == null || userId == null) {
+                return BadRequest(ERROR_USUARIO_INVALIDO);
+            }
+
+            if (user.Id != userId) {
+                return BadRequest(ERROR_USUARIO_INVALIDO);
+            }
 
             var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
 
             if (!result.Succeeded) {
-                return BadRequest(result.Errors);
+                return BadRequest("Não foi possível alterar a senha do usuário.", result.Errors);
             }
 
             return Ok("Senha alterada com sucesso.");
@@ -118,8 +123,9 @@ namespace Auth_Turkeysoftware.Controllers
             DeletePreviousTokenFromCookies();
 
             var user = await _userManager.FindByNameAsync(userName);
-            if (user == null)
+            if (user == null) {
                 return Ok(ERROR_USUARIO_INVALIDO);
+            }
 
             await _userSessionService.InvalidateUserSession(idSessao, user.Id);
 
@@ -140,13 +146,16 @@ namespace Auth_Turkeysoftware.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var userEmail = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
                 var user = await _userManager.FindByNameAsync(userEmail);
-                if (user == null || userId == null)
-                    return Unauthorized(ERROR_USUARIO_INVALIDO);
 
-                if (user.Id != userId)
-                    return Unauthorized(ERROR_USUARIO_INVALIDO);
+                if (user == null || userId == null) {
+                    return BadRequest(ERROR_USUARIO_INVALIDO);
+                }
 
-                await _userSessionService.InvalidateUserSession(idSessao, user.Id);
+                if (user.Id != userId) {
+                    return BadRequest(ERROR_USUARIO_INVALIDO);
+                }
+
+                await _userSessionService.InvalidateUserSession(user.Id, idSessao);
 
                 return Ok();
             }
@@ -167,16 +176,18 @@ namespace Auth_Turkeysoftware.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var userEmail = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
             var user = await _userManager.FindByNameAsync(userEmail);
-            if (user == null || userId == null)
-                return Unauthorized(ERROR_USUARIO_INVALIDO);
 
-            if (user.Id != userId)
-                return Unauthorized(ERROR_USUARIO_INVALIDO);
+            if (user == null || userId == null) {
+                return BadRequest(ERROR_USUARIO_INVALIDO);
+            }
+
+            if (user.Id != userId) {
+                return BadRequest(ERROR_USUARIO_INVALIDO);
+            }
 
             var result = await _userManager.DeleteAsync(user);
 
-            if (!result.Succeeded)
-            {
+            if (!result.Succeeded) {
                 return BadRequest(result.Errors);
             }
 
