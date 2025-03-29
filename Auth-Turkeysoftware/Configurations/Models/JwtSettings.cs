@@ -1,4 +1,4 @@
-﻿namespace Auth_Turkeysoftware.Models.Configurations
+﻿namespace Auth_Turkeysoftware.Configurations.Models
 {
     public class JwtSettings
     {
@@ -11,6 +11,5 @@
         public int RefreshTokenValidityInMinutes { get; set; }
         public string RefreshTokenPath { get; set; }
         public string AccessTokenPath { get; set; }
-        //public Object[] JwtAuthorities { get; private set; }
     }
 }

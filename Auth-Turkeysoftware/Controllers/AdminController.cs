@@ -1,9 +1,11 @@
-﻿using Auth_Turkeysoftware.Controllers.Base;
+﻿using Auth_Turkeysoftware.Configurations.Services;
+using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models.DataBaseModels;
-using Auth_Turkeysoftware.Models.RequestDTOs;
+using Auth_Turkeysoftware.Models.Request;
+using Auth_Turkeysoftware.Models.Response;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -32,8 +34,8 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         [HttpPost]
-        [Route("revoke-user-sessions")]
-        public async Task<IActionResult> RevokeUserSessions([FromBody] RevokeUserSessionRequestDTO request) {
+        [Route("RevokeUserSessions")]
+        public async Task<IActionResult> RevokeUserSessions([FromBody] RevokeUserSessionRequest request) {
             try
             {
                 var user = await _userManager.FindByNameAsync(request.Email);
@@ -54,8 +56,8 @@ namespace Auth_Turkeysoftware.Controllers
 
 
         [HttpPost]
-        [Route("get-user-all-sessions")]
-        public async Task<IActionResult> GetUserAllSessionsByEmail([FromBody] GetAllUserSessionsRequestDTO request)
+        [Route("GetUserActiveSessions")]
+        public async Task<IActionResult> GetUserActiveSessionsByEmail([FromBody] GetAllUserSessionsRequest request)
         {
             try
             {
@@ -65,7 +67,7 @@ namespace Auth_Turkeysoftware.Controllers
                     return BadRequest(USER_NOT_FOUND);
                 }
 
-                var userActiveSessions = await _admnistrationService.GetUserAllSessions(user.Id, request.pagina);
+                var userActiveSessions = await _admnistrationService.GetUserActiveSessions(user.Id, request.pagina);
 
                 return Ok(userActiveSessions);
             }
@@ -76,9 +78,9 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         [HttpPost]
-        [Route("force-change-user-password")]
+        [Route("ChangeUserPassword")]
         [Authorize(Roles = nameof(UserRolesEnum.Master))]
-        public async Task<IActionResult> ForceChangeUserPassword([FromBody] ForceChangePasswordRequestDTO request)
+        public async Task<IActionResult> ChangeUserPassword([FromBody] ForceChangePasswordRequest request)
         {
             try
             {
@@ -102,8 +104,8 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         [HttpPost]
-        [Route("disable-enable-userAccount")]
-        public async Task<IActionResult> DisableOrEnableUserAccount([FromBody] DisableEnableUserAccountRequestDTO request) {
+        [Route("DisableOrEnableUserAccount")]
+        public async Task<IActionResult> DisableOrEnableUserAccount([FromBody] DisableEnableUserAccountRequest request) {
 
             var user = await _userManager.FindByNameAsync(request.Email);
             if (user == null) {
@@ -111,26 +113,29 @@ namespace Auth_Turkeysoftware.Controllers
             }
 
             string returnMessage = "Nenhuma ação foi tomada.";
-            if (request.operationMode == 0) {
-                await _userManager.SetLockoutEnabledAsync(user, true);
-                await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddYears(99).ToUniversalTime());
-                returnMessage = "A conta foi bloqueada com sucesso.";
+
+            switch (request.operationMode) {
+                case 0:
+                    await _userManager.SetLockoutEnabledAsync(user, true);
+                    await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddYears(99).ToUniversalTime());
+                    returnMessage = "A conta foi bloqueada com sucesso.";
+                    break;
+                case 1:
+                    await _userManager.SetLockoutEnabledAsync(user, false);
+                    await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddDays(-1).ToUniversalTime());
+                    await _userManager.ResetAccessFailedCountAsync(user);
+                    returnMessage = "A conta foi desbloqueada com sucesso.";
+                    break;
+                default:
+                    return BadRequest("Modo de operação desconhecido.");
             }
-            else if (request.operationMode == 1) {
-                await _userManager.SetLockoutEnabledAsync(user, false);
-                await _userManager.SetLockoutEndDateAsync(user, DateTime.Today.AddDays(-1).ToUniversalTime());
-                await _userManager.ResetAccessFailedCountAsync(user);
-                returnMessage = "A conta foi desbloqueada com sucesso.";
-            } else
-            {
-                return BadRequest("Não foi possível completar a ação");
-            }
-            return Ok(returnMessage);
+
+            return Ok(returnMessage, new UserAccountStatusResponse(user.UserName, user.LockoutEnabled && user.LockoutEnd > DateTime.Now));
         }
 
         [HttpPost]
-        [Route("get-userAccount-status")]
-        public async Task<IActionResult> GetUserAccountStatus([FromBody] EmailRequestDTO request)
+        [Route("GetUserAccountStatus")]
+        public async Task<IActionResult> GetUserAccountStatus([FromBody] EmailRequest request)
         {
             var user = await _userManager.FindByNameAsync(request.Email);
             if (user == null) {
@@ -145,7 +150,27 @@ namespace Auth_Turkeysoftware.Controllers
                 returnMessage = "A conta do usuário não está bloqueada.";
             }
 
-            return Ok(returnMessage, new { AccountLockedStatus = userLockoutStatus });
+            return Ok(returnMessage, new UserAccountStatusResponse(user.UserName, userLockoutStatus));
+        }
+
+        [HttpPost]
+        [Route("GetUserInformation")]
+        public async Task<IActionResult> GetUserInformation([FromBody] EmailRequest request)
+        {
+            var user = await _userManager.FindByNameAsync(request.Email);
+            if (user == null) {
+                return BadRequest(USER_NOT_FOUND);
+            }
+
+            return Ok(new UserInfoResponse
+            {
+                Name = user.Name,
+                Email = user.UserName,
+                Phone = user.PhoneNumber,
+                EmailConfirmed = user.EmailConfirmed,
+                PhoneConfirmed = user.PhoneNumberConfirmed,
+                TwoFactorEnabled = user.TwoFactorEnabled
+            });
         }
     }
 }

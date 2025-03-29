@@ -1,6 +1,6 @@
-﻿namespace Auth_Turkeysoftware.Models.DTOs
+﻿namespace Auth_Turkeysoftware.Models.Response
 {
-    public class UserInfoDTO
+    public class UserInfoResponse
     {
         public string? Name { get; set; }
         public string? Email { get; set; }

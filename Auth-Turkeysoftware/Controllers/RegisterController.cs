@@ -1,11 +1,11 @@
 ﻿using Auth_Turkeysoftware.Enums;
-using Auth_Turkeysoftware.Models.DataBaseModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Security.Claims;
 using Auth_Turkeysoftware.Controllers.Base;
-using Auth_Turkeysoftware.Models.RequestDTOs;
+using Auth_Turkeysoftware.Models.Request;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 
 namespace Auth_Turkeysoftware.Controllers
 {
@@ -26,14 +26,12 @@ namespace Auth_Turkeysoftware.Controllers
 
         [HttpPost]
         [Route("register-user")]
-        public async Task<IActionResult> RegisterUser([FromBody] RegisterRequestDTO model)
+        public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest model)
         {
             var userExists = await _userManager.FindByNameAsync(model.Email);
 
             if (userExists != null)
-            {
                 return BadRequest("Usuário já existe!");
-            }
 
             ApplicationUser user = new()
             {

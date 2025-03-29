@@ -1,9 +1,9 @@
-﻿using Auth_Turkeysoftware.Services;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 using System.Text;
+using Auth_Turkeysoftware.Configurations.Services;
 
 namespace Auth_Turkeysoftware.Controllers.Base
 {

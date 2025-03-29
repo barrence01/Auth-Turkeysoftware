@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Auth_Turkeysoftware.Models.RequestDTOs
+namespace Auth_Turkeysoftware.Models.Request
 {
-    public class RegisterRequestDTO
+    public class RegisterRequest
     {
         private string _email = string.Empty;
 
@@ -15,11 +15,13 @@ namespace Auth_Turkeysoftware.Models.RequestDTOs
         }
 
         [Required(ErrorMessage = "Password é obrigatório")]
-        public string? Password { get; set; }
+        public string Password { get; set; }
 
+        [Required(ErrorMessage = "Nome é obrigatório")]
         [StringLength(100)]
-        public string? Name { get; set; }
+        public string Name { get; set; }
 
-        public string? PhoneNumber { get; set; }
+        [Required(ErrorMessage = "Telefone é obrigatório")]
+        public string PhoneNumber { get; set; }
     }
 }

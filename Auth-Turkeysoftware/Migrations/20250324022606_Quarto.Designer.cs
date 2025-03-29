@@ -3,6 +3,7 @@ using System;
 using Auth_Turkeysoftware.Repositories.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Auth_Turkeysoftware.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250324022606_Quarto")]
+    partial class Quarto
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,9 +27,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.HasSequence("admin_action_sequence");
 
-            modelBuilder.HasSequence<int>("test_data_sequence");
-
-            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.AdminActionLogModel", b =>
+            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.AdminActionLogModel", b =>
                 {
                     b.Property<long>("IdAction")
                         .ValueGeneratedOnAdd()
@@ -60,7 +61,7 @@ namespace Auth_Turkeysoftware.Migrations
                     b.ToTable("TB_LOG_ADMIN_ACTION");
                 });
 
-            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", b =>
+            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -128,29 +129,7 @@ namespace Auth_Turkeysoftware.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.TestDataModel", b =>
-                {
-                    b.Property<string>("IdTest")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasColumnName("id_test")
-                        .HasDefaultValueSql("nextval('\"test_data_sequence\"')");
-
-                    b.Property<string>("dsString")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("ds_string");
-
-                    b.Property<int>("number")
-                        .HasColumnType("integer")
-                        .HasColumnName("nr_number");
-
-                    b.HasKey("IdTest");
-
-                    b.ToTable("TB_TEST");
-                });
-
-            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.UserSessionModel", b =>
+            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.UserSessionModel", b =>
                 {
                     b.Property<string>("IdSessao")
                         .HasColumnType("text")
@@ -361,7 +340,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -370,7 +349,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -385,7 +364,7 @@ namespace Auth_Turkeysoftware.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -394,7 +373,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

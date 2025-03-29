@@ -1,4 +1,3 @@
-using Auth_Turkeysoftware.Models.DataBaseModels;
 using Auth_Turkeysoftware.Repositories;
 using Auth_Turkeysoftware.Repositories.Context;
 using Auth_Turkeysoftware.Services;
@@ -12,11 +11,16 @@ using Serilog.Events;
 using Microsoft.AspNetCore.HttpOverrides;
 using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Services.ExternalServices;
-using Auth_Turkeysoftware.Models;
 using Auth_Turkeysoftware.Services.MailService;
 using Auth_Turkeysoftware.Models.Identity;
 using Auth_Turkeysoftware.Enums;
-using Auth_Turkeysoftware.Models.Configurations;
+using Auth_Turkeysoftware.Controllers.Handlers;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Auth_Turkeysoftware.Test.Repositories;
+using Auth_Turkeysoftware.Configurations.Models;
+using Auth_Turkeysoftware.Configurations.Services;
 
 // Logging provider
 Log.Logger = new LoggerConfiguration()
@@ -38,10 +42,12 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-
+    // Adicionar log do serilog como padrão
     builder.Host.UseSerilog();
 
-    // Add services to the container.
+    /////
+    /// Serviços criados
+    /////
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApiDocument();
@@ -52,6 +58,7 @@ try
     builder.Services.AddScoped<IAdministrationService, AdministrationService>();
     builder.Services.AddScoped<IAdministrationRepository, AdministrationRepository>();
     builder.Services.AddSingleton<HttpClientSingleton>();
+    builder.Services.AddScoped<ITestDataRepository, TestDataRepository>();
 
     // Singleton JwtSettings
     builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -65,7 +72,13 @@ try
     builder.Services.AddScoped<LoginFilter>();
     builder.Services.AddScoped<AdminActionLoggingFilterAsync>();
 
-    // Entity Framework
+    // Global Exeption Handler
+    builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+    /////
+    /// Entity Framework
+    /// Acesso ao banco de dados
+    /////
     var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
 
     builder.Services.AddDbContextPool<AppDbContext>(options =>
@@ -76,7 +89,10 @@ try
         });
     });
 
-    // Identity
+    /////
+    /// Microsoft Identity
+    /// Autenticação e autorização
+    /////
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                     .AddEntityFrameworkStores<AppDbContext>()
                     .AddErrorDescriber<CustomIdentityErrorDescriber>()
@@ -143,6 +159,20 @@ try
         };
     });
 
+    // Configurar MVC para exigir autenticação globalmente
+    builder.Services.AddControllers(config =>
+    {
+        var policy = new AuthorizationPolicyBuilder()
+            .RequireAuthenticatedUser()
+            .Build();
+        config.Filters.Add(new AuthorizeFilter(policy));
+    });
+
+
+    /////
+    /// CORS
+    /// Controle de acesso ao host
+    /////
     builder.Services.AddAuthorization(options =>
     {
         options.AddPolicy("AcessoElevado", policy =>
@@ -158,19 +188,30 @@ try
         options.AddPolicy(name: "AllowLocalhost",
                           policy =>
                           {
-                              policy.WithOrigins(@"http://localhost:3000", @"http://localhost:7157", @"http://localhost:3001")
+                              policy.WithOrigins(@"http://localhost:3000", @"http://localhost:7157", @"http://localhost:3001", @"http://app.localhost:3001")
                               .AllowCredentials()
                               .AllowAnyHeader()
                               .AllowAnyMethod();
                           });
+        options.AddPolicy(name: "Production",
+                  policy =>
+                  {
+                      policy.WithOrigins(@"http://meudominio.com.br")
+                      .AllowCredentials()
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+                  });
     });
 
     var app = builder.Build();
+
+    app.UseExceptionHandler(o => { }); ;
 
     app.UseCors("AllowLocalhost");
 
     app.UseSerilogRequestLogging();
 
+    // Obter IP caso seja redirecionamento
     app.UseForwardedHeaders(new ForwardedHeadersOptions
     {
         ForwardedHeaders = ForwardedHeaders.XForwardedFor |

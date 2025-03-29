@@ -1,4 +1,4 @@
-﻿namespace Auth_Turkeysoftware.Models
+﻿namespace Auth_Turkeysoftware.Configurations.Models
 {
     public class EmailSettings
     {

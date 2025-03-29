@@ -1,8 +1,9 @@
-﻿using Auth_Turkeysoftware.Controllers.Base;
+﻿using Auth_Turkeysoftware.Configurations.Services;
+using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models.DataBaseModels;
-using Auth_Turkeysoftware.Models.RequestDTOs;
+using Auth_Turkeysoftware.Models.Request;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -14,7 +15,6 @@ namespace Auth_Turkeysoftware.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "DenyGuests")]
     public class AuthController : AuthControllerBase
     {
         private const string ERROR_SESSAO_INVALIDA = "Não foi possível autorizar o token recebido.";
@@ -46,7 +46,7 @@ namespace Auth_Turkeysoftware.Controllers
         [Route("login")]
         [TypeFilter(typeof(LoginFilter))]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginRequestDTO model)
+        public async Task<IActionResult> Login([FromBody] LoginRequest model)
         {
             try
             {

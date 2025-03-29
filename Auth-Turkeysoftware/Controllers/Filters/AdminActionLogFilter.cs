@@ -1,5 +1,5 @@
 ﻿using Auth_Turkeysoftware.Extensions;
-using Auth_Turkeysoftware.Models.DataBaseModels;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Repositories.Context;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Text.Json;

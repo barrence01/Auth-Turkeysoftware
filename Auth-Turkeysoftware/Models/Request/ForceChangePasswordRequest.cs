@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Auth_Turkeysoftware.Models.RequestDTOs
+namespace Auth_Turkeysoftware.Models.Request
 {
-    public class ForceChangePasswordRequestDTO
+    public class ForceChangePasswordRequest
     {
         private string _email = string.Empty;
 

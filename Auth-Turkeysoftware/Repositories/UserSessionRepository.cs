@@ -1,8 +1,9 @@
 ﻿using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models.DataBaseModels;
 using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Models.Response;
 using Auth_Turkeysoftware.Repositories.Context;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services.ExternalServices;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -116,16 +117,24 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        public async Task<List<UserSessionDTO>> GetUserActiveSessionsByUserId(string UserId, int pagina, int qtdRegistrosPorPagina)
+        public async Task<PaginationDTO<UserSessionResponse>> GetUserActiveSessionsByUserId(string userId, int pagina, int tamanhoPagina)
         {
             DateTime dataAtual = DateTime.Now.ToUniversalTime();
             DateTime dataLimite = dataAtual.AddDays(-7).ToUniversalTime();
 
-            return await dataBaseContext.LoggedUser
+            long qtdRegistros = await this.GetUserActiveSessionsByUserIdCount(userId, dataLimite);
+            int totalPaginas = (int)Math.Ceiling((double)qtdRegistros / (double)tamanhoPagina);
+
+            if (qtdRegistros <= 0 || pagina >= totalPaginas)
+            {
+                return new PaginationDTO<UserSessionResponse>([], pagina, tamanhoPagina, qtdRegistros);
+            }
+
+            var sessoes = await dataBaseContext.LoggedUser
                                         .AsNoTracking()
-                                        .Where(p => p.FkIdUsuario == UserId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
+                                        .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
                                                  && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
-                                        .Select(p => new UserSessionDTO
+                                        .Select(p => new UserSessionResponse
                                         {
                                             IdSessao = p.IdSessao,
                                             TokenStatus = p.TokenStatus,
@@ -136,19 +145,18 @@ namespace Auth_Turkeysoftware.Repositories
                                             Pais = p.Pais,
                                             UF = p.UF
                                         }).OrderByDescending(p => p.DataInclusao)
-                                        .Skip((pagina - 1) * qtdRegistrosPorPagina)
-                                        .Take(qtdRegistrosPorPagina)
+                                        .Skip((pagina - 1) * tamanhoPagina)
+                                        .Take(tamanhoPagina)
                                         .ToListAsync();
+
+            return new PaginationDTO<UserSessionResponse>(sessoes, pagina, tamanhoPagina, qtdRegistros);
         }
 
-        public async Task<long> GetUserActiveSessionsByUserIdCount(string UserId)
+        public async Task<long> GetUserActiveSessionsByUserIdCount(string userId, DateTime dataLimite)
         {
-            DateTime dataAtual = DateTime.Now.ToUniversalTime();
-            DateTime dataLimite = dataAtual.AddDays(-7).ToUniversalTime();
-
             return await dataBaseContext.LoggedUser
                                         .AsNoTracking()
-                                        .Where(p => p.FkIdUsuario == UserId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
+                                        .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
                                                  && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
                                         .OrderByDescending(p => p.DataInclusao)
                                         .CountAsync();

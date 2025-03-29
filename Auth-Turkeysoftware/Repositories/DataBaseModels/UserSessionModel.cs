@@ -4,7 +4,7 @@ using YamlDotNet.Core.Tokens;
 using Microsoft.EntityFrameworkCore;
 using Auth_Turkeysoftware.Extensions;
 
-namespace Auth_Turkeysoftware.Models.DataBaseModels
+namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 {
     [Table("TB_USUAR_SESSION")]
     [Index(nameof(FkIdUsuario), Name = "IX_COD_USUAR_SESSION")]
@@ -24,9 +24,10 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
         public string? RefreshToken { get; set; }
 
         [Column("st_token")]
-        [AllowedValues('A', 'I')]
+        [AllowedValues('A', 'I', 'B')]
         [Required]
-        public char? TokenStatus { get; set; } // A - Ativa | I - Inativa
+        [Comment("A - Ativo | I - Inativo | B - Bloqueado")]
+        public char? TokenStatus { get; set; }
 
         [Column("dt_inclusao")]
         [Required]
@@ -51,7 +52,7 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
         [MaxLength(50)]
         [Required]
         public string? IP { get; set; }
-        
+
         [Column("nm_platform", TypeName = "VARCHAR")]
         [MaxLength(30)]
         public string? Platform { get; set; }
@@ -64,8 +65,8 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
 
         public bool IsValidForInclusion()
         {
-            if (this.FkIdUsuario == null ||
-                string.IsNullOrEmpty(this.RefreshToken) || string.IsNullOrEmpty(this.IP))
+            if (FkIdUsuario == null ||
+                string.IsNullOrEmpty(RefreshToken) || string.IsNullOrEmpty(IP))
             {
                 return false;
             }

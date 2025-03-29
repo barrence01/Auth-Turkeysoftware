@@ -1,9 +1,9 @@
-﻿using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models.Configurations;
+﻿using Auth_Turkeysoftware.Configurations.Models;
+using Auth_Turkeysoftware.Exceptions;
 using Microsoft.Extensions.Options;
 using Serilog;
 
-namespace Auth_Turkeysoftware.Services
+namespace Auth_Turkeysoftware.Configurations.Services
 {
     public sealed class JwtSettingsSingleton
     {
@@ -13,7 +13,8 @@ namespace Auth_Turkeysoftware.Services
             _jwtSettings = jwtSettings.Value;
         }
 
-        public JwtSettings GetJwtSettings() {
+        public JwtSettings GetJwtSettings()
+        {
             return _jwtSettings;
         }
     }

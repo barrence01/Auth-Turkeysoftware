@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Auth_Turkeysoftware.Models.DataBaseModels
+namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 {
     [Table("TB_LOG_ADMIN_ACTION")]
     public class AdminActionLogModel
@@ -14,24 +14,25 @@ namespace Auth_Turkeysoftware.Models.DataBaseModels
         [Column("fk_id_usuario", TypeName = "VARCHAR")]
         [MaxLength(255)]
         [Required]
-        public string FkIdUsuario { get; set; }
+        public string? FkIdUsuario { get; set; }
 
         [Column("nm_classe_metodo_executado")]
         [MaxLength(255)]
         [Required]
-        public string NomeMetodo { get; set; }
+        public string? NomeMetodo { get; set; }
 
         [Column("ds_argumentos", TypeName = "text")]
         [Required]
-        public string Argumentos { get; set; }
+        public string? Argumentos { get; set; }
 
         [Column("dt_inclusao")]
         [Required]
-        public DateTime? DataInclusao {  get; set; }
+        public DateTime? DataInclusao { get; set; }
 
         public AdminActionLogModel() { }
 
-        public AdminActionLogModel(string idAdmin, string nomeMetodo, string argumentos) {
+        public AdminActionLogModel(string idAdmin, string nomeMetodo, string argumentos)
+        {
             FkIdUsuario = idAdmin;
             NomeMetodo = nomeMetodo;
             Argumentos = argumentos;

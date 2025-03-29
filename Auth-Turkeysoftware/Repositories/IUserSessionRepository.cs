@@ -1,5 +1,6 @@
-﻿using Auth_Turkeysoftware.Models.DataBaseModels;
-using Auth_Turkeysoftware.Models.DTOs;
+﻿using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Models.Response;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 
 namespace Auth_Turkeysoftware.Repositories
 {
@@ -13,8 +14,8 @@ namespace Auth_Turkeysoftware.Repositories
 
         Task UpdateSessionRefreshToken(string idUsuario, string idSessao, string oldRefreshToken, string newRefreshToken);
 
-        Task<List<UserSessionDTO>> GetUserActiveSessionsByUserId(string UserId, int pagina, int qtdRegistrosPorPagina);
+        Task<PaginationDTO<UserSessionResponse>> GetUserActiveSessionsByUserId(string userId, int pagina, int tamanhoPagina);
 
-        Task<long> GetUserActiveSessionsByUserIdCount(string UserId);
+        Task<long> GetUserActiveSessionsByUserIdCount(string userId, DateTime dataLimite);
     }
 }

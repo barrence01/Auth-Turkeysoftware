@@ -7,6 +7,7 @@
     <RootNamespace>Auth_Turkeysoftware</RootNamespace>
     <UserSecretsId>89b735e1-806a-4287-902f-11ed71048d34</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <PublishAot>False</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,7 +40,6 @@
   <ItemGroup>
     <Folder Include="logs\" />
     <Folder Include="Migrations\" />
-    <Folder Include="Test\" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿using Auth_Turkeysoftware.Models;
+﻿using Auth_Turkeysoftware.Configurations.Models;
 using Auth_Turkeysoftware.Models.DTOs;
 using MailKit.Net.Smtp;
 using MailKit.Security;

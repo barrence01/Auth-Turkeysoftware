@@ -1,16 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Auth_Turkeysoftware.Models.RequestDTOs
+namespace Auth_Turkeysoftware.Models.Request
 {
-    public class EmailRequestDTO
+    public class GetAllUserSessionsRequest
     {
         private string _email = string.Empty;
 
-        [Required(ErrorMessage = "É necessário fornecer um email de usuário")]
+        [Required(ErrorMessage = "Email é obrigatório")]
         public string Email
         {
             get => _email;
             set => _email = value?.ToLower();
         }
+
+        public int pagina { get; set; } = 1;
     }
 }

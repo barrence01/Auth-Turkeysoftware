@@ -1,12 +1,8 @@
 ﻿using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Extensions;
-using Auth_Turkeysoftware.Models.DataBaseModels;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Repositories.Context;
-using Auth_Turkeysoftware.Services.ExternalServices;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
-using System.Reflection;
 
 namespace Auth_Turkeysoftware.Repositories
 {

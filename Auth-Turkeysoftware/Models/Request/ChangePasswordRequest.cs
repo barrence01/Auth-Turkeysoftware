@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Auth_Turkeysoftware.Models.RequestDTOs
+namespace Auth_Turkeysoftware.Models.Request
 {
-    public class ChangePasswordRequestDTO
+    public class ChangePasswordRequest
     {
         [Required(ErrorMessage = "É necessário fornecer a senha atual")]
         public string CurrentPassword { get; set; } = string.Empty;

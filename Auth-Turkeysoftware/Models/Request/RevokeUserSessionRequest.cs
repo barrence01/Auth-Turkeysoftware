@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Auth_Turkeysoftware.Models.RequestDTOs
+namespace Auth_Turkeysoftware.Models.Request
 {
-    public class LoginRequestDTO
+    public class RevokeUserSessionRequest
     {
         private string _email = string.Empty;
 
@@ -13,7 +13,6 @@ namespace Auth_Turkeysoftware.Models.RequestDTOs
             set => _email = value?.ToLower();
         }
 
-        [Required(ErrorMessage = "Password é obrigatório")]
-        public string Password { get; set; }
+        public string UserSessionId { get; set; } = string.Empty;
     }
 }

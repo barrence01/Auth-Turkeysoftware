@@ -1,10 +1,10 @@
-﻿using Auth_Turkeysoftware.Models.DataBaseModels;
-using Microsoft.AspNetCore.Identity.Data;
+﻿using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 
 namespace Auth_Turkeysoftware.Controllers
 {
@@ -16,6 +16,7 @@ namespace Auth_Turkeysoftware.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Policy = "DenyGuests")]
+    [AllowAnonymous]
     public class AccountRecoveryController : CommonControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;

@@ -1,4 +1,5 @@
 ﻿using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Models.Response;
 using Auth_Turkeysoftware.Repositories;
 
 namespace Auth_Turkeysoftware.Services
@@ -24,25 +25,12 @@ namespace Auth_Turkeysoftware.Services
                 await _userSessionRepository.InvalidateUserSessionByIdSessaoAndIdUsuario(userId, userSessionId);
         }
 
-        public async Task<PaginationDTO<List<UserSessionDTO>>> GetUserAllSessions(string userId, int pagina)
+        public async Task<PaginationDTO<UserSessionResponse>> GetUserActiveSessions(string userId, int pagina)
         {
             if (pagina <= 0)
                 pagina = 1;
 
-            int qtdRegistrosPorPagina = 20;
-            long totalRegistros = await _userSessionRepository.GetUserActiveSessionsByUserIdCount(userId);
-            int totalPaginas = (int)Math.Ceiling((double)totalRegistros / (double)qtdRegistrosPorPagina);
-
-            if (totalRegistros <= 0 || pagina > totalPaginas)
-            {
-                return new PaginationDTO<List<UserSessionDTO>>(totalRegistros, totalPaginas,
-                                                                   pagina, qtdRegistrosPorPagina, []);
-            }
-
-            var sessions = await _userSessionRepository.GetUserActiveSessionsByUserId(userId, pagina, qtdRegistrosPorPagina);
-
-            return new PaginationDTO<List<UserSessionDTO>>(totalRegistros, totalPaginas,
-                                                               pagina, qtdRegistrosPorPagina, sessions);
+            return await _userSessionRepository.GetUserActiveSessionsByUserId(userId, pagina, 10);
         }
     }
 }

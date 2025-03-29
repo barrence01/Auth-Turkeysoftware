@@ -1,5 +1,6 @@
-﻿using Auth_Turkeysoftware.Models.DataBaseModels;
-using Auth_Turkeysoftware.Models.DTOs;
+﻿using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Models.Response;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 
 namespace Auth_Turkeysoftware.Services
 {
@@ -16,6 +17,6 @@ namespace Auth_Turkeysoftware.Services
 
         Task<UserSessionModel> GetGeolocationByIpAddress(UserSessionModel loggedUserModel);
 
-        Task<PaginationDTO<List<UserSessionDTO>>> GetUserActiveSessions(string userId, int pagina);
+        Task<PaginationDTO<UserSessionResponse>> GetUserActiveSessions(string userId, int pagina);
     }
 }

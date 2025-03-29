@@ -1,15 +1,17 @@
-﻿using Auth_Turkeysoftware.Controllers.Base;
+﻿using Auth_Turkeysoftware.Configurations.Services;
+using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Enums;
-using Auth_Turkeysoftware.Models.DataBaseModels;
-using Auth_Turkeysoftware.Models.RequestDTOs;
+using Auth_Turkeysoftware.Exceptions;
+using Auth_Turkeysoftware.Models.Request;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services;
+using Auth_Turkeysoftware.Test.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Serilog;
 using System.Security.Claims;
 
-namespace Auth_Turkeysoftware.Controllers
+namespace Auth_Turkeysoftware.Test.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -18,16 +20,19 @@ namespace Auth_Turkeysoftware.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IUserSessionService _loggedUserService;
+        private readonly ITestDataRepository _testDataRepository;
 
         public TestController(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             JwtSettingsSingleton jwtSettingsSingleton,
-            IUserSessionService loggedUserService) : base(jwtSettingsSingleton)
+            IUserSessionService loggedUserService,
+            ITestDataRepository testDataRepository) : base(jwtSettingsSingleton)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _loggedUserService = loggedUserService;
+            _testDataRepository = testDataRepository;
         }
 
 #if DEBUG
@@ -37,6 +42,7 @@ namespace Auth_Turkeysoftware.Controllers
         {
             Log.Information("Hello, world!");
             Log.Information("Doing magic asynchronously!");
+            await _testDataRepository.AddData();
             // Simulate a long running task
             //Thread.Sleep(5000);
             //await Task.Run(() =>
@@ -47,17 +53,17 @@ namespace Auth_Turkeysoftware.Controllers
             //});
             //var email2 = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
             //Log.Information();
-            return Ok();
+            return BadRequest(await _testDataRepository.ReadData());
         }
 
         [HttpPost]
         [Route("teste/create-default-user")]
         public async Task<IActionResult> CreateDefaultUser()
         {
-            RegisterRequestDTO? model = null;
+            RegisterRequest? model = null;
             string email = "desenv@email.com";
 
-            model = new RegisterRequestDTO()
+            model = new RegisterRequest()
             {
                 Name = "desenv",
                 Email = email,
@@ -67,10 +73,12 @@ namespace Auth_Turkeysoftware.Controllers
 
             var user = await _userManager.FindByNameAsync(email);
 
-            if ( user == null) {
-                await this.RegisterMaster(model);
+            if (user == null)
+            {
+                await RegisterMaster(model);
             }
-            else {
+            else
+            {
                 await _userManager.ResetAccessFailedCountAsync(user);
                 var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
                 await _userManager.ResetPasswordAsync(user, resetToken, model.Password);
@@ -81,7 +89,7 @@ namespace Auth_Turkeysoftware.Controllers
 
         [HttpPost]
         [Route("admin/register-master")]
-        public async Task<IActionResult> RegisterMaster([FromBody] RegisterRequestDTO model)
+        public async Task<IActionResult> RegisterMaster([FromBody] RegisterRequest model)
         {
             var userExists = await _userManager.FindByNameAsync(model.Email);
 
@@ -131,6 +139,6 @@ namespace Auth_Turkeysoftware.Controllers
             }
             return true;
         }
-    #endif
+#endif
     }
 }
