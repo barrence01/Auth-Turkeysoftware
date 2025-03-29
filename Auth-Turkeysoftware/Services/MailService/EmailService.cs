@@ -1,8 +1,7 @@
-﻿using Auth_Turkeysoftware.Configurations.Models;
+﻿using Auth_Turkeysoftware.Configurations.Services;
 using Auth_Turkeysoftware.Models.DTOs;
 using MailKit.Net.Smtp;
 using MailKit.Security;
-using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
 
@@ -10,14 +9,14 @@ namespace Auth_Turkeysoftware.Services.MailService
 {
     public class EmailService : IEmailService
     {
-        private readonly EmailSettings _emailSettings;
+        protected readonly EmailSettingsSingleton _emailSettings;
 
         ILogger<EmailService> _logger;
 
-        public EmailService(IOptions<EmailSettings> emailSettings,
+        public EmailService(EmailSettingsSingleton emailSettings,
             ILogger<EmailService> logger)
         {
-            _emailSettings = emailSettings.Value;
+            _emailSettings = emailSettings;
             _logger = logger;
         }
 
@@ -25,12 +24,12 @@ namespace Auth_Turkeysoftware.Services.MailService
         {
             try
             {
-                var senderName = _emailSettings.SenderName;
-                var senderEmail = _emailSettings.SenderEmail;
-                var smtpServer = _emailSettings.SmtpServer;
-                var smtpUser = _emailSettings.SmtpUser;
-                var smtpSenha = _emailSettings.SmtpPass;
-                int smtpPorta = _emailSettings.SmtpPort;
+                var senderName = _emailSettings.GetEmailSettings().SenderName;
+                var senderEmail = _emailSettings.GetEmailSettings().SenderEmail;
+                var smtpServer = _emailSettings.GetEmailSettings().SmtpServer;
+                var smtpUser = _emailSettings.GetEmailSettings().SmtpUser;
+                var smtpSenha = _emailSettings.GetEmailSettings().SmtpPass;
+                int smtpPorta = _emailSettings.GetEmailSettings().SmtpPort;
 
                 var email = new MimeMessage();
                 email.From.Add(new MailboxAddress(senderName, senderEmail));

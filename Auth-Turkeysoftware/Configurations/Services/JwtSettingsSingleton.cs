@@ -1,7 +1,5 @@
 ﻿using Auth_Turkeysoftware.Configurations.Models;
-using Auth_Turkeysoftware.Exceptions;
 using Microsoft.Extensions.Options;
-using Serilog;
 
 namespace Auth_Turkeysoftware.Configurations.Services
 {

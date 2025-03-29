@@ -60,9 +60,11 @@ try
     builder.Services.AddSingleton<HttpClientSingleton>();
     builder.Services.AddScoped<ITestDataRepository, TestDataRepository>();
 
-    // Singleton JwtSettings
+    // Singleton Settings
     builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
     builder.Services.AddSingleton<JwtSettingsSingleton>();
+    builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+    builder.Services.AddSingleton<EmailSettingsSingleton>();
 
     // Mail Service
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
