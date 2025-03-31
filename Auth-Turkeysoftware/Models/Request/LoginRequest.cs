@@ -15,5 +15,7 @@ namespace Auth_Turkeysoftware.Models.Request
 
         [Required(ErrorMessage = "Password é obrigatório")]
         public string Password { get; set; }
+
+        public string? TwoFactorCode { get; set; }
     }
 }

@@ -3,11 +3,12 @@ using Auth_Turkeysoftware.Services.MailService;
 
 namespace Auth_Turkeysoftware.Services
 {
-    public class SendEmailService : ISendEmailService
+    public class AccountRecoveryService : IAccountRecoveryService
     {
         private readonly IEmailService _emailService;
 
-        public SendEmailService(IEmailService emailService) {
+        public AccountRecoveryService(IEmailService emailService)
+        {
             _emailService = emailService;
         }
 
@@ -23,9 +24,8 @@ namespace Auth_Turkeysoftware.Services
             var resetLink = $"https://yourfrontend.com/reset-password?token={Uri.EscapeDataString(resetToken)}&email={userEmail}";
             var emailRequest = new SendEmailDTO
             {
-                Body = $"Clique no link para resetar sua senha: {resetLink}",
                 Subject = "Recuperação de senha - TurkeySoftware",
-                To = new List<string>()
+                Body = $"Clique no link para resetar sua senha: {resetLink}"
             };
 
             emailRequest.To.Add(userEmail);

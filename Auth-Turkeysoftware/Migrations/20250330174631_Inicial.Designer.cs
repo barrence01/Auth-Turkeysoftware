@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Auth_Turkeysoftware.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250315002253_Segundo")]
-    partial class Segundo
+    [Migration("20250330174631_Inicial")]
+    partial class Inicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,7 +27,9 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.HasSequence("admin_action_sequence");
 
-            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.AdminActionLogModel", b =>
+            modelBuilder.HasSequence<int>("test_data_sequence");
+
+            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.AdminActionLogModel", b =>
                 {
                     b.Property<long>("IdAction")
                         .ValueGeneratedOnAdd()
@@ -50,24 +52,18 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("VARCHAR")
                         .HasColumnName("fk_id_usuario");
 
-                    b.Property<string>("NomeClasse")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("nm_classe_executada");
-
                     b.Property<string>("NomeMetodo")
                         .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("nm_metodo_executado");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("nm_classe_metodo_executado");
 
                     b.HasKey("IdAction");
 
                     b.ToTable("TB_LOG_ADMIN_ACTION");
                 });
 
-            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", b =>
+            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -132,10 +128,142 @@ namespace Auth_Turkeysoftware.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
-                    b.ToTable("AspNetUsers", (string)null);
+                    b.ToTable("AspNetUsers", null, t =>
+                        {
+                            t.HasTrigger("LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER");
+
+                            t.HasTrigger("LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER");
+                        });
+
+                    b
+                        .HasAnnotation("LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER", "CREATE FUNCTION \"LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"TB_HIST_AspNetUsers\" (\"Id\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"dt_inclusao\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER AFTER INSERT\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER\"();")
+                        .HasAnnotation("LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER", "CREATE FUNCTION \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"TB_HIST_AspNetUsers\" (\"Id\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"dt_inclusao\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'A', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER AFTER UPDATE\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"();");
                 });
 
-            modelBuilder.Entity("Auth_Turkeysoftware.Models.DataBaseModels.UserSessionModel", b =>
+            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.HistAplicationUserModel", b =>
+                {
+                    b.Property<DateTime>("DataInclusao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dt_inclusao");
+
+                    b.Property<char>("DbOperationType")
+                        .HasColumnType("character(1)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Id")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(128)
+                        .HasColumnType("VARCHAR");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NormalizedUserName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.ToTable("TB_HIST_AspNetUsers", t =>
+                        {
+                            t.HasComment("Tracks the changes in the AspNetUsers table");
+                        });
+                });
+
+            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.HistUserLoginModel", b =>
+                {
+                    b.Property<DateTime>("DataInclusao")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dt_inclusao");
+
+                    b.Property<char>("DbOperationType")
+                        .HasColumnType("character(1)");
+
+                    b.Property<string>("FkIdUsuario")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("fk_id_usuario");
+
+                    b.Property<string>("IP")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("nr_ip");
+
+                    b.Property<string>("IdSessao")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("id_sessao");
+
+                    b.Property<string>("Pais")
+                        .HasMaxLength(60)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("nm_pais");
+
+                    b.Property<string>("Platform")
+                        .HasMaxLength(30)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("nm_platform");
+
+                    b.Property<string>("Provedora")
+                        .HasMaxLength(60)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("nm_provedora");
+
+                    b.Property<string>("UF")
+                        .HasMaxLength(60)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("nm_estado");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(150)
+                        .HasColumnType("VARCHAR")
+                        .HasColumnName("ds_userAgent");
+
+                    b.ToTable("TB_HIST_USUAR_LOGIN");
+                });
+
+            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.TestDataModel", b =>
+                {
+                    b.Property<string>("IdTest")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("id_test")
+                        .HasDefaultValueSql("nextval('\"test_data_sequence\"')");
+
+                    b.Property<string>("dsString")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ds_string");
+
+                    b.Property<int>("number")
+                        .HasColumnType("integer")
+                        .HasColumnName("nr_number");
+
+                    b.HasKey("IdTest");
+
+                    b.ToTable("TB_TEST");
+                });
+
+            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.UserSessionModel", b =>
                 {
                     b.Property<string>("IdSessao")
                         .HasColumnType("text")
@@ -183,7 +311,8 @@ namespace Auth_Turkeysoftware.Migrations
 
                     b.Property<char>("TokenStatus")
                         .HasColumnType("character(1)")
-                        .HasColumnName("st_token");
+                        .HasColumnName("st_token")
+                        .HasComment("A - Ativo | I - Inativo");
 
                     b.Property<string>("UF")
                         .HasMaxLength(60)
@@ -199,7 +328,12 @@ namespace Auth_Turkeysoftware.Migrations
 
                     b.HasIndex(new[] { "FkIdUsuario" }, "IX_COD_USUAR_SESSION");
 
-                    b.ToTable("TB_USUAR_SESSION");
+                    b.ToTable("TB_USUAR_SESSION", t =>
+                        {
+                            t.HasTrigger("LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL");
+                        });
+
+                    b.HasAnnotation("LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL", "CREATE FUNCTION \"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$\r\nBEGIN\r\n  INSERT INTO \"TB_HIST_USUAR_LOGIN\" (\"id_sessao\", \"fk_id_usuario\", \"dt_inclusao\", \"nm_estado\", \"nm_provedora\", \"nr_ip\", \"nm_platform\", \"ds_userAgent\", \"DbOperationType\") SELECT NEW.\"id_sessao\", \r\n  NEW.\"fk_id_usuario\", \r\n  NEW.\"dt_inclusao\", \r\n  NEW.\"nm_estado\", \r\n  NEW.\"nm_provedora\", \r\n  NEW.\"nr_ip\", \r\n  NEW.\"nm_platform\", \r\n  NEW.\"ds_userAgent\", \r\n  'I';\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL AFTER INSERT\r\nON \"TB_USUAR_SESSION\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"();");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -345,7 +479,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -354,7 +488,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -369,7 +503,7 @@ namespace Auth_Turkeysoftware.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -378,7 +512,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Auth_Turkeysoftware.Models.DataBaseModels.ApplicationUser", null)
+                    b.HasOne("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

@@ -20,21 +20,25 @@ namespace Auth_Turkeysoftware.Services
             _externalApiService = externalApiService;
         }
 
+        /// <inheritdoc/>
         public async Task AddLoggedUser(UserSessionModel loggedUserModel)
         {
             await _userSessionRepository.AddLoggedUser(loggedUserModel);
         }
 
-        public async Task InvalidateUserSession(string idSessao, string idUsuario)
+        /// <inheritdoc/>
+        public async Task InvalidateUserSession(string idUsuario, string idSessao)
         {
-            await _userSessionRepository.InvalidateUserSession(idSessao, idUsuario);
+            await _userSessionRepository.InvalidateUserSession(idUsuario, idSessao);
         }
 
+        /// <inheritdoc/>
         public async Task InvalidateAllUserSession(string idUsuario, string idSessao)
         {
             await _userSessionRepository.InvalidateUserSession(idUsuario, idSessao);
         }
 
+        /// <inheritdoc/>
         public async Task<bool> IsTokenBlackListed(string userId, string sessionId, string userToken)
         {
             var result = await _userSessionRepository.FindRefreshToken(userId, sessionId, userToken);
@@ -44,11 +48,13 @@ namespace Auth_Turkeysoftware.Services
             return false;
         }
 
+        /// <inheritdoc/>
         public async Task UpdateSessionRefreshToken(string idUsuario, string idSessao, string refreshToken, string newRefreshToken)
         {
             await _userSessionRepository.UpdateSessionRefreshToken(idUsuario, idSessao, refreshToken, newRefreshToken);
         }
 
+        /// <inheritdoc/>
         public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pagina)
         {
             if (pagina <= 0)
@@ -57,6 +63,7 @@ namespace Auth_Turkeysoftware.Services
             return await _userSessionRepository.ListUserActiveSessionsPaginated(userId, pagina, 10);
         }
 
+        /// <inheritdoc/>
         public async Task<UserSessionModel> GetGeolocationByIpAddress(UserSessionModel loggedUserModel)
         {
             //if (!string.IsNullOrWhiteSpace(loggedUserModel.IP))

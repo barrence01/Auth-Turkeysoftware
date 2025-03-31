@@ -34,10 +34,6 @@ namespace Auth_Turkeysoftware.Controllers.Filters
                 userAgent = userAgentHeader.ToString();
             }
 
-            // If i's localhost set to a default
-            if (ip == "127.0.0.1")
-                ip = "179.117.69.197";
-
             httpContext.Items["IP"] = ip;
             httpContext.Items["Platform"] = platform;
             httpContext.Items["UserAgent"] = userAgent;

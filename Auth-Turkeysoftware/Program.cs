@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Auth_Turkeysoftware.Test.Repositories;
 using Auth_Turkeysoftware.Configurations.Models;
 using Auth_Turkeysoftware.Configurations.Services;
+using Laraue.EfCoreTriggers.PostgreSql.Extensions;
 
 // Logging provider
 Log.Logger = new LoggerConfiguration()
@@ -51,16 +52,18 @@ try
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApiDocument();
+    builder.Services.AddMemoryCache();
     builder.Services.AddScoped<IUserSessionService, UserSessionService>();
     builder.Services.AddScoped<IUserSessionRepository, UserSessionRepository>();
     builder.Services.AddScoped<IExternalApiService, ExternalApiService>();
-    builder.Services.AddScoped<ISendEmailService, SendEmailService>();
     builder.Services.AddScoped<IAdministrationService, AdministrationService>();
     builder.Services.AddScoped<IAdministrationRepository, AdministrationRepository>();
+    builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+    builder.Services.AddScoped<IAccountRecoveryService, AccountRecoveryService>();
     builder.Services.AddSingleton<HttpClientSingleton>();
     builder.Services.AddScoped<ITestDataRepository, TestDataRepository>();
 
-    // Singleton Settings
+    // Singleton Service
     builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
     builder.Services.AddSingleton<JwtSettingsSingleton>();
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -89,6 +92,7 @@ try
         {
             npgsqlOptions.EnableRetryOnFailure();
         });
+        options.UsePostgreSqlTriggers();
     });
 
     /////

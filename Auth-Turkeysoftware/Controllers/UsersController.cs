@@ -127,7 +127,7 @@ namespace Auth_Turkeysoftware.Controllers
                 return Ok(ERROR_USUARIO_INVALIDO);
             }
 
-            await _userSessionService.InvalidateUserSession(idSessao, user.Id);
+            await _userSessionService.InvalidateUserSession(user.Id, idSessao);
 
             return Ok();
         }
@@ -139,7 +139,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <returns>Um 200 OK indicando o resultado da operação.</returns>
         [HttpPost]
         [Route("revoke-session/{idSessao}")]
-        public async Task<IActionResult> Revoke([FromRoute] string idSessao)
+        public async Task<IActionResult> RevokeSession([FromRoute] string idSessao)
         {
             try
             {
@@ -194,6 +194,12 @@ namespace Auth_Turkeysoftware.Controllers
             DeletePreviousTokenFromCookies();
 
             return Ok("Conta deletada com sucesso");
+        }
+
+        [HttpPost]
+        [Route("enable-two-factor")]
+        public async Task<IActionResult> EnableTwoFactor() {
+            return Ok();
         }
     }
 }

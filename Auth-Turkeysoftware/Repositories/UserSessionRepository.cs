@@ -4,9 +4,7 @@ using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Models.Response;
 using Auth_Turkeysoftware.Repositories.Context;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
-using Auth_Turkeysoftware.Services.ExternalServices;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
 
 namespace Auth_Turkeysoftware.Repositories
 {
@@ -28,8 +26,7 @@ namespace Auth_Turkeysoftware.Repositories
             {
                 loggedUser.TokenStatus = (char)StatusTokenEnum.ATIVO;
                 loggedUser.DataInclusao = DateTime.Now.ToUniversalTime();
-                if (!loggedUser.IsValidForInclusion())
-                {
+                if (!loggedUser.IsValidForInclusion()) {
                     throw new BusinessRuleException("Os campos EmailUsuario, RefreshToken e IP são obrigatórios.");
                 }
 
@@ -52,6 +49,7 @@ namespace Auth_Turkeysoftware.Repositories
                                         .Select(p => new UserSessionModel
                                         {
                                             IdSessao = p.IdSessao,
+                                            FkIdUsuario = p.FkIdUsuario,
                                             TokenStatus = p.TokenStatus
                                         })
                                         .FirstOrDefaultAsync();
@@ -61,23 +59,14 @@ namespace Auth_Turkeysoftware.Repositories
         {
             try
             {
-                var sessao = await dataBaseContext.LoggedUser
-                                              .AsNoTracking()
-                                              .Where(p => p.IdSessao == idSessao
-                                                       && p.FkIdUsuario == idUsuario)
-                                              .Select(p => new UserSessionModel
-                                              {
-                                                  IdSessao = p.IdSessao
-                                              }).FirstOrDefaultAsync();
-                if (sessao == null)
-                    throw new BusinessRuleException("Não foi possível encontrar a sessão à ser revogada.");
+                int rowsAffected = await dataBaseContext.LoggedUser
+                            .Where(p => p.IdSessao == idSessao
+                                     && p.FkIdUsuario == idUsuario)
+                            .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO)
+                                                      .SetProperty(e => e.DataAlteracao, DateTime.Now.ToUniversalTime()));
 
-                dataBaseContext.Attach(sessao);
-
-                sessao.TokenStatus = (char)StatusTokenEnum.INATIVO;
-                sessao.DataAlteracao = DateTime.Now.ToUniversalTime();
-
-                await dataBaseContext.SaveChangesAsync();
+                if (rowsAffected <= 0)
+                    throw new InvalidSessionException("Não foi possível encontrar a sessão à ser revogada.");
             }
             catch (DbUpdateException e)
             {
@@ -90,25 +79,15 @@ namespace Auth_Turkeysoftware.Repositories
         {
             try
             {
-                var sessao = await dataBaseContext.LoggedUser
-                                              .AsNoTracking()
-                                              .Where(p => p.IdSessao == idSessao
-                                                       && p.FkIdUsuario == idUsuario
-                                                       && p.RefreshToken == oldRefreshToken
-                                                       && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
-                                              .Select(p => new UserSessionModel
-                                              {
-                                                  IdSessao = p.IdSessao
-                                              }).FirstOrDefaultAsync();
-                if (sessao == null)
+                int rowsAffected = await dataBaseContext.LoggedUser
+                                            .Where(p => p.IdSessao == idSessao && p.FkIdUsuario == idUsuario
+                                                     && p.RefreshToken == oldRefreshToken && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
+                                            .ExecuteUpdateAsync(p => p.SetProperty(e => e.RefreshToken, newRefreshToken)
+                                                                      .SetProperty(e => e.DataAlteracao, DateTime.Now.ToUniversalTime()));
+
+                if (rowsAffected <= 0)
                     throw new InvalidSessionException("Não foi possível encontrar uma sessão válida que esteja utilizando o refresh token informado.");
 
-                // Reseta colunas para não alterada no contexto
-                dataBaseContext.Attach(sessao);
-                sessao.DataAlteracao = DateTime.Now.ToUniversalTime();
-                sessao.RefreshToken = newRefreshToken;
-
-                await dataBaseContext.SaveChangesAsync();
             }
             catch (DbUpdateException e)
             {
@@ -125,8 +104,7 @@ namespace Auth_Turkeysoftware.Repositories
             long qtdRegistros = await this.ListUserActiveSessionsCount(userId, dataLimite);
             int totalPaginas = (int)Math.Ceiling((double)qtdRegistros / (double)tamanhoPagina);
 
-            if (qtdRegistros <= 0 || pagina >= totalPaginas)
-            {
+            if (qtdRegistros <= 0 || pagina >= totalPaginas) {
                 return new PaginationDTO<UserSessionResponse>([], pagina, tamanhoPagina, qtdRegistros);
             }
 

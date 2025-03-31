@@ -6,6 +6,7 @@ using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services;
 using Auth_Turkeysoftware.Test.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -15,6 +16,7 @@ namespace Auth_Turkeysoftware.Test.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [AllowAnonymous]
     public class TestController : AuthControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;

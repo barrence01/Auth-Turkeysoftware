@@ -21,12 +21,12 @@ namespace Auth_Turkeysoftware.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
 
-        private readonly SendEmailService _sendEmailService;
+        private readonly IAccountRecoveryService _accountRecoveryService;
 
-        public AccountRecoveryController(UserManager<ApplicationUser> userManager, SendEmailService sendEmailService)
+        public AccountRecoveryController(UserManager<ApplicationUser> userManager, IAccountRecoveryService accountRecoveryService)
         {
             _userManager = userManager;
-            _sendEmailService = sendEmailService;
+            _accountRecoveryService = accountRecoveryService;
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Auth_Turkeysoftware.Controllers
 
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            await _sendEmailService.SendPasswordResetEmail(resetToken, userEmail);
+            await _accountRecoveryService.SendPasswordResetEmail(resetToken, userEmail);
          
             return Ok("E-mail de recuperação de senha enviado.");
         }
