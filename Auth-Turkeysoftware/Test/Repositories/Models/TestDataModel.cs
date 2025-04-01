@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Auth_Turkeysoftware.Repositories.DataBaseModels
+namespace Auth_Turkeysoftware.Test.Repositories.Models
 {
     [Table("tb_test", Schema = "auth")]
     public class TestDataModel

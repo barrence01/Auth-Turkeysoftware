@@ -10,7 +10,6 @@ using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Asn1.Ocsp;
 using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;

@@ -1,11 +1,9 @@
 ﻿using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
+using Auth_Turkeysoftware.Test.Repositories.Models;
 using Laraue.EfCoreTriggers.Common.Extensions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
-using System.Reflection.Emit;
-using System.Xml;
 
 namespace Auth_Turkeysoftware.Repositories.Context
 {

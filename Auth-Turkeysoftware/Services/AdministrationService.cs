@@ -6,14 +6,10 @@ namespace Auth_Turkeysoftware.Services
 {
     public class AdministrationService : IAdministrationService
     {
-        private readonly IAdministrationRepository _administrationRepository;
-
         private readonly IUserSessionRepository _userSessionRepository;
 
-        public AdministrationService(IAdministrationRepository administrationRepository,
-                                     IUserSessionRepository userSessionRepository)
+        public AdministrationService(IUserSessionRepository userSessionRepository)
         {
-            _administrationRepository = administrationRepository;
             _userSessionRepository = userSessionRepository;
         }
 

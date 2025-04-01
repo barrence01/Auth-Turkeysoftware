@@ -1,4 +1,4 @@
-﻿using Auth_Turkeysoftware.Repositories.DataBaseModels;
+﻿using Auth_Turkeysoftware.Test.Repositories.Models;
 
 namespace Auth_Turkeysoftware.Test.Repositories
 {

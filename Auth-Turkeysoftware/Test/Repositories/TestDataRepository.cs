@@ -1,7 +1,7 @@
 ﻿using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Repositories;
 using Auth_Turkeysoftware.Repositories.Context;
-using Auth_Turkeysoftware.Repositories.DataBaseModels;
+using Auth_Turkeysoftware.Test.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Auth_Turkeysoftware.Test.Repositories

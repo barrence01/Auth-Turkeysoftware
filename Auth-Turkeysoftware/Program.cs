@@ -60,7 +60,6 @@ try
     builder.Services.AddScoped<IUserSessionRepository, UserSessionRepository>();
     builder.Services.AddScoped<IExternalApiService, ExternalApiService>();
     builder.Services.AddScoped<IAdministrationService, AdministrationService>();
-    builder.Services.AddScoped<IAdministrationRepository, AdministrationRepository>();
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
     builder.Services.AddScoped<IAccountRecoveryService, AccountRecoveryService>();
     builder.Services.AddSingleton<HttpClientSingleton>();

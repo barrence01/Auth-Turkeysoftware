@@ -1,9 +1,7 @@
-﻿using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models.DTOs;
+﻿using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services.DistributedCacheService;
 using Auth_Turkeysoftware.Services.MailService;
-using Microsoft.Extensions.Caching.Memory;
 using System.Security.Cryptography;
 
 namespace Auth_Turkeysoftware.Services
