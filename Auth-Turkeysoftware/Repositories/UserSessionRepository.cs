@@ -11,12 +11,12 @@ namespace Auth_Turkeysoftware.Repositories
     public class UserSessionRepository : IUserSessionRepository
     {
         private static readonly string ERROR_UPDATE_DB = "Houve um erro de acesso ao banco de dados durante a atualização da sessão do usuário";
-        internal AppDbContext dataBaseContext;
+        internal AppDbContext dbContext;
         private readonly ILogger<UserSessionRepository> _logger;
 
         public UserSessionRepository(AppDbContext dataBaseContext, ILogger<UserSessionRepository> logger)
         {
-            this.dataBaseContext = dataBaseContext;
+            this.dbContext = dataBaseContext;
             this._logger = logger;
         }
 
@@ -30,8 +30,8 @@ namespace Auth_Turkeysoftware.Repositories
                     throw new BusinessRuleException("Os campos EmailUsuario, RefreshToken e IP são obrigatórios.");
                 }
 
-                dataBaseContext.LoggedUser.Add(loggedUser);
-                await dataBaseContext.SaveChangesAsync();
+                dbContext.LoggedUser.Add(loggedUser);
+                await dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException e)
             {
@@ -42,28 +42,28 @@ namespace Auth_Turkeysoftware.Repositories
 
         public async Task<UserSessionModel?> FindRefreshToken(string userId, string sessionId, string userToken)
         {
-            return await dataBaseContext.LoggedUser
-                                        .AsNoTracking()
-                                        .Where(p => p.IdSessao == sessionId && p.FkIdUsuario == userId
-                                                 && p.RefreshToken == userToken)
-                                        .Select(p => new UserSessionModel
-                                        {
-                                            IdSessao = p.IdSessao,
-                                            FkIdUsuario = p.FkIdUsuario,
-                                            TokenStatus = p.TokenStatus
-                                        })
-                                        .FirstOrDefaultAsync();
+            return await dbContext.LoggedUser
+                                    .AsNoTracking()
+                                    .Where(p => p.IdSessao == sessionId && p.FkIdUsuario == userId
+                                                && p.RefreshToken == userToken)
+                                    .Select(p => new UserSessionModel
+                                    {
+                                        IdSessao = p.IdSessao,
+                                        FkIdUsuario = p.FkIdUsuario,
+                                        TokenStatus = p.TokenStatus
+                                    })
+                                    .FirstOrDefaultAsync();
         }
 
         public async Task InvalidateUserSession(string idUsuario, string idSessao)
         {
             try
             {
-                int rowsAffected = await dataBaseContext.LoggedUser
-                            .Where(p => p.IdSessao == idSessao
-                                     && p.FkIdUsuario == idUsuario)
-                            .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO)
-                                                      .SetProperty(e => e.DataAlteracao, DateTime.Now.ToUniversalTime()));
+                int rowsAffected = await dbContext.LoggedUser
+                                                    .Where(p => p.IdSessao == idSessao
+                                                             && p.FkIdUsuario == idUsuario)
+                                                    .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO)
+                                                                              .SetProperty(e => e.DataAlteracao, DateTime.Now.ToUniversalTime()));
 
                 if (rowsAffected <= 0)
                     throw new InvalidSessionException("Não foi possível encontrar a sessão à ser revogada.");
@@ -79,11 +79,11 @@ namespace Auth_Turkeysoftware.Repositories
         {
             try
             {
-                int rowsAffected = await dataBaseContext.LoggedUser
-                                            .Where(p => p.IdSessao == idSessao && p.FkIdUsuario == idUsuario
-                                                     && p.RefreshToken == oldRefreshToken && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
-                                            .ExecuteUpdateAsync(p => p.SetProperty(e => e.RefreshToken, newRefreshToken)
-                                                                      .SetProperty(e => e.DataAlteracao, DateTime.Now.ToUniversalTime()));
+                int rowsAffected = await dbContext.LoggedUser
+                                                    .Where(p => p.IdSessao == idSessao && p.FkIdUsuario == idUsuario
+                                                                && p.RefreshToken == oldRefreshToken && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
+                                                    .ExecuteUpdateAsync(p => p.SetProperty(e => e.RefreshToken, newRefreshToken)
+                                                                                .SetProperty(e => e.DataAlteracao, DateTime.Now.ToUniversalTime()));
 
                 if (rowsAffected <= 0)
                     throw new InvalidSessionException("Não foi possível encontrar uma sessão válida que esteja utilizando o refresh token informado.");
@@ -108,43 +108,43 @@ namespace Auth_Turkeysoftware.Repositories
                 return new PaginationDTO<UserSessionResponse>([], pagina, tamanhoPagina, qtdRegistros);
             }
 
-            var sessoes = await dataBaseContext.LoggedUser
-                                        .AsNoTracking()
-                                        .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
-                                                 && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
-                                        .Select(p => new UserSessionResponse
-                                        {
-                                            IdSessao = p.IdSessao,
-                                            TokenStatus = p.TokenStatus,
-                                            DataInclusao = p.DataInclusao,
-                                            UltimaVezOnline = p.DataAlteracao ?? p.DataInclusao,
-                                            IP = p.IP,
-                                            Platform = p.Platform,
-                                            Pais = p.Pais,
-                                            UF = p.UF
-                                        }).OrderByDescending(p => p.DataInclusao)
-                                        .Skip((pagina - 1) * tamanhoPagina)
-                                        .Take(tamanhoPagina)
-                                        .ToListAsync();
+            var sessoes = await dbContext.LoggedUser
+                                            .AsNoTracking()
+                                            .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
+                                                     && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
+                                            .Select(p => new UserSessionResponse
+                                            {
+                                                IdSessao = p.IdSessao,
+                                                TokenStatus = p.TokenStatus,
+                                                DataInclusao = p.DataInclusao,
+                                                UltimaVezOnline = p.DataAlteracao ?? p.DataInclusao,
+                                                IP = p.IP,
+                                                Platform = p.Platform,
+                                                Pais = p.Pais,
+                                                UF = p.UF
+                                            }).OrderByDescending(p => p.DataInclusao)
+                                            .Skip((pagina - 1) * tamanhoPagina)
+                                            .Take(tamanhoPagina)
+                                            .ToListAsync();
 
             return new PaginationDTO<UserSessionResponse>(sessoes, pagina, tamanhoPagina, qtdRegistros);
         }
 
         public async Task<long> ListUserActiveSessionsCount(string userId, DateTime dataLimite)
         {
-            return await dataBaseContext.LoggedUser
-                                        .AsNoTracking()
-                                        .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
-                                                 && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
-                                        .OrderByDescending(p => p.DataInclusao)
-                                        .CountAsync();
+            return await dbContext.LoggedUser
+                                    .AsNoTracking()
+                                    .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
+                                                && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
+                                    .OrderByDescending(p => p.DataInclusao)
+                                    .CountAsync();
         }
 
         public async Task InvalidateAllUserSessions(string userId)
         {
-            await dataBaseContext.LoggedUser
-                                 .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
-                                 .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO));
+            await dbContext.LoggedUser
+                            .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
+                            .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO));
         }
     }
 }

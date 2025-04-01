@@ -62,23 +62,19 @@ namespace Auth_Turkeysoftware.Controllers
                     return BadRequest("Email ou senha inválido!", result);
                 }
 
-                var twoFactorResult = _authenticationService.VerifyTwoFactor(user, request.TwoFactorCode);
+                TwoFactorValidationDTO twoFactorResult = await _authenticationService.VerifyTwoFactor(user, request.TwoFactorCode);
                 if (!twoFactorResult.HasSucceeded()) { 
                     result.IsTwoFactorRequired = true;
-                    result.HasTwoFactorFailed = true;
 
                     if (twoFactorResult.IsTwoFactorCodeEmpty) {
                         return BadRequest("É necessário código de autenticação de 2 fatores para o login.", result);
                     }
-                    else if (twoFactorResult.IsMaxNumberOfTriesExceeded) {
-                        result.HasTwoFactorCodeExpired = true;
-                        return BadRequest("O número máximo de tentativas foi excedido.", result);
-                    }
-                    else if (twoFactorResult.IsTwoFactorCodeExpired) {
-                        result.HasTwoFactorCodeExpired = true;
-                        return BadRequest("O código de 2 fatores está expirado.", result);
+                    else if (twoFactorResult.IsMaxNumberOfTriesExceeded || twoFactorResult.IsTwoFactorCodeExpired) {
+                        result.IsTwoFactorCodeExpired = true;
+                        return BadRequest("O código de dois fatores expirou.", result);
                     }
                     else if (twoFactorResult.IsTwoFactorCodeInvalid) {
+                        result.IsTwoFactorCodeInvalid = true;
                         return BadRequest("O código 2FA fornecido é inválido", result);
                     }
                 }
@@ -127,8 +123,7 @@ namespace Auth_Turkeysoftware.Controllers
 
                 AddTokensToCookies(refreshToken, accessToken);
 
-                result.HasSucceeded = true;
-                return Ok(result);
+                return Ok("Login realizado com sucesso.");
             }
             catch (Exception e) {
                 Log.Error(e, "Erro Desconhecido.");
@@ -148,7 +143,6 @@ namespace Auth_Turkeysoftware.Controllers
             }
 
             if (!user.TwoFactorEnabled) {
-                result.HasSucceeded = true;
                 return Ok("Usuário não possui autenticação de 2 fatores", result);
             }
 
@@ -169,8 +163,7 @@ namespace Auth_Turkeysoftware.Controllers
             }
 
             await _authenticationService.SendTwoFactorCodeAsync(request.Email);
-            result.HasSucceeded = true;
-            return Ok("Código 2FA enviado.", result);
+            return Ok("Código 2FA enviado.");
         }
 
         /// <summary>

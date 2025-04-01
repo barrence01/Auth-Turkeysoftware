@@ -3,6 +3,7 @@ using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Laraue.EfCoreTriggers.Common.Extensions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Auth_Turkeysoftware.Repositories.Context
 {
@@ -11,6 +12,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+        public DbSet<CacheEntryModel> DistributedCache { get; set; }
         public DbSet<UserSessionModel> LoggedUser { get; set; }
         public DbSet<AdminActionLogModel> AdminActionLog { get; set; }
         public DbSet<HistUserLoginModel> HistUserLogin { get; set; }
@@ -20,7 +22,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
         protected override void OnModelCreating(ModelBuilder builder)
         {
             ///
-            // TABLE: TB_USUAR_SESSION
+            // TABLE: tb_usuar_session
             // MODEL: UserSessionModel
             ///
             builder.Entity<UserSessionModel>()
@@ -40,9 +42,17 @@ namespace Auth_Turkeysoftware.Repositories.Context
                             })));
 
             ///
-            // TABLE: AspNetUsers
-            // MODEL: ApplicationUser
+            // TABLE: tb_hist_aspnet_users
+            // MODEL: HistAplicationUserModel
             ///
+            builder.HasSequence<int>("hist_aspnet_users_sequence")
+                   .StartsAt(1)
+                   .IncrementsBy(1);
+
+            builder.Entity<HistAplicationUserModel>()
+                   .Property(e => e.IdMudanca)
+                   .HasDefaultValueSql("nextval('\"hist_aspnet_users_sequence\"')");
+
             builder.Entity<ApplicationUser>()
                    .AfterInsert(trigger =>
                        trigger.Action(action =>
@@ -77,7 +87,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
 
 
             ///
-            // TABLE: TB_LOG_ADMIN_ACTION
+            // TABLE: tb_log_admin_action
             // MODEL: AdminActionLogModel
             ///
             builder.HasSequence<long>("admin_action_sequence")
@@ -90,7 +100,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
 
 
             ///
-            // TABLE: TB_TEST
+            // TABLE: tb_test
             // MODEL: TestDataModel
             ///
             builder.HasSequence<int>("test_data_sequence")
@@ -100,6 +110,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
             builder.Entity<TestDataModel>()
                    .Property(e => e.IdTest)
                    .HasDefaultValueSql("nextval('\"test_data_sequence\"')");
+
 
             // Para criar um owner/schema
             //modelBuilder.Entity<Customer>()

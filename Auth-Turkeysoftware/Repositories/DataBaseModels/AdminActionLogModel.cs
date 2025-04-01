@@ -1,17 +1,16 @@
-﻿using Auth_Turkeysoftware.Extensions;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 {
-    [Table("TB_LOG_ADMIN_ACTION")]
+    [Table("tb_log_admin_action")]
     public class AdminActionLogModel
     {
         [Key]
         [Column("id_action")]
         public long? IdAction { get; set; }
 
-        [Column("fk_id_usuario", TypeName = "VARCHAR")]
+        [Column("fk_id_usuario")]
         [MaxLength(255)]
         [Required]
         public string? FkIdUsuario { get; set; }

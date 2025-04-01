@@ -1,6 +1,7 @@
 ﻿using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
+using Auth_Turkeysoftware.Services.DistributedCacheService;
 using Auth_Turkeysoftware.Services.MailService;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Cryptography;
@@ -10,13 +11,14 @@ namespace Auth_Turkeysoftware.Services
     public class AuthenticationService : IAuthenticationService
     {
         private readonly IEmailService _emailService;
-        private readonly IMemoryCache _cache;
+        private readonly IDistributedCacheService _cache;
         private readonly ILogger<AuthenticationService> _logger;
+        private const int TWO_FACTOR_CODE_LIFE_LIMIT = 10;
 
-        public AuthenticationService(IEmailService emailService, IMemoryCache cache, ILogger<AuthenticationService> logger)
+        public AuthenticationService(IEmailService emailService, IDistributedCacheService cacheService, ILogger<AuthenticationService> logger)
         {
             _emailService = emailService;
-            _cache = cache;
+            _cache = cacheService;
             _logger = logger;
         }
 
@@ -24,10 +26,10 @@ namespace Auth_Turkeysoftware.Services
         public async Task SendTwoFactorCodeAsync(string email)
         {
             string code = RandomNumberGenerator.GetInt32(1000000, 9999999).ToString();
-            TwoFactorAuthDTO twoFactorDto = new TwoFactorAuthDTO(code);
+            TwoFactorDTO twoFactorDto = new TwoFactorDTO { TwoFactorCode = code };
 
             string cacheKey = Get2FACacheKey(email);
-            _cache.Set(cacheKey, twoFactorDto, TimeSpan.FromMinutes(5));
+            await _cache.SetAsync(cacheKey, twoFactorDto, TimeSpan.FromMinutes(TWO_FACTOR_CODE_LIFE_LIMIT));
 
             var emailRequest = new SendEmailDTO
             {
@@ -36,11 +38,11 @@ namespace Auth_Turkeysoftware.Services
             };
             emailRequest.To.Add(email);
 
-            await _emailService.SendEmailAsync(emailRequest);
+            //await _emailService.SendEmailAsync(emailRequest);
         }
 
         /// <inheritdoc/>
-        public TwoFactorValidationDTO VerifyTwoFactor(ApplicationUser user, string? twoFactorCode)
+        public async Task<TwoFactorValidationDTO> VerifyTwoFactor(ApplicationUser user, string? twoFactorCode)
         {
             var result = new TwoFactorValidationDTO();
 
@@ -53,23 +55,22 @@ namespace Auth_Turkeysoftware.Services
                 return result;
             }
 
-            string cacheKey = Get2FACacheKey(user.Email);
-            if (!_cache.TryGetValue(cacheKey, out TwoFactorAuthDTO storedTwoFactorDto) || storedTwoFactorDto == null) {
+            TwoFactorDTO? storedTwoFactorDto = await _cache.GetAsync<TwoFactorDTO>(Get2FACacheKey(user.Email));
+            if (storedTwoFactorDto == null) {
                 result.IsTwoFactorCodeExpired = true;
                 return result;
             }
 
             storedTwoFactorDto.NumberOfTries += 1;
+            await _cache.SetAsync(Get2FACacheKey(user.Email), storedTwoFactorDto, TimeSpan.FromMinutes(TWO_FACTOR_CODE_LIFE_LIMIT));
 
             if (storedTwoFactorDto.NumberOfTries >= 5) {
                 result.IsMaxNumberOfTriesExceeded = true;
                 return result;
             }
 
-            storedTwoFactorDto.NumberOfTries += 1;
-
             if (storedTwoFactorDto.TwoFactorCode == twoFactorCode) {
-                _cache.Remove(cacheKey);
+                await _cache.RemoveAsync(Get2FACacheKey(user.Email));
                 return result;
             }
             else {

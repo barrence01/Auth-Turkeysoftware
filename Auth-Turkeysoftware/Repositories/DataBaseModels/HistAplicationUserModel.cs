@@ -1,15 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
 
 namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 {
-    [Table("TB_HIST_AspNetUsers")]
+    [Table("tb_hist_aspnet_users", Schema = "auth")]
     [Comment("Tracks the changes in the AspNetUsers table")]
-    [Keyless]
     public class HistAplicationUserModel
     {
+        [Key]
+        public int IdMudanca { get; set; }
+
         [Required]
         public string? Id { get; set; }
         [Required]
@@ -25,7 +26,6 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         [Required]
         public string? PhoneNumber { get; set; }
 
-        [Column(TypeName = "VARCHAR")]
         [MaxLength(128)]
         public string? Name { get; set; }
 

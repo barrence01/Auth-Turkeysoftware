@@ -113,7 +113,7 @@ namespace Auth_Turkeysoftware.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Logout()
         {
-            if (!User.Identity.IsAuthenticated) {
+            if (User.Identity == null || !User.Identity.IsAuthenticated) {
                 return Ok();
             }
 

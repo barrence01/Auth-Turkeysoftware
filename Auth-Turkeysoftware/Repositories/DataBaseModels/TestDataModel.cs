@@ -1,11 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Xml.Linq;
 
 namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 {
-    [Table("TB_TEST")]
+    [Table("tb_test", Schema = "auth")]
     public class TestDataModel
     {
         [Key]

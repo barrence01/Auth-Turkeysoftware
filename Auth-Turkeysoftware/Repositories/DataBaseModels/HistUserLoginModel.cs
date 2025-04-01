@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 {
-    [Table("TB_HIST_USUAR_LOGIN")]
+    [Table("tb_hist_usuar_login", Schema = "auth")]
     [Keyless]
     public class HistUserLoginModel
     {

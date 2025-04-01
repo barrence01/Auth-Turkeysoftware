@@ -22,6 +22,7 @@ using Auth_Turkeysoftware.Test.Repositories;
 using Auth_Turkeysoftware.Configurations.Models;
 using Auth_Turkeysoftware.Configurations.Services;
 using Laraue.EfCoreTriggers.PostgreSql.Extensions;
+using Auth_Turkeysoftware.Services.DistributedCacheService;
 
 // Logging provider
 Log.Logger = new LoggerConfiguration()
@@ -52,7 +53,9 @@ try
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApiDocument();
-    builder.Services.AddMemoryCache();
+    builder.Services.AddDistributedMemoryCache();
+    builder.Services.AddScoped<IPostgresCacheRepository, PostgresCacheRepository>();
+    builder.Services.AddScoped<IDistributedCacheService, DistributedCacheService>();
     builder.Services.AddScoped<IUserSessionService, UserSessionService>();
     builder.Services.AddScoped<IUserSessionRepository, UserSessionRepository>();
     builder.Services.AddScoped<IExternalApiService, ExternalApiService>();
@@ -84,8 +87,7 @@ try
     /// Entity Framework
     /// Acesso ao banco de dados
     /////
-    var connectionString = builder.Configuration.GetConnectionString("DatabaseConnection");
-
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     builder.Services.AddDbContextPool<AppDbContext>(options =>
     {
         options.UseNpgsql(connectionString, npgsqlOptions =>
@@ -93,6 +95,19 @@ try
             npgsqlOptions.EnableRetryOnFailure();
         });
         options.UsePostgreSqlTriggers();
+    });
+
+    /////
+    /// Acesso separado para o dbcontext do distributedCache para que atualizações no cache
+    /// não afetem transações em progresso na mesma requisição
+    /////
+    var connectionStringDistributedCache = builder.Configuration.GetConnectionString("CacheDbConnection");
+    builder.Services.AddDbContextPool<CacheDbContext>(options =>
+    {
+        options.UseNpgsql(connectionStringDistributedCache, npgsqlOptions =>
+        {
+            npgsqlOptions.EnableRetryOnFailure();
+        });
     });
 
     /////

@@ -6,8 +6,8 @@ using Auth_Turkeysoftware.Extensions;
 
 namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 {
-    [Table("TB_USUAR_SESSION")]
-    [Index(nameof(FkIdUsuario), Name = "IX_COD_USUAR_SESSION")]
+    [Table("tb_usuar_session", Schema = "auth")]
+    [Index(nameof(FkIdUsuario), Name = "ix_fk_idusuar_session")]
     public class UserSessionModel
     {
         [Key]

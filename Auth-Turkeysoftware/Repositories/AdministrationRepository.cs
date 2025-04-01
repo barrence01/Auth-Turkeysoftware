@@ -9,12 +9,12 @@ namespace Auth_Turkeysoftware.Repositories
     public class AdministrationRepository : IAdministrationRepository
     {
         private static readonly string ERROR_UPDATE_DB = "Houve um erro de acesso ao banco de dados durante a atualização da sessão do usuário";
-        internal AppDbContext dataBaseContext;
+        internal AppDbContext dbContext;
         private readonly ILogger<AdministrationRepository> _logger;
 
         public AdministrationRepository(AppDbContext dataBaseContext, ILogger<AdministrationRepository> logger)
         {
-            this.dataBaseContext = dataBaseContext;
+            this.dbContext = dataBaseContext;
             this._logger = logger;
         }
     }
