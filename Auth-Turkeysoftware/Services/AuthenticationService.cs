@@ -60,9 +60,10 @@ namespace Auth_Turkeysoftware.Services
             }
 
             storedTwoFactorDto.NumberOfTries += 1;
-            await _cache.SetAsync(Get2FACacheKey(user.Email), storedTwoFactorDto, TimeSpan.FromMinutes(TWO_FACTOR_CODE_LIFE_LIMIT));
+            await _cache.SetAsync(Get2FACacheKey(user.Email), storedTwoFactorDto);
 
             if (storedTwoFactorDto.NumberOfTries >= 5) {
+                await _cache.RemoveAsync(Get2FACacheKey(user.Email));
                 result.IsMaxNumberOfTriesExceeded = true;
                 return result;
             }

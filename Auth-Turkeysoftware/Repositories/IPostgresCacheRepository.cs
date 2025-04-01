@@ -17,6 +17,16 @@ namespace Auth_Turkeysoftware.Repositories
         Task SetAsync(string key, object value, TimeSpan expiration);
 
         /// <summary>
+        /// Armazena um valor no cache com uma chave específica.
+        /// Se o objeto em cache não estiver expirado, o atualiza.
+        /// Caso contrário, um objeto de tempo de expiração zerado será criado.
+        /// </summary>
+        /// <param name="key">A chave única para o valor armazenado.</param>
+        /// <param name="value">O valor a ser armazenado no cache.</param>
+        /// <param name="keepExpTime">Flag que indica se deve ser mantido os valores originais para expiração do objeto armazenado.</param>
+        Task SetAsync(string key, object value, bool keepExpTime);
+
+        /// <summary>
         /// Armazena um valor no cache com uma chave específica e um tempo de expiração.
         /// </summary>
         /// <param name="key">A chave única para o valor armazenado.</param>
@@ -38,15 +48,5 @@ namespace Auth_Turkeysoftware.Repositories
         /// </summary>
         /// <param name="key">A chave única do valor a ser removido.</param>
         Task RemoveAsync(string key);
-
-        /// <summary>
-        /// Obtém uma lista de entradas de cache que correspondem a um campo JSON específico.
-        /// </summary>
-        /// <param name="idPattern">Padrão de ID para filtrar as entradas de cache.</param>
-        /// <param name="fieldName">Nome do campo JSON a ser filtrado.</param>
-        /// <param name="fieldValue">Valor do campo JSON a ser filtrado.</param>
-        /// <param name="useLikeId">Indica se deve usar LIKE para o padrão de ID.</param>
-        /// <returns>Uma lista de entradas de cache que correspondem aos critérios fornecidos.</returns>
-        Task<List<CacheEntryModel>> GetEntitiesByJsonField(string idPattern, string fieldName, string fieldValue, bool useLikeId);
     }
 }

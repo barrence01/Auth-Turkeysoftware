@@ -1,7 +1,6 @@
 ﻿using Auth_Turkeysoftware.Configurations.Services;
 using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Enums;
-using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services;
@@ -11,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace Auth_Turkeysoftware.Test.Controllers
 {
@@ -44,7 +44,8 @@ namespace Auth_Turkeysoftware.Test.Controllers
         {
             Log.Information("Hello, world!");
             Log.Information("Doing magic asynchronously!");
-            await _testDataRepository.AddData();
+            Log.Information(JsonSerializer.Serialize("text"));
+            //await _testDataRepository.AddData();
             // Simulate a long running task
             //Thread.Sleep(5000);
             //await Task.Run(() =>
@@ -55,7 +56,7 @@ namespace Auth_Turkeysoftware.Test.Controllers
             //});
             //var email2 = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
             //Log.Information();
-            return BadRequest(await _testDataRepository.ReadData());
+            return BadRequest();
         }
 
         [HttpPost]

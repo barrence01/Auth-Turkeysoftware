@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Auth_Turkeysoftware.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250401192840_Inicial")]
+    [Migration("20250401233103_Inicial")]
     partial class Inicial
     {
         /// <inheritdoc />
@@ -273,28 +273,6 @@ namespace Auth_Turkeysoftware.Migrations
                     b.ToTable("tb_hist_usuar_login", "auth");
                 });
 
-            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.TestDataModel", b =>
-                {
-                    b.Property<string>("IdTest")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("text")
-                        .HasColumnName("id_test")
-                        .HasDefaultValueSql("nextval('\"test_data_sequence\"')");
-
-                    b.Property<string>("dsString")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("ds_string");
-
-                    b.Property<int>("number")
-                        .HasColumnType("integer")
-                        .HasColumnName("nr_number");
-
-                    b.HasKey("IdTest");
-
-                    b.ToTable("tb_test", "auth");
-                });
-
             modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.UserSessionModel", b =>
                 {
                     b.Property<string>("IdSessao")
@@ -366,6 +344,28 @@ namespace Auth_Turkeysoftware.Migrations
                         });
 
                     b.HasAnnotation("LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL", "CREATE FUNCTION \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_usuar_login\" (\"id_sessao\", \"fk_id_usuario\", \"dt_inclusao\", \"nm_estado\", \"nm_provedora\", \"nr_ip\", \"nm_platform\", \"ds_userAgent\", \"DbOperationType\") SELECT NEW.\"id_sessao\", \r\n  NEW.\"fk_id_usuario\", \r\n  NEW.\"dt_inclusao\", \r\n  NEW.\"nm_estado\", \r\n  NEW.\"nm_provedora\", \r\n  NEW.\"nr_ip\", \r\n  NEW.\"nm_platform\", \r\n  NEW.\"ds_userAgent\", \r\n  'I';\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL AFTER INSERT\r\nON \"auth\".\"tb_usuar_session\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"();");
+                });
+
+            modelBuilder.Entity("Auth_Turkeysoftware.Test.Repositories.Models.TestDataModel", b =>
+                {
+                    b.Property<string>("IdTest")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasColumnName("id_test")
+                        .HasDefaultValueSql("nextval('\"test_data_sequence\"')");
+
+                    b.Property<string>("dsString")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("ds_string");
+
+                    b.Property<int>("number")
+                        .HasColumnType("integer")
+                        .HasColumnName("nr_number");
+
+                    b.HasKey("IdTest");
+
+                    b.ToTable("tb_test", "auth");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

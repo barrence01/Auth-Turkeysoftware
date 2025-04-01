@@ -16,6 +16,15 @@ namespace Auth_Turkeysoftware.Services.DistributedCacheService
         Task SetAsync(string key, object value, TimeSpan expiration);
 
         /// <summary>
+        /// Armazena um valor no cache com uma chave específica.<br/>
+        /// Se o objeto em cache não estiver expirado, o atualiza.
+        /// Caso contrário, um objeto de tempo de expiração zerado será criado.
+        /// </summary>
+        /// <param name="key">A chave única para o valor armazenado.</param>
+        /// <param name="value">O valor a ser armazenado no cache.</param>
+        Task SetAsync(string key, object value);
+
+        /// <summary>
         /// Armazena um valor no cache com uma chave específica e um tempo de expiração.
         /// </summary>
         /// <param name="key">A chave única para o valor armazenado.</param>

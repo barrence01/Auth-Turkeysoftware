@@ -5,9 +5,9 @@ namespace Auth_Turkeysoftware.Services.DistributedCacheService
 {
     public class DistributedCacheService : IDistributedCacheService
     {
-        private readonly IPostgresCacheRepository _cacheService;
+        private readonly IPostgresCacheRepository _cacheRepository;
         public DistributedCacheService(IPostgresCacheRepository postgresCacheRepository) { 
-            _cacheService = postgresCacheRepository;
+            _cacheRepository = postgresCacheRepository;
         }
 
         /// <inheritdoc/>
@@ -20,7 +20,20 @@ namespace Auth_Turkeysoftware.Services.DistributedCacheService
                 throw new ArgumentException("A chave não pode ter mais de 255 caracteres.", nameof(key));
             }
 
-            await _cacheService.SetAsync(key, value, expiration);
+            await _cacheRepository.SetAsync(key, value, expiration);
+        }
+
+        /// <inheritdoc/>
+        public async Task SetAsync(string key, object value)
+        {
+            if (string.IsNullOrWhiteSpace(key)) {
+                throw new ArgumentException("A chave não pode ser nula ou vazia.", nameof(key));
+            }
+            if (key.Length > 255) {
+                throw new ArgumentException("A chave não pode ter mais de 255 caracteres.", nameof(key));
+            }
+
+            await _cacheRepository.SetAsync(key, value, true);
         }
 
         /// <inheritdoc/>
@@ -36,19 +49,19 @@ namespace Auth_Turkeysoftware.Services.DistributedCacheService
                 throw new ArgumentException("Data de expiração final(AbsoluteExpiration) não pode ser menor que a data de expiração(expiration).", nameof(key));
             }
 
-            await _cacheService.SetAsync(key, value, expiration, options);
+            await _cacheRepository.SetAsync(key, value, expiration, options);
         }
 
         /// <inheritdoc/>
         public async Task<T?> GetAsync<T>(string key)
         {
-            return await _cacheService.GetAsync<T>(key);
+            return await _cacheRepository.GetAsync<T>(key);
         }
 
         /// <inheritdoc/>
         public async Task RemoveAsync(string key)
         {
-            await _cacheService.RemoveAsync(key);
+            await _cacheRepository.RemoveAsync(key);
         }
     }
 }
