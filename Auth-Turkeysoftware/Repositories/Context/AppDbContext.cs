@@ -4,6 +4,8 @@ using Laraue.EfCoreTriggers.Common.Extensions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Reflection.Emit;
+using System.Xml;
 
 namespace Auth_Turkeysoftware.Repositories.Context
 {
@@ -21,6 +23,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
+
             ///
             // TABLE: tb_usuar_session
             // MODEL: UserSessionModel

@@ -151,8 +151,8 @@ namespace Auth_Turkeysoftware.Migrations
                     b.Property<DateTimeOffset>("ExpiresAtTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("SlidingExpiration")
-                        .HasColumnType("bigint");
+                    b.Property<TimeSpan?>("SlidingExpiration")
+                        .HasColumnType("interval");
 
                     b.Property<byte[]>("Value")
                         .IsRequired()

@@ -1,7 +1,5 @@
 ﻿using Auth_Turkeysoftware.Repositories;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
-using Microsoft.EntityFrameworkCore;
-using System.Text;
 
 namespace Auth_Turkeysoftware.Services.DistributedCacheService
 {
@@ -23,6 +21,22 @@ namespace Auth_Turkeysoftware.Services.DistributedCacheService
             }
 
             await _cacheService.SetAsync(key, value, expiration);
+        }
+
+        /// <inheritdoc/>
+        public async Task SetAsync(string key, object value, TimeSpan expiration, CacheEntryOptions options)
+        {
+            if (string.IsNullOrWhiteSpace(key)) {
+                throw new ArgumentException("A chave não pode ser nula ou vazia.", nameof(key));
+            }
+            if (key.Length > 255) {
+                throw new ArgumentException("A chave não pode ter mais de 255 caracteres.", nameof(key));
+            }
+            if (options.AbsoluteExpiration.HasValue && (options.AbsoluteExpiration <= DateTimeOffset.UtcNow.Add(expiration))) {
+                throw new ArgumentException("Data de expiração final(AbsoluteExpiration) não pode ser menor que a data de expiração(expiration).", nameof(key));
+            }
+
+            await _cacheService.SetAsync(key, value, expiration, options);
         }
 
         /// <inheritdoc/>

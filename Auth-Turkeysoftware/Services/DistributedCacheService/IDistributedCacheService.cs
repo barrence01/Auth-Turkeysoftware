@@ -1,4 +1,6 @@
-﻿namespace Auth_Turkeysoftware.Services.DistributedCacheService
+﻿using Auth_Turkeysoftware.Repositories.DataBaseModels;
+
+namespace Auth_Turkeysoftware.Services.DistributedCacheService
 {
     /// <summary>
     /// Interface para o serviço de cache distribuído.
@@ -12,6 +14,15 @@
         /// <param name="value">O valor a ser armazenado no cache.</param>
         /// <param name="expiration">O tempo de expiração do cache.</param>
         Task SetAsync(string key, object value, TimeSpan expiration);
+
+        /// <summary>
+        /// Armazena um valor no cache com uma chave específica e um tempo de expiração.
+        /// </summary>
+        /// <param name="key">A chave única para o valor armazenado.</param>
+        /// <param name="value">O valor a ser armazenado no cache.</param>
+        /// <param name="expiration">O tempo de expiração do cache.</param>
+        /// <param name="options">Opções extras para extensão do prazo de expiração do cache.</param>
+        Task SetAsync(string key, object value, TimeSpan expiration, CacheEntryOptions options);
 
         /// <summary>
         /// Recupera um valor do cache com base na chave fornecida.

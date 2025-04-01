@@ -72,7 +72,7 @@ namespace Auth_Turkeysoftware.Migrations
                     Id = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Value = table.Column<byte[]>(type: "bytea", nullable: false),
                     ExpiresAtTime = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    SlidingExpiration = table.Column<long>(type: "bigint", nullable: true),
+                    SlidingExpiration = table.Column<TimeSpan>(type: "interval", nullable: true),
                     AbsoluteExpiration = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>

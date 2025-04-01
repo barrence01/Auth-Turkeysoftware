@@ -16,8 +16,14 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         [Required]
         public DateTimeOffset ExpiresAtTime { get; set; }
 
-        public long? SlidingExpiration { get; set; } 
+        public TimeSpan? SlidingExpiration { get; set; } 
 
-        public DateTimeOffset? AbsoluteExpiration { get; set; } 
+        public DateTimeOffset? AbsoluteExpiration { get; set; }
+    }
+
+    public class CacheEntryOptions {
+        public TimeSpan? SlidingExpiration { get; init; }
+
+        public DateTimeOffset? AbsoluteExpiration { get; init; }
     }
 }
