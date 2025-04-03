@@ -39,7 +39,8 @@ namespace Auth_Turkeysoftware.Repositories.Context
                                 IP = userSessionModel.New.IP,
                                 Platform = userSessionModel.New.Platform,
                                 UserAgent = userSessionModel.New.UserAgent,
-                                DbOperationType = (char)DbOperationTypeEnum.INCLUSAO
+                                DbOperationType = (char)DbOperationTypeEnum.INCLUSAO,
+                                DbOperationWhen = DateTime.Now
                             })));
 
             ///
@@ -68,7 +69,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
                                 PhoneNumber = applicationUser.New.PhoneNumber,
                                 Name = applicationUser.New.Name,
                                 DbOperationType = (char)DbOperationTypeEnum.INCLUSAO,
-                                DataInclusao = DateTime.Now
+                                DbOperationWhen = DateTime.Now
                             })))
                    .AfterUpdate(trigger =>
                         trigger.Action(action =>
@@ -83,7 +84,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
                                 PhoneNumber = applicationUser.New.PhoneNumber,
                                 Name = applicationUser.New.Name,
                                 DbOperationType = (char)DbOperationTypeEnum.ALTERACAO,
-                                DataInclusao = DateTime.Now
+                                DbOperationWhen = DateTime.Now
                             })));
 
 

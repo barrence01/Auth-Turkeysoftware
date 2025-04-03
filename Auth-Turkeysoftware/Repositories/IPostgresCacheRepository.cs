@@ -17,7 +17,7 @@ namespace Auth_Turkeysoftware.Repositories
         Task SetAsync(string key, object value, TimeSpan expiration);
 
         /// <summary>
-        /// Armazena um valor no cache com uma chave específica.
+        /// Armazena um valor no cache com uma chave específica.<br/>
         /// Se o objeto em cache não estiver expirado, o atualiza.
         /// Caso contrário, um objeto de tempo de expiração zerado será criado.
         /// </summary>

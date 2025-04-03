@@ -46,6 +46,10 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         [MaxLength(150)]
         public string? UserAgent { get; set; }
 
+        [Required]
         public char DbOperationType { get; set; }
+
+        [Required]
+        public DateTime? DbOperationWhen { get; set; }
     }
 }

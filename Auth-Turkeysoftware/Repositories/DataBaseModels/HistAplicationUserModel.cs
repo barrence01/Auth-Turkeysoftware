@@ -32,8 +32,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         [Required]
         public char? DbOperationType { get; set; }
 
-        [Column("dt_inclusao")]
         [Required]
-        public DateTime? DataInclusao { get; set; }
+        public DateTime? DbOperationWhen { get; set; }
     }
 }

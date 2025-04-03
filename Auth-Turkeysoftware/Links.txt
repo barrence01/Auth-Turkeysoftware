@@ -144,3 +144,45 @@ Obter usuarios conectados
 Restart postgreSQL
 net stop postgresql
 net start postgresql
+
+
+
+
+
+
+# Exemplo de trigger personalizada
+
+                            action.ExecuteRawSql(@"
+                                INSERT INTO ""auth"".""tb_hist_aspnet_users"" (
+                                    ""Id"", ""UserName"", ""NormalizedUserName"", ""Email"", ""NormalizedEmail"",
+                                    ""PasswordHash"", ""PhoneNumber"", ""Name"", ""DbOperationInField"",
+                                    ""DbOperationType"", ""DbOperationWhen""
+                                )
+                                SELECT
+                                    {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7},
+                                    TRIM(TRAILING ',' FROM
+                                        CASE WHEN {8} IS DISTINCT FROM {1} THEN 'UserName,' ELSE '' END ||
+                                        CASE WHEN {9} IS DISTINCT FROM {5} THEN 'PasswordHash,' ELSE '' END ||
+                                        CASE WHEN {10} IS DISTINCT FROM {6} THEN 'PhoneNumber,' ELSE '' END ||
+                                        CASE WHEN {11} IS DISTINCT FROM {7} THEN 'Name' ELSE NULL END
+                                    ),
+                                    'A',
+                                    NOW();
+                                ",
+                                // Parameter bindings (NEW values):
+                                tableRefs => tableRefs.New.Id,
+                                tableRefs => tableRefs.New.UserName,
+                                tableRefs => tableRefs.New.NormalizedUserName,
+                                tableRefs => tableRefs.New.Email,
+                                tableRefs => tableRefs.New.NormalizedEmail,
+                                tableRefs => tableRefs.New.PasswordHash,
+                                tableRefs => tableRefs.New.PhoneNumber,
+                                tableRefs => tableRefs.New.Name,
+                                // OLD values for comparison:
+                                tableRefs => tableRefs.Old.UserName,
+                                tableRefs => tableRefs.Old.PasswordHash,
+                                tableRefs => tableRefs.Old.PhoneNumber,
+                                tableRefs => tableRefs.Old.Name
+                            )
+                        )
+                    );
