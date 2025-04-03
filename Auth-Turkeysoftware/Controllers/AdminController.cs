@@ -3,6 +3,7 @@ using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
+using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Models.Response;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
@@ -33,8 +34,26 @@ namespace Auth_Turkeysoftware.Controllers
             _admnistrationService = admnistrationActionService;
         }
 
-        [HttpPost]
-        [Route("ListUserActiveSessions")]
+        /// <summary>
+        /// Lista todas as sessões ativas de um usuário específico (paginação).
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/Admin/ListUserActiveSessions<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com",
+        ///         "pagina": 1
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Dados para consulta (email e página).</param>
+        /// <returns>Lista paginada de sessões ativas.</returns>
+        /// <response code="200">Retorna a lista de sessões ativas.</response>
+        /// <response code="400">Usuário não encontrado ou parâmetros inválidos.</response>
+        [HttpPost("ListUserActiveSessions")]
+        [ProducesResponseType(typeof(Response<PaginationDTO<UserSessionResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ListUserActiveSessions([FromBody] ListAllUserSessionsRequest request)
         {
             try
@@ -49,15 +68,38 @@ namespace Auth_Turkeysoftware.Controllers
 
                 return Ok(userActiveSessions);
             }
-            catch (BusinessRuleException e)
+            catch (BusinessException e)
             {
                 return BadRequest(e.Message);
             }
         }
 
-        [HttpPost]
-        [Route("ChangeUserPassword")]
+        /// <summary>
+        /// Altera a senha de um usuário (requer permissão Master).
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/Admin/ChangeUserPassword<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com",
+        ///         "newPassword": "NovaSenha@123",
+        ///         "confirmPassword": "NovaSenha@123"
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Dados para alteração de senha.</param>
+        /// <returns>Resultado da operação.</returns>
+        /// <response code="200">Senha alterada com sucesso.</response>
+        /// <response code="400">Usuário não encontrado ou falha na operação.</response>
+        /// <response code="401">Não autorizado.</response>
+        /// <response code="403">Acesso negado (requer role Master).</response>
+        [HttpPost("ChangeUserPassword")]
         [Authorize(Roles = nameof(UserRolesEnum.Master))]
+        [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> ChangeUserPassword([FromBody] ForceChangePasswordRequest request)
         {
             try
@@ -75,18 +117,37 @@ namespace Auth_Turkeysoftware.Controllers
 
                 return Ok();
             }
-            catch (BusinessRuleException e)
+            catch (BusinessException e)
             {
                 return BadRequest(e.Message);
             }
         }
 
-        [HttpPost]
-        [Route("LockUserAccount")]
+        /// <summary>
+        /// Bloqueia uma conta de usuário.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/Admin/LockUserAccount<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com"
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Email do usuário a ser bloqueado.</param>
+        /// <returns>Status da conta após bloqueio.</returns>
+        /// <response code="200">Conta bloqueada com sucesso.</response>
+        /// <response code="400">Usuário não encontrado.</response>
+        /// <response code="401">Não autorizado.</response>
+        [HttpPost("LockUserAccount")]
+        [ProducesResponseType(typeof(Response<UserAccountStatusResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> LockUserAccount([FromBody] EmailRequest request) {
 
             var user = await _userManager.FindByNameAsync(request.Email);
-            if (user == null) {
+            if (user == null || user.UserName == null) {
                 return BadRequest(USER_NOT_FOUND);
             }
 
@@ -96,12 +157,31 @@ namespace Auth_Turkeysoftware.Controllers
             return Ok("A conta foi bloqueada com sucesso.", new UserAccountStatusResponse(user.UserName, user.LockoutEnabled && user.LockoutEnd > DateTime.Now));
         }
 
-        [HttpPost]
-        [Route("UnlockUserAccount")]
+        /// <summary>
+        /// Desbloqueia uma conta de usuário.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/Admin/UnlockUserAccount<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com"
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Email do usuário a ser desbloqueado.</param>
+        /// <returns>Status da conta após desbloqueio.</returns>
+        /// <response code="200">Conta desbloqueada com sucesso.</response>
+        /// <response code="400">Usuário não encontrado.</response>
+        /// <response code="401">Não autorizado.</response>
+        [HttpPost("UnlockUserAccount")]
+        [ProducesResponseType(typeof(Response<UserAccountStatusResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> UnlockUserAccount([FromBody] EmailRequest request)
         {
             var user = await _userManager.FindByNameAsync(request.Email);
-            if (user == null) {
+            if (user == null || user.UserName == null) {
                 return BadRequest(USER_NOT_FOUND);
             }
 
@@ -112,8 +192,28 @@ namespace Auth_Turkeysoftware.Controllers
             return Ok("A conta foi desbloqueada com sucesso.", new UserAccountStatusResponse(user.UserName, user.LockoutEnabled && user.LockoutEnd > DateTime.Now));
         }
 
-        [HttpPost]
-        [Route("RevokeUserSession")]
+        /// <summary>
+        /// Revoga uma sessão específica de um usuário.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/Admin/RevokeUserSession<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com",
+        ///         "sessionId": "abc123"
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Dados para revogação (email e ID da sessão).</param>
+        /// <returns>Resultado da operação.</returns>
+        /// <response code="200">Sessão revogada com sucesso.</response>
+        /// <response code="400">Usuário não encontrado ou sessão inválida.</response>
+        /// <response code="401">Não autorizado.</response>
+        [HttpPost("RevokeUserSession")]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> RevokeUserSession([FromBody] RevokeUserSessionRequest request)
         {
             try
@@ -127,14 +227,33 @@ namespace Auth_Turkeysoftware.Controllers
 
                 return Ok("Sessão revogada com sucesso.");
             }
-            catch (BusinessRuleException e)
+            catch (BusinessException e)
             {
                 return BadRequest(e.Message);
             }
         }
 
-        [HttpPost]
-        [Route("RevokeAllUserSession")]
+        /// <summary>
+        /// Revoga todas as sessões ativas de um usuário.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/Admin/RevokeAllUserSession<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com"
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Email do usuário.</param>
+        /// <returns>Resultado da operação.</returns>
+        /// <response code="200">Todas as sessões foram revogadas.</response>
+        /// <response code="400">Usuário não encontrado.</response>
+        /// <response code="401">Não autorizado.</response>
+        [HttpPost("RevokeAllUserSession")]
+        [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> RevokeAllUserSession([FromBody] EmailRequest request)
         {
             try
@@ -148,18 +267,37 @@ namespace Auth_Turkeysoftware.Controllers
 
                 return Ok();
             }
-            catch (BusinessRuleException e)
+            catch (BusinessException e)
             {
                 return BadRequest(e.Message);
             }
         }
 
-        [HttpPost]
-        [Route("GetUserAccountStatus")]
+        /// <summary>
+        /// Obtém o status de bloqueio de uma conta de usuário.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:
+        /// 
+        ///     POST /api/Admin/GetUserAccountStatus<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com"<br/>
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Email do usuário.</param>
+        /// <returns>Status da conta e informação de bloqueio.</returns>
+        /// <response code="200">Retorna o status da conta.</response>
+        /// <response code="400">Usuário não encontrado.</response>
+        /// <response code="401">Não autorizado.</response>
+        [HttpPost("GetUserAccountStatus")]
+        [ProducesResponseType(typeof(Response<UserAccountStatusResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetUserAccountStatus([FromBody] EmailRequest request)
         {
             var user = await _userManager.FindByNameAsync(request.Email);
-            if (user == null) {
+            if (user == null || user.UserName == null) {
                 return BadRequest(USER_NOT_FOUND);
             }
 
@@ -174,8 +312,27 @@ namespace Auth_Turkeysoftware.Controllers
             return Ok(returnMessage, new UserAccountStatusResponse(user.UserName, userLockoutStatus));
         }
 
-        [HttpPost]
-        [Route("GetUserInformation")]
+        /// <summary>
+        /// Obtém informações cadastrais de um usuário.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/Admin/GetUserInformation<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com"
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Email do usuário.</param>
+        /// <returns>Dados cadastrais do usuário.</returns>
+        /// <response code="200">Retorna as informações do usuário.</response>
+        /// <response code="400">Usuário não encontrado.</response>
+        /// <response code="401">Não autorizado.</response>
+        [HttpPost("GetUserInformation")]
+        [ProducesResponseType(typeof(Response<UserInfoResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetUserInformation([FromBody] EmailRequest request)
         {
             var user = await _userManager.FindByNameAsync(request.Email);

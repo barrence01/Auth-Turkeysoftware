@@ -10,7 +10,7 @@ namespace Auth_Turkeysoftware.Models.Request
         public string Email
         {
             get => _email;
-            set => _email = value?.ToLower();
+            set => _email = value.ToLower();
         }
     }
 }

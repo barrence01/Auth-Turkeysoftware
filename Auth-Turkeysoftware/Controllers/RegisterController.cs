@@ -6,6 +6,7 @@ using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Microsoft.AspNetCore.Authorization;
+using Auth_Turkeysoftware.Models.Response;
 
 namespace Auth_Turkeysoftware.Controllers
 {
@@ -27,9 +28,29 @@ namespace Auth_Turkeysoftware.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
-        [Route("register-user")]
+        /// <summary>
+        /// Registra um novo usuário no sistema com perfil padrão.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/Register/register-user<br/>
+        ///     {
+        ///         "email": "novo.usuario@exemplo.com",
+        ///         "name": "Fulano da Silva",
+        ///         "phoneNumber": "11999999999",
+        ///         "password": "SenhaForte@123"
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="model">Dados para cadastro do novo usuário.</param>
+        /// <returns>Resultado da operação de cadastro.</returns>
+        /// <response code="200">Usuário registrado com sucesso.</response>
+        /// <response code="400">Falha no registro (usuário já existe ou dados inválidos).</response>
+        [HttpPost("register-user")]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest model)
         {
             var userExists = await _userManager.FindByNameAsync(model.Email);

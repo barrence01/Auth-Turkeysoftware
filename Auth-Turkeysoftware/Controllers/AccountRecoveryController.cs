@@ -5,6 +5,7 @@ using Auth_Turkeysoftware.Controllers.Base;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
+using Auth_Turkeysoftware.Models.Response;
 
 namespace Auth_Turkeysoftware.Controllers
 {
@@ -30,12 +31,26 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         /// <summary>
-        /// Envia um e-mail de recuperação de senha para o usuário.
-        /// TODO: Colocar o domínio correto da página de recuperação.
+        /// Envia um e-mail de recuperação de senha para o usuário. TODO: Colocar o domínio correto da página de recuperação.
         /// </summary>
-        /// <param name="request">O modelo de solicitação de recuperação de senha.</param>
-        /// <returns>Retorna um status de sucesso ou erro.</returns>
+        /// <remarks>
+        /// Exemplo de requisição:
+        /// 
+        ///     POST /api/AccountRecovery/forgot-password
+        ///     {
+        ///         "email": "usuario@exemplo.com"
+        ///     }
+        ///     
+        /// O e-mail conterá um link para redefinição de senha com o domínio da aplicação.
+        /// </remarks>
+        /// <param name="request">Dados do usuário para recuperação de senha.</param>
+        /// <returns>Confirmação do envio do e-mail.</returns>
+        /// <response code="200">E-mail de recuperação enviado com sucesso.</response>
+        /// <response code="400">Endereço de e-mail inválido ou não encontrado.</response>
         [HttpPost("forgot-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             string userEmail = request.Email.ToLower();
@@ -52,11 +67,28 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         /// <summary>
-        /// Reseta a senha do usuário utilizando o código de redefinição.
+        /// Redefine a senha do usuário utilizando um token de redefinição válido.
         /// </summary>
-        /// <param name="request">O modelo de solicitação de redefinição de senha.</param>
-        /// <returns>Retorna um status de sucesso ou erro.</returns>
+        /// <remarks>
+        /// Exemplo de requisição:
+        /// 
+        ///     POST /api/AccountRecovery/reset-password
+        ///     {
+        ///         "email": "usuario@exemplo.com",
+        ///         "resetCode": "token-gerado",
+        ///         "newPassword": "NovaSenha@123"
+        ///     }
+        ///     
+        /// O token se encontra como paramêtro na URL recebida por email, depois de solicitar /api/AccountRecovery/forgot-password
+        /// </remarks>
+        /// <param name="request">Dados para redefinição de senha.</param>
+        /// <returns>Confirmação da alteração de senha.</returns>
+        /// <response code="200">Senha redefinida com sucesso.</response>
+        /// <response code="400">Token inválido, e-mail não encontrado ou senha não atende aos requisitos.</response>
         [HttpPost("reset-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(Response<string>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<List<string>>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
             string userEmail = request.Email.ToLower();

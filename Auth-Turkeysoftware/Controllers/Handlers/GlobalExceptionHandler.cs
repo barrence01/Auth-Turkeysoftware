@@ -1,4 +1,8 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore.Storage;
+using Npgsql;
+using System.Net.Sockets;
 using System.Text.Json;
 
 namespace Auth_Turkeysoftware.Controllers.Handlers
@@ -8,9 +12,25 @@ namespace Auth_Turkeysoftware.Controllers.Handlers
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
                                                     CancellationToken cancellationToken)
         {
-            httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            int statusCode;
+            string title;
+            switch (exception)
+            {
+                case SocketException:
+                case NpgsqlException:
+                case TimeoutException:
+                case RetryLimitExceededException:
+                    statusCode = StatusCodes.Status503ServiceUnavailable;
+                    title = "Service Unavailable";
+                    break;
+                default:
+                    statusCode = StatusCodes.Status500InternalServerError;
+                    title = "Internal Server error";
+                    break;
+            }
+            httpContext.Response.StatusCode = statusCode;
             await httpContext.Response.WriteAsync(JsonSerializer.Serialize(new Response(
-                                                    StatusCodes.Status500InternalServerError, "Error", "Internal Server error", exception.Message)), cancellationToken);
+                                                    statusCode, "Error", title, exception.Message)), cancellationToken);
 
             return true;
         }

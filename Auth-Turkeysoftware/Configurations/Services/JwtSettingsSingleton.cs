@@ -15,5 +15,48 @@ namespace Auth_Turkeysoftware.Configurations.Services
         {
             return _jwtSettings;
         }
+
+        public string GetJwtAccessSecretKey()
+        {
+            return GetJwtSettings().AccessSecretKey;
+        }
+
+        public string GetJwtRefreshSecretKey()
+        {
+            return GetJwtSettings().RefreshSecretKey;
+        }
+
+        public string GetJwtDomain()
+        {
+            return GetJwtSettings().Domain;
+        }
+
+        public string GetJwtIssuer()
+        {
+            return GetJwtSettings().Domain;
+        }
+
+        public string GetJwtAudience()
+        {
+            return GetJwtSettings().Domain;
+        }
+
+        public int GetRefreshTokenValidityInMinutes()
+        {
+            return GetJwtSettings().RefreshTokenValidityInMinutes;
+        }
+
+        public int GetAccessTokenValidityInMinutes()
+        {
+            return GetJwtSettings().AccessTokenValidityInMinutes;
+        }
+        public string GetRefreshTokenPath()
+        {
+            return GetJwtSettings().RefreshTokenPath;
+        }
+        public string GetAccessTokenPath()
+        {
+            return GetJwtSettings().AccessTokenPath;
+        }
     }
 }

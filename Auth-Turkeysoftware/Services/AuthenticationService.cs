@@ -40,7 +40,7 @@ namespace Auth_Turkeysoftware.Services
         }
 
         /// <inheritdoc/>
-        public async Task<TwoFactorValidationDTO> VerifyTwoFactor(ApplicationUser user, string? twoFactorCode)
+        public async Task<TwoFactorValidationDTO> VerifyTwoFactorAuthentication(ApplicationUser user, string? twoFactorCode)
         {
             var result = new TwoFactorValidationDTO();
 

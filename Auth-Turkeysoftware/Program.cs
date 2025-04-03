@@ -225,9 +225,13 @@ try
 
     var app = builder.Build();
 
-    app.UseExceptionHandler(o => { }); ;
+    app.UseExceptionHandler(o => { });
 
-    app.UseCors("AllowLocalhost");
+    #if !DEBUG
+        app.UseCors("Production");
+    #else
+        app.UseCors("AllowLocalhost");
+    #endif
 
     app.UseSerilogRequestLogging();
 
@@ -252,7 +256,7 @@ try
     if (app.Environment.IsDevelopment())
     {
         app.UseOpenApi(); /// https://localhost:7157/swagger/index.html
-        app.UseSwaggerUi(); //Add pacote swagger from NSwag.AspNetCore
+        app.UseSwaggerUi(); 
     }
 
     app.UseHttpsRedirection();

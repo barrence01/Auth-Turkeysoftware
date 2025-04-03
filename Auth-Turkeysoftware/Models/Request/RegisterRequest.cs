@@ -6,22 +6,22 @@ namespace Auth_Turkeysoftware.Models.Request
     {
         private string _email = string.Empty;
 
-        [EmailAddress]
-        [Required(ErrorMessage = "Email é obrigatório")]
+        [EmailAddress(ErrorMessage = "O Email fornecido não é válido.")]
+        [Required(ErrorMessage = "O Email é obrigatório")]
         public string Email
         {
             get => _email;
-            set => _email = value?.ToLower();
+            set => _email = value.ToLower();
         }
 
-        [Required(ErrorMessage = "Password é obrigatório")]
-        public string Password { get; set; }
+        [Required(ErrorMessage = "É obrigatório fornecer uma senha")]
+        public string Password { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Nome é obrigatório")]
+        [Required(ErrorMessage = "É obrigatório fornecer um nome")]
         [StringLength(100)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Telefone é obrigatório")]
-        public string PhoneNumber { get; set; }
+        [Required(ErrorMessage = "É obrigatório fornecer um telefone")]
+        public string PhoneNumber { get; set; } = string.Empty;
     }
 }

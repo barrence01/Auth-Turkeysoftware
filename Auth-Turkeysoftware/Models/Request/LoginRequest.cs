@@ -10,12 +10,12 @@ namespace Auth_Turkeysoftware.Models.Request
         public string Email
         {
             get => _email;
-            set => _email = value?.ToLower();
+            set => _email = value.ToLower();
         }
 
         [Required(ErrorMessage = "Password é obrigatório")]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
 
-        public string? TwoFactorCode { get; set; }
+        public string? TwoFactorCode { get; set; } = string.Empty;
     }
 }

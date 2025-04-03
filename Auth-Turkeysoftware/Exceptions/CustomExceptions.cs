@@ -2,18 +2,18 @@
 
 // Classe para exceções de negócio
 [Serializable]
-public class BusinessRuleException : Exception {
+public class BusinessException : Exception {
 
-    public BusinessRuleException() {}
+    public BusinessException() {}
 
-    public BusinessRuleException(string message) : base(message) {}
+    public BusinessException(string message) : base(message) {}
 
-    public BusinessRuleException(string message, Exception innerException) : base(message, innerException) {}
+    public BusinessException(string message, Exception innerException) : base(message, innerException) {}
 
 }
 
 [Serializable]
-public class InvalidSessionException : BusinessRuleException
+public class InvalidSessionException : BusinessException
 {
 
     public InvalidSessionException() { }

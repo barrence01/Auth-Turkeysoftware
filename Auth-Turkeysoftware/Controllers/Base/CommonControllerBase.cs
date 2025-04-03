@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Text.Json.Serialization;
+﻿using Auth_Turkeysoftware.Models.Response;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Auth_Turkeysoftware.Controllers.Base
 {
@@ -18,8 +18,7 @@ namespace Auth_Turkeysoftware.Controllers.Base
         private const string UNAUTHORIZED = "Unauthorized";
         private const string BAD_REQUEST = "BadRequest";
 
-        private static readonly Lazy<List<string>> _emptyStringList = new Lazy<List<string>>(() => new List<string>(0));
-        private static List<string> EmptyStringList => _emptyStringList.Value;
+        private const List<string> EmptyStringList = null;
 
         /// <summary>
         /// Cria uma resposta HTTP com base nos parâmetros fornecidos.
@@ -159,30 +158,5 @@ namespace Auth_Turkeysoftware.Controllers.Base
         /// <returns>Um objeto IActionResult com a resposta HTTP.</returns>
         protected IActionResult Ok<T>(string message, T? data) =>
             CreateResponse(STATUS_200, SUCCESS, message, null, data);
-    }
-
-    public class Response<T>
-    {
-        public int Status { get; }
-
-        public string Title { get; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? Message { get; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public List<string>? Errors { get; }
-
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public T? Data { get; }
-
-        public Response(int status, string title, string? message, List<string>? errors, T? data)
-        {
-            Status = status;
-            Title = title;
-            Message = message;
-            Errors = errors;
-            Data = data;
-        }
     }
 }

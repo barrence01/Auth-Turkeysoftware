@@ -30,7 +30,7 @@ namespace Auth_Turkeysoftware.Test.Repositories
             catch (DbUpdateException e)
             {
                 _logger.LogError(e, "Houve um erro de acesso ao banco de dados durante a inclusão da sessão do usuário.");
-                throw new BusinessRuleException("Não foi possível salvar o registro de login do usuário.");
+                throw new BusinessException("Não foi possível salvar o registro de login do usuário.");
             }
         }
 
@@ -46,7 +46,7 @@ namespace Auth_Turkeysoftware.Test.Repositories
             catch (DbUpdateException e)
             {
                 _logger.LogError(e, "Houve um erro de acesso ao banco de dados durante a inclusão da sessão do usuário.");
-                throw new BusinessRuleException("Não foi possível salvar o registro de login do usuário.");
+                throw new BusinessException("Não foi possível salvar o registro de login do usuário.");
             }
         }
     }

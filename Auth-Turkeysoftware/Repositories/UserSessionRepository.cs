@@ -27,7 +27,7 @@ namespace Auth_Turkeysoftware.Repositories
                 loggedUser.TokenStatus = (char)StatusTokenEnum.ATIVO;
                 loggedUser.DataInclusao = DateTime.Now.ToUniversalTime();
                 if (!loggedUser.IsValidForInclusion()) {
-                    throw new BusinessRuleException("Os campos EmailUsuario, RefreshToken e IP são obrigatórios.");
+                    throw new BusinessException("Os campos EmailUsuario, RefreshToken e IP são obrigatórios.");
                 }
 
                 dbContext.LoggedUser.Add(loggedUser);
@@ -36,7 +36,7 @@ namespace Auth_Turkeysoftware.Repositories
             catch (DbUpdateException e)
             {
                 _logger.LogError(e, "Houve um erro de acesso ao banco de dados durante a inclusão da sessão do usuário.");
-                throw new BusinessRuleException("Não foi possível salvar o registro de login do usuário.");
+                throw new BusinessException("Não foi possível salvar o registro de login do usuário.");
             }
         }
 
@@ -71,7 +71,7 @@ namespace Auth_Turkeysoftware.Repositories
             catch (DbUpdateException e)
             {
                 _logger.LogError(e, ERROR_UPDATE_DB);
-                throw new BusinessRuleException("Não foi possível dar update no registro de login do usuário.");
+                throw new BusinessException("Não foi possível dar update no registro de login do usuário.");
             }
         }
 
@@ -92,7 +92,7 @@ namespace Auth_Turkeysoftware.Repositories
             catch (DbUpdateException e)
             {
                 _logger.LogError(e, ERROR_UPDATE_DB);
-                throw new BusinessRuleException("Não foi possível dar update no registro de login do usuário.");
+                throw new BusinessException("Não foi possível dar update no registro de login do usuário.");
             }
         }
 
@@ -104,7 +104,7 @@ namespace Auth_Turkeysoftware.Repositories
             long qtdRegistros = await this.ListUserActiveSessionsCount(userId, dataLimite);
             int totalPaginas = (int)Math.Ceiling((double)qtdRegistros / (double)tamanhoPagina);
 
-            if (qtdRegistros <= 0 || pagina >= totalPaginas) {
+            if (qtdRegistros <= 0 || pagina > totalPaginas) {
                 return new PaginationDTO<UserSessionResponse>([], pagina, tamanhoPagina, qtdRegistros);
             }
 

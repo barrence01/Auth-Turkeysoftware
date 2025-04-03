@@ -18,6 +18,6 @@ namespace Auth_Turkeysoftware.Services
         /// <param name="user">O usuário tentando autenticar.</param>
         /// <param name="twoFactorCode">O código de autenticação de dois fatores fornecido pelo usuário.</param>
         /// <returns>Um <see cref="TwoFactorValidationDTO"/> contendo o resultado da verificação.</returns>
-        Task<TwoFactorValidationDTO> VerifyTwoFactor(ApplicationUser user, string? twoFactorCode);
+        Task<TwoFactorValidationDTO> VerifyTwoFactorAuthentication(ApplicationUser user, string? twoFactorCode);
     }
 }

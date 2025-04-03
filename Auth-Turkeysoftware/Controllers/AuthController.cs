@@ -42,14 +42,28 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         /// <summary>
-        /// Realiza o login do usuário com base no modelo fornecido.
+        /// Realiza a autenticação do usuário com validação de credenciais e código 2FA quando necessário.
         /// </summary>
-        /// <param name="request">Modelo contendo email e senha do usuário.</param>
-        /// <returns>Retorna 200 se OK.</returns>
-        [HttpPost]
-        [Route("login")]
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/auth/login<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com",
+        ///         "password": "SenhaSegura123",
+        ///         "twoFactorCode": "123456" (Obrigatório apenas se 2FA estiver habilitado)
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Dados de login (email, senha e código 2FA quando aplicável).</param>
+        /// <returns>Retorna tokens de autenticação em cookies HTTP-only e mensagem de status.</returns>
+        /// <response code="200">Login realizado com sucesso (tokens armazenados em cookies).</response>
+        /// <response code="400">Falha na autenticação (credenciais inválidas, conta bloqueada, 2FA requerido/inválido ou conta não confirmada).</response>
+        [HttpPost("login")]
         [TypeFilter(typeof(LoginFilter))]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             try
@@ -60,24 +74,6 @@ namespace Auth_Turkeysoftware.Controllers
                 if (user == null) {
                     return BadRequest("Email ou senha inválido!", result);
                 }
-
-                TwoFactorValidationDTO twoFactorResult = await _authenticationService.VerifyTwoFactor(user, request.TwoFactorCode);
-                if (!twoFactorResult.HasSucceeded()) { 
-                    result.IsTwoFactorRequired = true;
-
-                    if (twoFactorResult.IsTwoFactorCodeEmpty) {
-                        return BadRequest("É necessário código de autenticação de 2 fatores para o login.", result);
-                    }
-                    else if (twoFactorResult.IsMaxNumberOfTriesExceeded || twoFactorResult.IsTwoFactorCodeExpired) {
-                        result.IsTwoFactorCodeExpired = true;
-                        return BadRequest("O código de dois fatores expirou.", result);
-                    }
-                    else if (twoFactorResult.IsTwoFactorCodeInvalid) {
-                        result.IsTwoFactorCodeInvalid = true;
-                        return BadRequest("O código 2FA fornecido é inválido", result);
-                    }
-                }
-
 
                 var signInresult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
 
@@ -97,10 +93,30 @@ namespace Auth_Turkeysoftware.Controllers
                     return BadRequest("Email ou senha inválido!", result);
                 }
 
+                TwoFactorValidationDTO twoFactorResult = await _authenticationService.VerifyTwoFactorAuthentication(user, request.TwoFactorCode);
+                if (!twoFactorResult.HasSucceeded())
+                {
+                    result.IsTwoFactorRequired = true;
+
+                    if (twoFactorResult.IsTwoFactorCodeEmpty)
+                    {
+                        return BadRequest("É necessário código de autenticação de 2 fatores para o login.", result);
+                    }
+                    else if (twoFactorResult.IsMaxNumberOfTriesExceeded || twoFactorResult.IsTwoFactorCodeExpired)
+                    {
+                        result.IsTwoFactorCodeExpired = true;
+                        return BadRequest("O código de dois fatores expirou.", result);
+                    }
+                    else if (twoFactorResult.IsTwoFactorCodeInvalid)
+                    {
+                        result.IsTwoFactorCodeInvalid = true;
+                        return BadRequest("O código 2FA fornecido é inválido", result);
+                    }
+                }
+
                 var userRoles = await _userManager.GetRolesAsync(user);
                 var userClaims = await _userManager.GetClaimsAsync(user);
 
-                // Serve para não criar tokens com a mesma númeração e identificar a sessão com um id único
                 string newIdSessao = Guid.CreateVersion7().ToString("N");
                 userClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, newIdSessao));
 
@@ -125,13 +141,32 @@ namespace Auth_Turkeysoftware.Controllers
                 return Ok("Login realizado com sucesso.");
             }
             catch (Exception e) {
-                Log.Error(e, "Erro Desconhecido.");
+                Log.Error(e, "Erro Desconhecido: ");
                 return BadRequest("Não foi possível completar o login. Por favor, tente novamente mais tarde.");
             }
         }
 
+        /// <summary>
+        /// Envia um código de autenticação de dois fatores (2FA) para o usuário após validação inicial de credenciais.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/auth/send-2fa<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com",
+        ///         "password": "SenhaSegura123"
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Dados de login (email e senha).</param>
+        /// <returns> Retorna uma mensagem de sucesso se o 2FA for enviado ou avisos sobre estado da conta. </returns>
+        /// <response code="200"> Código 2FA enviado com sucesso OU usuário não possui 2FA habilitado. </response>
+        /// <response code="400"> Credenciais inválidas, conta não confirmada ou bloqueada. </response>
         [HttpPost("send-2fa")]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> SendTwoFactorCode([FromBody] LoginRequest request)
         {
             LoginResponse result = new LoginResponse();
@@ -139,10 +174,6 @@ namespace Auth_Turkeysoftware.Controllers
             var user = await _userManager.FindByNameAsync(request.Email);
             if (user == null) {
                 return BadRequest("Email ou senha inválido!", result);
-            }
-
-            if (!user.TwoFactorEnabled) {
-                return Ok("Usuário não possui autenticação de 2 fatores", result);
             }
 
             var signInresult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
@@ -161,17 +192,34 @@ namespace Auth_Turkeysoftware.Controllers
                 return BadRequest("Email ou senha inválido!", result);
             }
 
+            if (!user.TwoFactorEnabled)
+            {
+                return Ok("Usuário não possui autenticação de 2 fatores", result);
+            }
+
             await _authenticationService.SendTwoFactorCodeAsync(request.Email);
             return Ok("Código 2FA enviado.");
         }
 
         /// <summary>
-        /// Gera um novo par de tokens de acesso e refresh token com base no refresh token fornecido.
+        /// Gera um novo par de tokens de acesso e refresh com base no refresh token fornecido.
         /// </summary>
-        /// <returns>Retorna 200 se OK.</returns>
-        [HttpPost]
-        [Route("refresh-token")]
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/auth/refresh-token<br/>
+        ///     {
+        ///         // (O refresh token deve ser enviado como cookie)
+        ///     }
+        /// 
+        /// </remarks>
+        /// <returns>Retorna 200 (OK) com os novos tokens nos cookies.</returns>
+        /// <response code="200">Tokens atualizados com sucesso (armazenados em cookies HTTP-only).</response>
+        /// <response code="401">Token inválido ou sessão não autorizada.</response>
+        [HttpPost("refresh-token")]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> RefreshToken()
         {
             try
@@ -182,8 +230,14 @@ namespace Auth_Turkeysoftware.Controllers
 
                 var principalRefresh = await GetPrincipalFromRefreshToken(refreshToken);
 
+                if (principalRefresh.Identity == null || principalRefresh.Identity.Name == null) {
+                    _logger.LogError("Não foi possível identificar a identidade do refresh token.");
+                    return Unauthorized(ERROR_SESSAO_INVALIDA);
+                }
+
                 var user = await _userManager.FindByNameAsync(principalRefresh.Identity.Name);
                 if (user == null) {
+                    _logger.LogError("Usuário do refresh token não foi encontrado");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
@@ -204,14 +258,9 @@ namespace Auth_Turkeysoftware.Controllers
                 AddTokensToCookies(newRefreshToken, newAccessToken);
                 return Ok();
             }
-            catch (BusinessRuleException e)
+            catch (BusinessException e)
             {
                 _logger.LogError($"RefreshToken não gerado: {e.Message}");
-                return Unauthorized(ERROR_SESSAO_INVALIDA);
-            }
-            catch (Exception e)
-            {
-                _logger.LogError(e, "Erro desconhecido.");
                 return Unauthorized(ERROR_SESSAO_INVALIDA);
             }
         }

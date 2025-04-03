@@ -20,10 +20,11 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         {
             Id = Guid.CreateVersion7().ToString("N");
             SecurityStamp = Guid.CreateVersion7().ToString("N");
+            Name = string.Empty;
         }
 
-        [Column(TypeName = "VARCHAR")]
         [MaxLength(128)]
-        public string? Name { get; set; }
+        [Required]
+        public string Name { get; set; }
     }
 }
