@@ -89,7 +89,6 @@ namespace Auth_Turkeysoftware.Controllers
                             return BadRequest("É necessário confirmar a conta antes de fazer login.", result);
                         }
                     }
-                
                     return BadRequest("Email ou senha inválido!", result);
                 }
 
@@ -112,6 +111,7 @@ namespace Auth_Turkeysoftware.Controllers
                         result.IsTwoFactorCodeInvalid = true;
                         return BadRequest("O código 2FA fornecido é inválido", result);
                     }
+                    throw new BusinessException("Houve um erro desconhecido durante o login.");
                 }
 
                 var userRoles = await _userManager.GetRolesAsync(user);
