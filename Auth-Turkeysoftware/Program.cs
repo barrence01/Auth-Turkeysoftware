@@ -47,9 +47,9 @@ try
     // Adicionar log do serilog como padrão
     builder.Host.UseSerilog();
 
-    /////
-    /// Serviços criados
-    /////
+    ////
+    // Serviços criados
+    ////
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApiDocument();
@@ -82,10 +82,10 @@ try
     // Global Exeption Handler
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
-    /////
-    /// Entity Framework
-    /// Acesso ao banco de dados
-    /////
+    ////
+    // Entity Framework
+    // Acesso ao banco de dados
+    ////
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     builder.Services.AddDbContextPool<AppDbContext>(options =>
     {
@@ -96,10 +96,10 @@ try
         options.UsePostgreSqlTriggers();
     });
 
-    /////
-    /// Acesso separado para o dbcontext do distributedCache para que atualizações no cache
-    /// não afetem transações em progresso na mesma requisição
-    /////
+    ////
+    // Acesso separado para o dbcontext do distributedCache para que atualizações no cache
+    // não afetem transações em progresso na mesma requisição
+    ////
     var connectionStringDistributedCache = builder.Configuration.GetConnectionString("CacheDbConnection");
     builder.Services.AddDbContextPool<CacheDbContext>(options =>
     {
@@ -109,10 +109,10 @@ try
         });
     });
 
-    /////
-    /// Microsoft Identity
-    /// Autenticação e autorização
-    /////
+    ////
+    // Microsoft Identity
+    // Autenticação e autorização
+    ////
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                     .AddEntityFrameworkStores<AppDbContext>()
                     .AddErrorDescriber<CustomIdentityErrorDescriber>()
@@ -189,10 +189,10 @@ try
     });
 
 
-    /////
-    /// CORS
-    /// Controle de acesso ao host
-    /////
+    ////
+    // CORS
+    // Controle de acesso ao host
+    ////
     builder.Services.AddAuthorization(options =>
     {
         options.AddPolicy("AcessoElevado", policy =>
@@ -255,7 +255,7 @@ try
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
-        app.UseOpenApi(); /// https://localhost:7157/swagger/index.html
+        app.UseOpenApi(); // https://localhost:7157/swagger/index.html
         app.UseSwaggerUi(); 
     }
 

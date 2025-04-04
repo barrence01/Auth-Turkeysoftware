@@ -1,6 +1,6 @@
 ﻿namespace Auth_Turkeysoftware.Enums
 {
-    public enum StatusEnum
+    public enum StatusDbEnum
     {
         ATIVO = 'A',
         INATIVO = 'I',

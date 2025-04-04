@@ -1,5 +1,5 @@
 ﻿using Auth_Turkeysoftware.Configurations.Services;
-using Auth_Turkeysoftware.Controllers.Base;
+using Auth_Turkeysoftware.Controllers.Bases;
 using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;

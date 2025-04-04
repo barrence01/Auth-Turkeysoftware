@@ -11,16 +11,16 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         public long? IdAction { get; set; }
 
         [Column("fk_id_usuario")]
-        [MaxLength(255)]
         [Required]
+        [MaxLength(255)]
         public string? FkIdUsuario { get; set; }
 
-        [Column("nm_classe_metodo_executado")]
-        [MaxLength(255)]
+        [Column("nm_class_metdo_exec")]
         [Required]
+        [MaxLength(255)]
         public string? NomeMetodo { get; set; }
 
-        [Column("ds_argumentos", TypeName = "text")]
+        [Column("ds_args")]
         [Required]
         public string? Argumentos { get; set; }
 

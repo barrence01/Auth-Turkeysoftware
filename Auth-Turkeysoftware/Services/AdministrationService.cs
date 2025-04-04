@@ -23,12 +23,12 @@ namespace Auth_Turkeysoftware.Services
             await _userSessionRepository.InvalidateAllUserSessions(userId);
         }
 
-        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessions(string userId, int pagina)
+        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessions(string userId, int page)
         {
-            if (pagina <= 0)
-                pagina = 1;
+            if (page <= 0)
+                page = 1;
 
-            return await _userSessionRepository.ListUserActiveSessionsPaginated(userId, pagina, 10);
+            return await _userSessionRepository.ListUserActiveSessionsPaginated(userId, page, 10);
         }
     }
 }

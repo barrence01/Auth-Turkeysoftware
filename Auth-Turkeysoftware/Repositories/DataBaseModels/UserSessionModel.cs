@@ -7,25 +7,25 @@ using Auth_Turkeysoftware.Extensions;
 namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 {
     [Table("tb_usuar_session", Schema = "auth")]
-    [Index(nameof(FkIdUsuario), Name = "ix_fk_idusuar_session")]
+    [Index(nameof(FkIdUsuario), Name = "IX_fk_id_usuar_session")]
     public class UserSessionModel
     {
         [Key]
         [Column("id_sessao")]
         public string IdSessao { get; set; }
 
-        [Column("fk_id_usuario", TypeName = "VARCHAR")]
+        [Column("fk_id_usuario")]
         [MaxLength(255)]
         [Required]
         public string? FkIdUsuario { get; set; }
 
-        [Column("ds_refresh_token", TypeName = "text")]
+        [Column("ds_refresh_token")]
         [Required]
         public string? RefreshToken { get; set; }
 
         [Column("st_token")]
-        [AllowedValues('A', 'I')]
         [Required]
+        [AllowedValues('A', 'I')]
         [Comment("A - Ativo | I - Inativo")]
         public char? TokenStatus { get; set; }
 
@@ -36,28 +36,28 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         [Column("dt_alteracao")]
         public DateTime? DataAlteracao { get; set; }
 
-        [Column("nm_pais", TypeName = "VARCHAR")]
+        [Column("nm_pais")]
         [MaxLength(60)]
         public string? Pais { get; set; }
 
-        [Column("nm_estado", TypeName = "VARCHAR")]
+        [Column("nm_estado")]
         [MaxLength(60)]
         public string? UF { get; set; }
 
-        [Column("nm_provedora", TypeName = "VARCHAR")]
+        [Column("nm_provedora")]
         [MaxLength(60)]
         public string? Provedora { get; set; }
 
-        [Column("nr_ip", TypeName = "VARCHAR")]
+        [Column("nr_ip")]
         [MaxLength(50)]
         [Required]
         public string? IP { get; set; }
 
-        [Column("nm_platform", TypeName = "VARCHAR")]
+        [Column("nm_platforma")]
         [MaxLength(30)]
-        public string? Platform { get; set; }
+        public string? Platforma { get; set; }
 
-        [Column("ds_userAgent", TypeName = "VARCHAR")]
+        [Column("ds_userAgent")]
         [MaxLength(150)]
         public string? UserAgent { get; set; }
 
@@ -71,7 +71,14 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
                 return false;
             }
             this.TruncateAllFields();
+            this.DataNormalizer();
             return true;
+        }
+
+        public void DataNormalizer()
+        {
+            Pais = Pais?.ToLowerInvariant();
+            UF = UF?.ToLowerInvariant();
         }
     }
 }

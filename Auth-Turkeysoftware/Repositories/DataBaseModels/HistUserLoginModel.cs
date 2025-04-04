@@ -12,37 +12,37 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         [Required]
         public string? IdSessao { get; set; }
 
-        [Column("fk_id_usuario", TypeName = "VARCHAR")]
-        [MaxLength(255)]
+        [Column("fk_id_usuario")]
         [Required]
+        [MaxLength(255)]
         public string? FkIdUsuario { get; set; }
 
         [Column("dt_inclusao")]
         [Required]
         public DateTime? DataInclusao { get; set; }
 
-        [Column("nm_pais", TypeName = "VARCHAR")]
+        [Column("nm_pais")]
         [MaxLength(60)]
         public string? Pais { get; set; }
 
-        [Column("nm_estado", TypeName = "VARCHAR")]
+        [Column("nm_estado")]
         [MaxLength(60)]
         public string? UF { get; set; }
 
-        [Column("nm_provedora", TypeName = "VARCHAR")]
+        [Column("nm_provedora")]
         [MaxLength(60)]
         public string? Provedora { get; set; }
 
-        [Column("nr_ip", TypeName = "VARCHAR")]
-        [MaxLength(50)]
+        [Column("nr_ip")]
         [Required]
+        [MaxLength(50)]
         public string? IP { get; set; }
 
-        [Column("nm_platform", TypeName = "VARCHAR")]
+        [Column("nm_platform")]
         [MaxLength(30)]
-        public string? Platform { get; set; }
+        public string? Platforma { get; set; }
 
-        [Column("ds_userAgent", TypeName = "VARCHAR")]
+        [Column("ds_user_agent")]
         [MaxLength(150)]
         public string? UserAgent { get; set; }
 

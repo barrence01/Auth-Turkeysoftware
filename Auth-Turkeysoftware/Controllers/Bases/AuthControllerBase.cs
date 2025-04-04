@@ -5,7 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using Auth_Turkeysoftware.Configurations.Services;
 
-namespace Auth_Turkeysoftware.Controllers.Base
+namespace Auth_Turkeysoftware.Controllers.Bases
 {
     [ApiController]
     public class AuthControllerBase : CommonControllerBase

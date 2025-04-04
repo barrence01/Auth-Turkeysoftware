@@ -10,9 +10,8 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
     {
         [Key]
         public int IdMudanca { get; set; }
-
         [Required]
-        public string? Id { get; set; }
+        public string? UserId { get; set; }
         [Required]
         public string? UserName { get; set; }
         [Required]
@@ -25,7 +24,8 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         public string? PasswordHash { get; set; }
         [Required]
         public string? PhoneNumber { get; set; }
-
+        
+        [Required]
         [MaxLength(128)]
         public string? Name { get; set; }
 

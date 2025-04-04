@@ -39,7 +39,7 @@ namespace Auth_Turkeysoftware.Migrations
                     b.Property<string>("Argumentos")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("ds_argumentos");
+                        .HasColumnName("ds_args");
 
                     b.Property<DateTime>("DataInclusao")
                         .HasColumnType("timestamp with time zone")
@@ -55,7 +55,7 @@ namespace Auth_Turkeysoftware.Migrations
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
-                        .HasColumnName("nm_classe_metodo_executado");
+                        .HasColumnName("nm_class_metdo_exec");
 
                     b.HasKey("IdAction");
 
@@ -136,8 +136,8 @@ namespace Auth_Turkeysoftware.Migrations
                         });
 
                     b
-                        .HasAnnotation("LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER", "CREATE FUNCTION \"LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_aspnet_users\" (\"Id\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER AFTER INSERT\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER\"();")
-                        .HasAnnotation("LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER", "CREATE FUNCTION \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_aspnet_users\" (\"Id\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'A', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER AFTER UPDATE\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"();");
+                        .HasAnnotation("LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER", "CREATE FUNCTION \"LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_aspnet_users\" (\"UserId\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER AFTER INSERT\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER\"();")
+                        .HasAnnotation("LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER", "CREATE FUNCTION \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_aspnet_users\" (\"UserId\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'A', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER AFTER UPDATE\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"();");
                 });
 
             modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.CacheEntryModel", b =>
@@ -181,10 +181,8 @@ namespace Auth_Turkeysoftware.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
@@ -201,6 +199,10 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -231,13 +233,13 @@ namespace Auth_Turkeysoftware.Migrations
                     b.Property<string>("FkIdUsuario")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("fk_id_usuario");
 
                     b.Property<string>("IP")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("nr_ip");
 
                     b.Property<string>("IdSessao")
@@ -247,28 +249,28 @@ namespace Auth_Turkeysoftware.Migrations
 
                     b.Property<string>("Pais")
                         .HasMaxLength(60)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(60)")
                         .HasColumnName("nm_pais");
 
-                    b.Property<string>("Platform")
+                    b.Property<string>("Platforma")
                         .HasMaxLength(30)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("nm_platform");
 
                     b.Property<string>("Provedora")
                         .HasMaxLength(60)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(60)")
                         .HasColumnName("nm_provedora");
 
                     b.Property<string>("UF")
                         .HasMaxLength(60)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(60)")
                         .HasColumnName("nm_estado");
 
                     b.Property<string>("UserAgent")
                         .HasMaxLength(150)
-                        .HasColumnType("VARCHAR")
-                        .HasColumnName("ds_userAgent");
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("ds_user_agent");
 
                     b.ToTable("tb_hist_usuar_login", "auth");
                 });
@@ -290,28 +292,28 @@ namespace Auth_Turkeysoftware.Migrations
                     b.Property<string>("FkIdUsuario")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("fk_id_usuario");
 
                     b.Property<string>("IP")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("nr_ip");
 
                     b.Property<string>("Pais")
                         .HasMaxLength(60)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(60)")
                         .HasColumnName("nm_pais");
 
-                    b.Property<string>("Platform")
+                    b.Property<string>("Platforma")
                         .HasMaxLength(30)
-                        .HasColumnType("VARCHAR")
-                        .HasColumnName("nm_platform");
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("nm_platforma");
 
                     b.Property<string>("Provedora")
                         .HasMaxLength(60)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(60)")
                         .HasColumnName("nm_provedora");
 
                     b.Property<string>("RefreshToken")
@@ -326,24 +328,24 @@ namespace Auth_Turkeysoftware.Migrations
 
                     b.Property<string>("UF")
                         .HasMaxLength(60)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(60)")
                         .HasColumnName("nm_estado");
 
                     b.Property<string>("UserAgent")
                         .HasMaxLength(150)
-                        .HasColumnType("VARCHAR")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("ds_userAgent");
 
                     b.HasKey("IdSessao");
 
-                    b.HasIndex(new[] { "FkIdUsuario" }, "ix_fk_idusuar_session");
+                    b.HasIndex(new[] { "FkIdUsuario" }, "IX_fk_id_usuar_session");
 
                     b.ToTable("tb_usuar_session", "auth", t =>
                         {
                             t.HasTrigger("LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL");
                         });
 
-                    b.HasAnnotation("LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL", "CREATE FUNCTION \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_usuar_login\" (\"id_sessao\", \"fk_id_usuario\", \"dt_inclusao\", \"nm_estado\", \"nm_provedora\", \"nr_ip\", \"nm_platform\", \"ds_userAgent\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"id_sessao\", \r\n  NEW.\"fk_id_usuario\", \r\n  NEW.\"dt_inclusao\", \r\n  NEW.\"nm_estado\", \r\n  NEW.\"nm_provedora\", \r\n  NEW.\"nr_ip\", \r\n  NEW.\"nm_platform\", \r\n  NEW.\"ds_userAgent\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL AFTER INSERT\r\nON \"auth\".\"tb_usuar_session\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"();");
+                    b.HasAnnotation("LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL", "CREATE FUNCTION \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_usuar_login\" (\"id_sessao\", \"fk_id_usuario\", \"dt_inclusao\", \"nm_estado\", \"nm_provedora\", \"nr_ip\", \"nm_platform\", \"ds_user_agent\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"id_sessao\", \r\n  NEW.\"fk_id_usuario\", \r\n  NEW.\"dt_inclusao\", \r\n  NEW.\"nm_estado\", \r\n  NEW.\"nm_provedora\", \r\n  NEW.\"nr_ip\", \r\n  NEW.\"nm_platforma\", \r\n  NEW.\"ds_userAgent\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL AFTER INSERT\r\nON \"auth\".\"tb_usuar_session\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"();");
                 });
 
             modelBuilder.Entity("Auth_Turkeysoftware.Test.Repositories.Models.TestDataModel", b =>

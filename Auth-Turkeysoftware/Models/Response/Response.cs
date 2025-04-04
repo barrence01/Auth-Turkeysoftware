@@ -4,26 +4,21 @@ namespace Auth_Turkeysoftware.Models.Response
 {
     public class Response<T>
     {
-        public int Status { get; }
-
-        public string Title { get; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Message { get; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public List<string>? Errors { get; }
+        public Dictionary<string, string[]>? Errors { get; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public T? Data { get; }
+        public T? Payload { get; }
 
-        public Response(int status, string title, string? message, List<string>? errors, T? data)
+        public Response(string? message = default, Dictionary<string, string[]>? errors = default, T? payload = default)
         {
-            Status = status;
-            Title = title;
             Message = message;
             Errors = errors;
-            Data = data;
+            Payload = payload;
         }
     }
 }

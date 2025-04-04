@@ -18,17 +18,17 @@ namespace Auth_Turkeysoftware.Services
         /// Invalida a sessão de um usuário.
         /// </summary>
         /// <param name="idUsuario">ID do usuário.</param>
-        /// <param name="idSessao">ID da sessão.</param>
+        /// <param name="sessionId">ID da sessão.</param>
         /// <returns>Uma tarefa que representa a operação assíncrona.</returns>
-        Task InvalidateUserSession(string idUsuario , string idSessao);
+        Task InvalidateUserSession(string idUsuario , string sessionId);
 
         /// <summary>
         /// Invalida todas as sessões de um usuário.
         /// </summary>
-        /// <param name="idUsuario">ID do usuário.</param>
-        /// <param name="idSessao">ID da sessão.</param>
+        /// <param name="userId">ID do usuário.</param>
+        /// <param name="sessionId">ID da sessão.</param>
         /// <returns>Uma tarefa que representa a operação assíncrona.</returns>
-        Task InvalidateAllUserSession(string idUsuario, string idSessao);
+        Task InvalidateAllUserSession(string userId, string sessionId);
 
         /// <summary>
         /// Verifica se o token do usuário está na lista negra.
@@ -60,8 +60,8 @@ namespace Auth_Turkeysoftware.Services
         /// Lista as sessões ativas do usuário de forma paginada.
         /// </summary>
         /// <param name="userId">ID do usuário.</param>
-        /// <param name="pagina">Número da página.</param>
+        /// <param name="page">Número da página.</param>
         /// <returns>Retorna um DTO de paginação contendo as sessões ativas do usuário.</returns>
-        Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pagina);
+        Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page);
     }
 }

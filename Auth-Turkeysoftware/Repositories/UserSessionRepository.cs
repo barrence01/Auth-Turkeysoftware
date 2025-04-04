@@ -55,13 +55,13 @@ namespace Auth_Turkeysoftware.Repositories
                                     .FirstOrDefaultAsync();
         }
 
-        public async Task InvalidateUserSession(string idUsuario, string idSessao)
+        public async Task InvalidateUserSession(string userId, string sessionId)
         {
             try
             {
                 int rowsAffected = await dbContext.LoggedUser
-                                                    .Where(p => p.IdSessao == idSessao
-                                                             && p.FkIdUsuario == idUsuario)
+                                                    .Where(p => p.IdSessao == sessionId
+                                                             && p.FkIdUsuario == userId)
                                                     .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO)
                                                                               .SetProperty(e => e.DataAlteracao, DateTime.Now.ToUniversalTime()));
 
@@ -75,12 +75,12 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        public async Task UpdateSessionRefreshToken(string idUsuario, string idSessao, string oldRefreshToken, string newRefreshToken)
+        public async Task UpdateSessionRefreshToken(string userId, string sessionId, string oldRefreshToken, string newRefreshToken)
         {
             try
             {
                 int rowsAffected = await dbContext.LoggedUser
-                                                    .Where(p => p.IdSessao == idSessao && p.FkIdUsuario == idUsuario
+                                                    .Where(p => p.IdSessao == sessionId && p.FkIdUsuario == userId
                                                                 && p.RefreshToken == oldRefreshToken && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
                                                     .ExecuteUpdateAsync(p => p.SetProperty(e => e.RefreshToken, newRefreshToken)
                                                                                 .SetProperty(e => e.DataAlteracao, DateTime.Now.ToUniversalTime()));
@@ -96,22 +96,22 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pagina, int tamanhoPagina)
+        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page, int pageSize)
         {
-            DateTime dataAtual = DateTime.Now.ToUniversalTime();
-            DateTime dataLimite = dataAtual.AddDays(-7).ToUniversalTime();
+            DateTime currentDate = DateTime.Now.ToUniversalTime();
+            DateTime sevenDaysAgo = currentDate.AddDays(-7).ToUniversalTime();
 
-            long qtdRegistros = await this.ListUserActiveSessionsCount(userId, dataLimite);
-            int totalPaginas = (int)Math.Ceiling((double)qtdRegistros / (double)tamanhoPagina);
+            long rowsCount = await this.ListUserActiveSessionsCount(userId, sevenDaysAgo);
+            int pageCount = (int)Math.Ceiling((double)rowsCount / (double)pageSize);
 
-            if (qtdRegistros <= 0 || pagina > totalPaginas) {
-                return new PaginationDTO<UserSessionResponse>([], pagina, tamanhoPagina, qtdRegistros);
+            if (rowsCount <= 0 || page > pageCount) {
+                return new PaginationDTO<UserSessionResponse>([], page, pageSize, rowsCount);
             }
 
             var sessoes = await dbContext.LoggedUser
                                             .AsNoTracking()
                                             .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
-                                                     && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
+                                                     && (p.DataAlteracao > sevenDaysAgo || (p.DataInclusao > sevenDaysAgo && p.DataAlteracao == null)))
                                             .Select(p => new UserSessionResponse
                                             {
                                                 IdSessao = p.IdSessao,
@@ -119,23 +119,23 @@ namespace Auth_Turkeysoftware.Repositories
                                                 DataInclusao = p.DataInclusao,
                                                 UltimaVezOnline = p.DataAlteracao ?? p.DataInclusao,
                                                 IP = p.IP,
-                                                Platform = p.Platform,
+                                                Platform = p.Platforma,
                                                 Pais = p.Pais,
                                                 UF = p.UF
                                             }).OrderByDescending(p => p.DataInclusao)
-                                            .Skip((pagina - 1) * tamanhoPagina)
-                                            .Take(tamanhoPagina)
+                                            .Skip((page - 1) * pageSize)
+                                            .Take(pageSize)
                                             .ToListAsync();
 
-            return new PaginationDTO<UserSessionResponse>(sessoes, pagina, tamanhoPagina, qtdRegistros);
+            return new PaginationDTO<UserSessionResponse>(sessoes, page, pageSize, rowsCount);
         }
 
-        public async Task<long> ListUserActiveSessionsCount(string userId, DateTime dataLimite)
+        public async Task<long> ListUserActiveSessionsCount(string userId, DateTime minDay)
         {
             return await dbContext.LoggedUser
                                     .AsNoTracking()
                                     .Where(p => p.FkIdUsuario == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
-                                                && (p.DataAlteracao > dataLimite || (p.DataInclusao > dataLimite && p.DataAlteracao == null)))
+                                                && (p.DataAlteracao > minDay || (p.DataInclusao > minDay && p.DataAlteracao == null)))
                                     .OrderByDescending(p => p.DataInclusao)
                                     .CountAsync();
         }

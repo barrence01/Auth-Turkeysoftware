@@ -20,7 +20,7 @@ namespace Auth_Turkeysoftware.Repositories
         {
             var cacheEntry = CreateCacheEntry(key, value, expiration, default);
 
-            if (!await IsCached(key))
+            if (!await IsCachedAsync(key))
             {
                 await _dbContext.DistributedCache.AddAsync(cacheEntry);
                 await _dbContext.SaveChangesAsync();
@@ -35,7 +35,7 @@ namespace Auth_Turkeysoftware.Repositories
         {
             var cacheEntry = CreateCacheEntry(key, value, default, default);
 
-            if (!await IsCached(key))
+            if (!await IsCachedAsync(key))
             {
                 await _dbContext.DistributedCache.AddAsync(cacheEntry);
                 await _dbContext.SaveChangesAsync();
@@ -45,11 +45,12 @@ namespace Auth_Turkeysoftware.Repositories
             await UpdateCachedEntry(cacheEntry, keepExpTime);
         }
 
+        /// <inheritdoc/>
         public async Task SetAsync(string key, object value, TimeSpan expiration, CacheEntryOptions options)
         {
             var cacheEntry = CreateCacheEntry(key, value, expiration, options);
 
-            if (!await IsCached(key))
+            if (!await IsCachedAsync(key))
             {
                 await _dbContext.DistributedCache.AddAsync(cacheEntry);
                 await _dbContext.SaveChangesAsync();
@@ -64,7 +65,7 @@ namespace Auth_Turkeysoftware.Repositories
         {
             var cacheEntry = await _dbContext.DistributedCache.FindAsync(key);
 
-            return await ValidateCachedElement<T>(key, cacheEntry);
+            return await ValidateDeserializeCachedElement<T>(key, cacheEntry);
         }
 
         /// <inheritdoc/>
@@ -75,14 +76,35 @@ namespace Auth_Turkeysoftware.Repositories
                   .ExecuteDeleteAsync();
         }
 
-        private async Task<bool> IsCached(string key)
+        /// <inheritdoc/>
+        public async Task<bool> IsCachedAsync(string key)
         {
-            return await _dbContext.DistributedCache
-                                   .AsNoTracking()
-                                   .AnyAsync(p => p.Id == key);
+            CacheEntryModel? cacheEntry = await _dbContext.DistributedCache.AsNoTracking()
+                                                                            .Where(e => e.Id == key)
+                                                                            .Select(s => new CacheEntryModel { 
+                                                                                Id = s.Id,
+                                                                                ExpiresAtTime = s.ExpiresAtTime,
+                                                                                AbsoluteExpiration = s.AbsoluteExpiration,
+                                                                                SlidingExpiration = s.SlidingExpiration
+                                                                            })
+                                                                            .Take(1)
+                                                                            .FirstOrDefaultAsync();
+
+            if (await ValidateCachedElement(key, cacheEntry) == null)  {
+                return false;
+            }
+            return true;
         }
 
-        private CacheEntryModel CreateCacheEntry(string key, object value, TimeSpan expiration, CacheEntryOptions? options)
+        /// <summary>
+        /// Cria uma nova entrada de cache com a chave, valor, tempo de expiração e opções especificadas.
+        /// </summary>
+        /// <param name="key">Chave única que identifica a entrada no cache.</param>
+        /// <param name="value">Objeto a ser armazenado no cache (será serializado para JSON).</param>
+        /// <param name="expiration">Tempo de vida padrão para a entrada de cache.</param>
+        /// <param name="options">Opções adicionais de cache como expiração absoluta ou deslizante.</param>
+        /// <returns>Um novo <see cref="CacheEntryModel"/> configurado com os parâmetros fornecidos.</returns>
+        private static CacheEntryModel CreateCacheEntry(string key, object value, TimeSpan expiration, CacheEntryOptions? options)
         {
             var jsonData = JsonSerializer.Serialize(value);
             var encodedData = Encoding.UTF8.GetBytes(jsonData);
@@ -103,6 +125,12 @@ namespace Auth_Turkeysoftware.Repositories
             return entry;
         }
 
+        /// <summary>
+        /// Atualiza uma entrada existente no cache, opcionalmente mantendo seu tempo de expiração.
+        /// </summary>
+        /// <param name="cacheEntry">Modelo da entrada de cache com os valores atualizados.</param>
+        /// <param name="keepExpTime">Se true, mantém o tempo de expiração existente; caso contrário atualiza todas as propriedades.</param>
+        /// <returns>Uma tarefa que representa a operação assíncrona de atualização.</returns>
         private async Task UpdateCachedEntry(CacheEntryModel cacheEntry, bool keepExpTime = false)
         {
             if (keepExpTime) {
@@ -124,18 +152,29 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        private async Task<T?> ValidateCachedElement<T>(string key, CacheEntryModel? cacheEntry)
+        /// <summary>
+        /// Valida um elemento em cache, verificando expiração e aplicando expiração deslizante quando necessário.
+        /// </summary>
+        /// <typeparam name="T">Tipo do objeto armazenado em cache.</typeparam>
+        /// <param name="key">Chave da entrada no cache.</param>
+        /// <param name="cacheEntry">Entrada de cache a ser validada, ou null se não encontrada.</param>
+        /// <returns>
+        /// O valor desserializado se válido; caso contrário remove a entrada expirada e retorna default(T).
+        /// </returns>
+        private async Task<T?> ValidateDeserializeCachedElement<T>(string key, CacheEntryModel? cacheEntry)
         {
 
             DateTimeOffset currentTime = DateTimeOffset.UtcNow;
 
-            if (cacheEntry == null || (cacheEntry.AbsoluteExpiration <= currentTime || cacheEntry.ExpiresAtTime <= currentTime))
+            if (cacheEntry == null) { return default; }
+
+            if (cacheEntry.AbsoluteExpiration <= currentTime || (!cacheEntry.SlidingExpiration.HasValue && cacheEntry.ExpiresAtTime <= currentTime))
             {
                 await RemoveAsync(key);
                 return default;
             }
 
-            if (cacheEntry.AbsoluteExpiration <= currentTime && cacheEntry.SlidingExpiration.HasValue)
+            if (cacheEntry.SlidingExpiration.HasValue && cacheEntry.AbsoluteExpiration <= currentTime)
             {
                 cacheEntry.ExpiresAtTime = currentTime.Add(cacheEntry.SlidingExpiration.Value);
                 await _dbContext.SaveChangesAsync();
@@ -144,7 +183,45 @@ namespace Auth_Turkeysoftware.Repositories
             return DeserializeCacheEntry<T>(cacheEntry.Value);
         }
 
-        private T? DeserializeCacheEntry<T>(byte[] value)
+        /// <summary>
+        /// Valida um elemento em cache, verificando expiração e aplicando expiração deslizante quando necessário.
+        /// </summary>
+        /// <param name="key">Chave da entrada no cache.</param>
+        /// <param name="cacheEntry">Entrada de cache a ser validada, ou null se não encontrada.</param>
+        /// <returns>
+        /// Retorna o cacheEntry se não estiver expirado.
+        /// </returns>
+        private async Task<CacheEntryModel?> ValidateCachedElement(string key, CacheEntryModel? cacheEntry)
+        {
+            DateTimeOffset currentTime = DateTimeOffset.UtcNow;
+
+            if(cacheEntry == null) { return default; }
+
+            if (cacheEntry.AbsoluteExpiration <= currentTime || (!cacheEntry.SlidingExpiration.HasValue && cacheEntry.ExpiresAtTime <= currentTime))
+            {
+                await RemoveAsync(key);
+                return default;
+            }
+
+            if (cacheEntry.SlidingExpiration.HasValue && cacheEntry.AbsoluteExpiration <= currentTime)
+            {
+                cacheEntry.ExpiresAtTime = currentTime.Add(cacheEntry.SlidingExpiration.Value);
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return cacheEntry;
+        }
+
+        /// <summary>
+        /// Desserializa um array de bytes em cache para um objeto do tipo T.
+        /// </summary>
+        /// <typeparam name="T">Tipo alvo para desserialização.</typeparam>
+        /// <param name="value">Array de bytes contendo os dados JSON serializados.</param>
+        /// <returns>O objeto desserializado ou null se a desserialização falhar.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Lançada quando os dados JSON não podem ser desserializados no tipo alvo.
+        /// </exception>
+        private static T? DeserializeCacheEntry<T>(byte[] value)
         {
             try
             {

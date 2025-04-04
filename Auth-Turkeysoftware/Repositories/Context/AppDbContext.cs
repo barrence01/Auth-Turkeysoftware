@@ -22,10 +22,10 @@ namespace Auth_Turkeysoftware.Repositories.Context
         protected override void OnModelCreating(ModelBuilder builder)
         {
 
-            ///
+            ////
             // TABLE: tb_usuar_session
             // MODEL: UserSessionModel
-            ///
+            ////
             builder.Entity<UserSessionModel>()
                    .AfterInsert(trigger =>
                        trigger.Action(action =>
@@ -37,22 +37,24 @@ namespace Auth_Turkeysoftware.Repositories.Context
                                 UF = userSessionModel.New.UF,
                                 Provedora = userSessionModel.New.Provedora,
                                 IP = userSessionModel.New.IP,
-                                Platform = userSessionModel.New.Platform,
+                                Platforma = userSessionModel.New.Platforma,
                                 UserAgent = userSessionModel.New.UserAgent,
                                 DbOperationType = (char)DbOperationTypeEnum.INCLUSAO,
                                 DbOperationWhen = DateTime.Now
                             })));
 
-            ///
+            ////
             // TABLE: tb_hist_aspnet_users
             // MODEL: HistAplicationUserModel
-            ///
+            // TODO: Adicionar cache de 10 para esta trigger
+            ////
             builder.HasSequence<int>("hist_aspnet_users_sequence")
                    .StartsAt(1)
                    .IncrementsBy(1);
 
             builder.Entity<HistAplicationUserModel>()
                    .Property(e => e.IdMudanca)
+                   .IsRequired()
                    .HasDefaultValueSql("nextval('\"hist_aspnet_users_sequence\"')");
 
             builder.Entity<ApplicationUser>()
@@ -60,7 +62,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
                        trigger.Action(action =>
                             action.Insert<HistAplicationUserModel>(applicationUser => new HistAplicationUserModel
                             {
-                                Id = applicationUser.New.Id,
+                                UserId = applicationUser.New.Id,
                                 UserName = applicationUser.New.UserName,
                                 NormalizedUserName = applicationUser.New.NormalizedUserName,
                                 Email = applicationUser.New.Email,
@@ -75,7 +77,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
                         trigger.Action(action =>
                             action.Insert<HistAplicationUserModel>(applicationUser => new HistAplicationUserModel
                             {
-                                Id = applicationUser.New.Id,
+                                UserId = applicationUser.New.Id,
                                 UserName = applicationUser.New.UserName,
                                 NormalizedUserName = applicationUser.New.NormalizedUserName,
                                 Email = applicationUser.New.Email,
@@ -88,10 +90,10 @@ namespace Auth_Turkeysoftware.Repositories.Context
                             })));
 
 
-            ///
+            ////
             // TABLE: tb_log_admin_action
             // MODEL: AdminActionLogModel
-            ///
+            ////
             builder.HasSequence<long>("admin_action_sequence")
                    .StartsAt(1)
                    .IncrementsBy(1);
@@ -101,10 +103,10 @@ namespace Auth_Turkeysoftware.Repositories.Context
                    .HasDefaultValueSql("nextval('\"admin_action_sequence\"')");
 
 
-            ///
+            ////
             // TABLE: tb_test
             // MODEL: TestDataModel
-            ///
+            ////
             builder.HasSequence<int>("test_data_sequence")
                    .StartsAt(1)
                    .IncrementsBy(1);

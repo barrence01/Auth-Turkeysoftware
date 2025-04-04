@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text.Json;
 
@@ -28,9 +28,10 @@ namespace Auth_Turkeysoftware.Controllers.Handlers
                     title = "Internal Server error";
                     break;
             }
+
             httpContext.Response.StatusCode = statusCode;
             await httpContext.Response.WriteAsync(JsonSerializer.Serialize(new Response(
-                                                    statusCode, "Error", title, exception.Message)), cancellationToken);
+                                                    title, exception.Message, Activity.Current?.Id)), cancellationToken);
 
             return true;
         }
@@ -38,17 +39,15 @@ namespace Auth_Turkeysoftware.Controllers.Handlers
 
     public class Response
     {
-        public int Status { get; }
         public string Title { get; }
-        public string Message { get; }
-        public string? Errors { get; }
+        public string? Message { get; }
+        public string? TraceId { get; }
 
-        public Response(int status, string title, string message, string? error)
+        public Response(string title, string message, string? traceId)
         {
-            Status = status;
             Title = title;
             Message = message;
-            Errors = error;
+            TraceId = traceId;
         }
     }
 }

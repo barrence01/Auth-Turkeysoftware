@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Auth_Turkeysoftware.Controllers.Base;
+using Auth_Turkeysoftware.Controllers.Bases;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Microsoft.AspNetCore.Authorization;
@@ -49,8 +49,8 @@ namespace Auth_Turkeysoftware.Controllers
         /// <response code="400">Falha no registro (usuário já existe ou dados inválidos).</response>
         [HttpPost("register-user")]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest model)
         {
             var userExists = await _userManager.FindByNameAsync(model.Email);

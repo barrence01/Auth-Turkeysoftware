@@ -86,14 +86,14 @@ namespace Auth_Turkeysoftware.Migrations
                 columns: table => new
                 {
                     IdMudanca = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "nextval('\"hist_aspnet_users_sequence\"')"),
-                    Id = table.Column<string>(type: "text", nullable: true),
+                    UserId = table.Column<string>(type: "text", nullable: false),
                     UserName = table.Column<string>(type: "text", nullable: false),
                     NormalizedUserName = table.Column<string>(type: "text", nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
                     NormalizedEmail = table.Column<string>(type: "text", nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
                     PhoneNumber = table.Column<string>(type: "text", nullable: false),
-                    Name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
+                    Name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     DbOperationType = table.Column<char>(type: "character(1)", nullable: false),
                     DbOperationWhen = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -109,14 +109,14 @@ namespace Auth_Turkeysoftware.Migrations
                 columns: table => new
                 {
                     id_sessao = table.Column<string>(type: "text", nullable: false),
-                    fk_id_usuario = table.Column<string>(type: "VARCHAR", maxLength: 255, nullable: false),
+                    fk_id_usuario = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     dt_inclusao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    nm_pais = table.Column<string>(type: "VARCHAR", maxLength: 60, nullable: true),
-                    nm_estado = table.Column<string>(type: "VARCHAR", maxLength: 60, nullable: true),
-                    nm_provedora = table.Column<string>(type: "VARCHAR", maxLength: 60, nullable: true),
-                    nr_ip = table.Column<string>(type: "VARCHAR", maxLength: 50, nullable: false),
-                    nm_platform = table.Column<string>(type: "VARCHAR", maxLength: 30, nullable: true),
-                    ds_userAgent = table.Column<string>(type: "VARCHAR", maxLength: 150, nullable: true),
+                    nm_pais = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: true),
+                    nm_estado = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: true),
+                    nm_provedora = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: true),
+                    nr_ip = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    nm_platform = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
+                    ds_user_agent = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true),
                     DbOperationType = table.Column<char>(type: "character(1)", nullable: false),
                     DbOperationWhen = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -130,8 +130,8 @@ namespace Auth_Turkeysoftware.Migrations
                 {
                     id_action = table.Column<long>(type: "bigint", nullable: false, defaultValueSql: "nextval('\"admin_action_sequence\"')"),
                     fk_id_usuario = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    nm_classe_metodo_executado = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    ds_argumentos = table.Column<string>(type: "text", nullable: false),
+                    nm_class_metdo_exec = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    ds_args = table.Column<string>(type: "text", nullable: false),
                     dt_inclusao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -159,17 +159,17 @@ namespace Auth_Turkeysoftware.Migrations
                 columns: table => new
                 {
                     id_sessao = table.Column<string>(type: "text", nullable: false),
-                    fk_id_usuario = table.Column<string>(type: "VARCHAR", maxLength: 255, nullable: false),
+                    fk_id_usuario = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     ds_refresh_token = table.Column<string>(type: "text", nullable: false),
                     st_token = table.Column<char>(type: "character(1)", nullable: false, comment: "A - Ativo | I - Inativo"),
                     dt_inclusao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     dt_alteracao = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    nm_pais = table.Column<string>(type: "VARCHAR", maxLength: 60, nullable: true),
-                    nm_estado = table.Column<string>(type: "VARCHAR", maxLength: 60, nullable: true),
-                    nm_provedora = table.Column<string>(type: "VARCHAR", maxLength: 60, nullable: true),
-                    nr_ip = table.Column<string>(type: "VARCHAR", maxLength: 50, nullable: false),
-                    nm_platform = table.Column<string>(type: "VARCHAR", maxLength: 30, nullable: true),
-                    ds_userAgent = table.Column<string>(type: "VARCHAR", maxLength: 150, nullable: true)
+                    nm_pais = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: true),
+                    nm_estado = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: true),
+                    nm_provedora = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: true),
+                    nr_ip = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    nm_platforma = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
+                    ds_userAgent = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -320,16 +320,16 @@ namespace Auth_Turkeysoftware.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_fk_idusuar_session",
+                name: "IX_fk_id_usuar_session",
                 schema: "auth",
                 table: "tb_usuar_session",
                 column: "fk_id_usuario");
 
-            migrationBuilder.Sql("CREATE FUNCTION \"LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_aspnet_users\" (\"Id\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER AFTER INSERT\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER\"();");
+            migrationBuilder.Sql("CREATE FUNCTION \"LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_aspnet_users\" (\"UserId\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER AFTER INSERT\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_INSERT_APPLICATIONUSER\"();");
 
-            migrationBuilder.Sql("CREATE FUNCTION \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_aspnet_users\" (\"Id\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'A', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER AFTER UPDATE\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"();");
+            migrationBuilder.Sql("CREATE FUNCTION \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_aspnet_users\" (\"UserId\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'A', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER AFTER UPDATE\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"();");
 
-            migrationBuilder.Sql("CREATE FUNCTION \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_usuar_login\" (\"id_sessao\", \"fk_id_usuario\", \"dt_inclusao\", \"nm_estado\", \"nm_provedora\", \"nr_ip\", \"nm_platform\", \"ds_userAgent\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"id_sessao\", \r\n  NEW.\"fk_id_usuario\", \r\n  NEW.\"dt_inclusao\", \r\n  NEW.\"nm_estado\", \r\n  NEW.\"nm_provedora\", \r\n  NEW.\"nr_ip\", \r\n  NEW.\"nm_platform\", \r\n  NEW.\"ds_userAgent\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL AFTER INSERT\r\nON \"auth\".\"tb_usuar_session\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"();");
+            migrationBuilder.Sql("CREATE FUNCTION \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_usuar_login\" (\"id_sessao\", \"fk_id_usuario\", \"dt_inclusao\", \"nm_estado\", \"nm_provedora\", \"nr_ip\", \"nm_platform\", \"ds_user_agent\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"id_sessao\", \r\n  NEW.\"fk_id_usuario\", \r\n  NEW.\"dt_inclusao\", \r\n  NEW.\"nm_estado\", \r\n  NEW.\"nm_provedora\", \r\n  NEW.\"nr_ip\", \r\n  NEW.\"nm_platforma\", \r\n  NEW.\"ds_userAgent\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL AFTER INSERT\r\nON \"auth\".\"tb_usuar_session\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"();");
         }
 
         /// <inheritdoc />

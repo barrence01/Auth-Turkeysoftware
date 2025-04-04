@@ -27,15 +27,15 @@ namespace Auth_Turkeysoftware.Services
         }
 
         /// <inheritdoc/>
-        public async Task InvalidateUserSession(string idUsuario, string idSessao)
+        public async Task InvalidateUserSession(string userId, string idSessao)
         {
-            await _userSessionRepository.InvalidateUserSession(idUsuario, idSessao);
+            await _userSessionRepository.InvalidateUserSession(userId, idSessao);
         }
 
         /// <inheritdoc/>
-        public async Task InvalidateAllUserSession(string idUsuario, string idSessao)
+        public async Task InvalidateAllUserSession(string userId, string idSessao)
         {
-            await _userSessionRepository.InvalidateUserSession(idUsuario, idSessao);
+            await _userSessionRepository.InvalidateUserSession(userId, idSessao);
         }
 
         /// <inheritdoc/>
@@ -49,18 +49,18 @@ namespace Auth_Turkeysoftware.Services
         }
 
         /// <inheritdoc/>
-        public async Task UpdateSessionRefreshToken(string idUsuario, string idSessao, string refreshToken, string newRefreshToken)
+        public async Task UpdateSessionRefreshToken(string userId, string sessionId, string refreshToken, string newRefreshToken)
         {
-            await _userSessionRepository.UpdateSessionRefreshToken(idUsuario, idSessao, refreshToken, newRefreshToken);
+            await _userSessionRepository.UpdateSessionRefreshToken(userId, sessionId, refreshToken, newRefreshToken);
         }
 
         /// <inheritdoc/>
-        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pagina)
+        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page)
         {
-            if (pagina <= 0)
-                pagina = 1;
+            if (page <= 0)
+                page = 1;
 
-            return await _userSessionRepository.ListUserActiveSessionsPaginated(userId, pagina, 10);
+            return await _userSessionRepository.ListUserActiveSessionsPaginated(userId, page, 10);
         }
 
         /// <inheritdoc/>

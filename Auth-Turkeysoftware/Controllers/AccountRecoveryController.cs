@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Auth_Turkeysoftware.Controllers.Base;
+using Auth_Turkeysoftware.Controllers.Bases;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;

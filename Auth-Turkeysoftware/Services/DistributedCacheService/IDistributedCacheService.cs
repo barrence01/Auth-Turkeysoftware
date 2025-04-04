@@ -46,5 +46,17 @@ namespace Auth_Turkeysoftware.Services.DistributedCacheService
         /// </summary>
         /// <param name="key">A chave única do valor a ser removido.</param>
         Task RemoveAsync(string key);
+
+
+        /// <summary>
+        /// Verifica se uma entrada existe no cache distribuído com a chave especificada.<br/>
+        /// Este método também valida o elemento em cache, verifica sua expiração e aplica expiração deslizante quando necessário.
+        /// </summary>
+        /// <param name="key">A chave única do item de cache a ser verificado.</param>
+        /// <returns>
+        /// Uma tarefa que representa a operação assíncrona, contendo true se a chave existir no cache,
+        /// ou false caso contrário.
+        /// </returns>
+        Task<bool> IsCachedAsync(string key);
     }
 }

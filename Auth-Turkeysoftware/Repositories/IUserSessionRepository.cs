@@ -10,13 +10,13 @@ namespace Auth_Turkeysoftware.Repositories
 
         Task<UserSessionModel?> FindRefreshToken(string userId, string sessionId, string userToken);
 
-        Task InvalidateUserSession(string idUsuario, string idSessao);
+        Task InvalidateUserSession(string userId, string sessionId);
 
-        Task UpdateSessionRefreshToken(string idUsuario, string idSessao, string oldRefreshToken, string newRefreshToken);
+        Task UpdateSessionRefreshToken(string userId, string sessionId, string oldRefreshToken, string newRefreshToken);
 
-        Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pagina, int tamanhoPagina);
+        Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page, int pageSize);
 
-        Task<long> ListUserActiveSessionsCount(string userId, DateTime dataLimite);
+        Task<long> ListUserActiveSessionsCount(string userId, DateTime dayLimit);
 
         Task InvalidateAllUserSessions(string userId);
     }

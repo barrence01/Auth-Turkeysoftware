@@ -1,5 +1,5 @@
 ﻿using Auth_Turkeysoftware.Configurations.Services;
-using Auth_Turkeysoftware.Controllers.Base;
+using Auth_Turkeysoftware.Controllers.Bases;
 using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.DTOs;
@@ -62,7 +62,7 @@ namespace Auth_Turkeysoftware.Controllers
         [HttpPost("login")]
         [TypeFilter(typeof(LoginFilter))]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -130,7 +130,7 @@ namespace Auth_Turkeysoftware.Controllers
                     FkIdUsuario = user.Id,
                     RefreshToken = refreshToken,
                     IP = HttpContext.Items["IP"]?.ToString() ?? string.Empty,
-                    Platform = HttpContext.Items["Platform"]?.ToString() ?? string.Empty,
+                    Platforma = HttpContext.Items["Platform"]?.ToString() ?? string.Empty,
                     UserAgent = HttpContext.Items["UserAgent"]?.ToString() ?? string.Empty
                 });
 
@@ -165,7 +165,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <response code="400"> Credenciais inválidas, conta não confirmada ou bloqueada. </response>
         [HttpPost("send-2fa")]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> SendTwoFactorCode([FromBody] LoginRequest request)
         {
@@ -219,7 +219,7 @@ namespace Auth_Turkeysoftware.Controllers
         [HttpPost("refresh-token")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> RefreshToken()
         {
             try

@@ -63,5 +63,11 @@ namespace Auth_Turkeysoftware.Services.DistributedCacheService
         {
             await _cacheRepository.RemoveAsync(key);
         }
+
+        /// <inheritdoc/>
+        public async Task<bool> IsCachedAsync(string key)
+        {
+            return await _cacheRepository.IsCachedAsync(key);
+        }
     }
 }

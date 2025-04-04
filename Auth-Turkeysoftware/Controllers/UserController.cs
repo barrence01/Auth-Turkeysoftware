@@ -1,5 +1,5 @@
 ﻿using Auth_Turkeysoftware.Configurations.Services;
-using Auth_Turkeysoftware.Controllers.Base;
+using Auth_Turkeysoftware.Controllers.Bases;
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Models.Request;
@@ -46,7 +46,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <response code="401">Não autorizado - token inválido ou ausente.</response>
         [HttpGet("get-info")]
         [ProducesResponseType(typeof(Response<UserInfoResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetUserInfo() { 
 
@@ -85,8 +85,8 @@ namespace Auth_Turkeysoftware.Controllers
         /// <response code="400">Usuário inválido ou parâmetros incorretos.</response>
         /// <response code="401">Não autorizado - token inválido ou ausente.</response>
         [HttpGet("all-sessions")]
-        [ProducesResponseType(typeof(PaginationDTO<UserSessionResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(Response<Object>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Response<PaginationDTO<UserSessionResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> ListAllSessions([FromQuery] int pagina)
         {
@@ -181,11 +181,11 @@ namespace Auth_Turkeysoftware.Controllers
             }
 
             var userName = User.FindFirst(ClaimTypes.Name)?.Value;
-            string? idSessao = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+            string? sessionId = User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
 
             DeletePreviousTokenFromCookies();
 
-            if (userName == null || idSessao == null)
+            if (userName == null || sessionId == null)
             {
                 return Ok();
             }
@@ -195,7 +195,7 @@ namespace Auth_Turkeysoftware.Controllers
                 return Ok();
             }
 
-            await _userSessionService.InvalidateUserSession(user.Id, idSessao);
+            await _userSessionService.InvalidateUserSession(user.Id, sessionId);
 
             return Ok();
         }
@@ -206,7 +206,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <remarks>
         /// Exemplo de requisição:
         /// 
-        ///     POST /api/User/revoke-session/{idSessao}
+        ///     POST /api/User/revoke-session/{sessionId}
         ///     Authorization: Bearer {token}
         ///
         /// </remarks>

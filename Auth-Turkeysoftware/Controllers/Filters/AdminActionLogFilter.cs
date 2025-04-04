@@ -9,11 +9,11 @@ namespace Auth_Turkeysoftware.Controllers.Filters
     public class AdminActionLoggingFilterAsync : IAsyncActionFilter
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly AppDbContext _dbContext;
+        private readonly CacheDbContext _dbContext;
         private readonly ILogger<AdminActionLoggingFilterAsync> _logger;
 
         public AdminActionLoggingFilterAsync(IHttpContextAccessor httpContextAccessor,
-                                             AppDbContext dbContext,
+                                             CacheDbContext dbContext,
                                              ILogger<AdminActionLoggingFilterAsync> logger)
         {
             _httpContextAccessor = httpContextAccessor;
