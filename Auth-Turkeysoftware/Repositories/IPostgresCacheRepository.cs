@@ -51,7 +51,6 @@ namespace Auth_Turkeysoftware.Repositories
 
         /// <summary>
         /// Verifica se uma entrada existe no cache distribuído com a chave especificada.<br/>
-        /// Este método também valida o elemento em cache, verifica sua expiração e aplica expiração deslizante quando necessário.
         /// </summary>
         /// <param name="key">A chave única do item de cache a ser verificado.</param>
         /// <returns>

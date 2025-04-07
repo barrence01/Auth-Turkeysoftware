@@ -20,7 +20,7 @@ namespace Auth_Turkeysoftware.Repositories
         {
             var cacheEntry = CreateCacheEntry(key, value, expiration, default);
 
-            if (!await IsCachedAsync(key))
+            if (!await IsAlreadyInserted(key))
             {
                 await _dbContext.DistributedCache.AddAsync(cacheEntry);
                 await _dbContext.SaveChangesAsync();
@@ -35,7 +35,7 @@ namespace Auth_Turkeysoftware.Repositories
         {
             var cacheEntry = CreateCacheEntry(key, value, default, default);
 
-            if (!await IsCachedAsync(key))
+            if (!await IsAlreadyInserted(key))
             {
                 await _dbContext.DistributedCache.AddAsync(cacheEntry);
                 await _dbContext.SaveChangesAsync();
@@ -50,7 +50,7 @@ namespace Auth_Turkeysoftware.Repositories
         {
             var cacheEntry = CreateCacheEntry(key, value, expiration, options);
 
-            if (!await IsCachedAsync(key))
+            if (!await IsAlreadyInserted(key))
             {
                 await _dbContext.DistributedCache.AddAsync(cacheEntry);
                 await _dbContext.SaveChangesAsync();
@@ -72,23 +72,30 @@ namespace Auth_Turkeysoftware.Repositories
         public async Task RemoveAsync(string key)
         {
             await _dbContext.DistributedCache
-                  .Where(p => p.Id == key)
-                  .ExecuteDeleteAsync();
+                            .Where(p => p.Id == key)
+                            .ExecuteDeleteAsync();
+        }
+
+        public async Task<bool> IsAlreadyInserted(string key)
+        {
+            return await _dbContext.DistributedCache.AsNoTracking().AnyAsync(e => e.Id == key);
         }
 
         /// <inheritdoc/>
         public async Task<bool> IsCachedAsync(string key)
         {
-            CacheEntryModel? cacheEntry = await _dbContext.DistributedCache.AsNoTracking()
-                                                                            .Where(e => e.Id == key)
-                                                                            .Select(s => new CacheEntryModel { 
-                                                                                Id = s.Id,
-                                                                                ExpiresAtTime = s.ExpiresAtTime,
-                                                                                AbsoluteExpiration = s.AbsoluteExpiration,
-                                                                                SlidingExpiration = s.SlidingExpiration
-                                                                            })
-                                                                            .Take(1)
-                                                                            .FirstOrDefaultAsync();
+            CacheEntryModel? cacheEntry = await _dbContext.DistributedCache
+                                                          .AsNoTracking()
+                                                          .Where(e => e.Id == key)
+                                                          .Select(s => new CacheEntryModel
+                                                          { 
+                                                            Id = s.Id,
+                                                            ExpiresAtTime = s.ExpiresAtTime,
+                                                            AbsoluteExpiration = s.AbsoluteExpiration,
+                                                            SlidingExpiration = s.SlidingExpiration
+                                                          })
+                                                          .Take(1)
+                                                          .FirstOrDefaultAsync();
 
             if (await ValidateCachedElement(key, cacheEntry) == null)  {
                 return false;
@@ -153,7 +160,7 @@ namespace Auth_Turkeysoftware.Repositories
         }
 
         /// <summary>
-        /// Valida um elemento em cache, verificando expiração e aplicando expiração deslizante quando necessário.
+        /// Valida um elemento em cache, verificando expiração e apenas o retornando se for uma entrada válida.
         /// </summary>
         /// <typeparam name="T">Tipo do objeto armazenado em cache.</typeparam>
         /// <param name="key">Chave da entrada no cache.</param>
@@ -170,7 +177,6 @@ namespace Auth_Turkeysoftware.Repositories
 
             if (cacheEntry.AbsoluteExpiration <= currentTime || (!cacheEntry.SlidingExpiration.HasValue && cacheEntry.ExpiresAtTime <= currentTime))
             {
-                await RemoveAsync(key);
                 return default;
             }
 
@@ -184,7 +190,7 @@ namespace Auth_Turkeysoftware.Repositories
         }
 
         /// <summary>
-        /// Valida um elemento em cache, verificando expiração e aplicando expiração deslizante quando necessário.
+        /// Valida um elemento em cache, verificando expiração e apenas o retornando se for uma entrada válida.
         /// </summary>
         /// <param name="key">Chave da entrada no cache.</param>
         /// <param name="cacheEntry">Entrada de cache a ser validada, ou null se não encontrada.</param>
@@ -197,9 +203,7 @@ namespace Auth_Turkeysoftware.Repositories
 
             if(cacheEntry == null) { return default; }
 
-            if (cacheEntry.AbsoluteExpiration <= currentTime || (!cacheEntry.SlidingExpiration.HasValue && cacheEntry.ExpiresAtTime <= currentTime))
-            {
-                await RemoveAsync(key);
+            if (cacheEntry.AbsoluteExpiration <= currentTime || (!cacheEntry.SlidingExpiration.HasValue && cacheEntry.ExpiresAtTime <= currentTime)) {
                 return default;
             }
 
