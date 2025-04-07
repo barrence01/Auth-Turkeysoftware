@@ -6,7 +6,7 @@ namespace Auth_Turkeysoftware.Controllers.Filters
     public class LoginFilter : ActionFilterAttribute
     {
         /// <summary>
-        /// Asynchronously executes the action filter. Reads and parses the request body to get IP, Platforma, and UserAgent.
+        /// Asynchronously executes the action filter. Reads and parses the request body to get IP, Platform, and UserAgent.
         /// If values are not found in the body, falls back to headers or connection info.
         /// Stores the values in HttpContext.Items for later use in the controller.
         /// </summary>
@@ -42,10 +42,10 @@ namespace Auth_Turkeysoftware.Controllers.Filters
         }
 
         /// <summary>
-        /// Helper method to asynchronously read and parse the request body for IP, Platforma, and UserAgent.
+        /// Helper method to asynchronously read and parse the request body for IP, Platform, and UserAgent.
         /// </summary>
         /// <param name="request">The HTTP request.</param>
-        /// <returns>A tuple containing the IP, Platforma, and UserAgent values.</returns>
+        /// <returns>A tuple containing the IP, Platform, and UserAgent values.</returns>
         private async Task<(string? ip, string? platform, string? userAgent)> GetValuesFromRequestBodyAsync(HttpRequest request)
         {
             // Allow the request body to be read multiple times

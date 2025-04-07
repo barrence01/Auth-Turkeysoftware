@@ -2,9 +2,9 @@
 using Auth_Turkeysoftware.Controllers.Bases;
 using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Models.Response;
+using Auth_Turkeysoftware.Models.Results;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -92,7 +92,7 @@ namespace Auth_Turkeysoftware.Controllers
                     return BadRequest("Email ou senha inválido!", result);
                 }
 
-                TwoFactorValidationDTO twoFactorResult = await _authenticationService.VerifyTwoFactorAuthentication(user, request.TwoFactorCode);
+                TwoFactorValidationResult twoFactorResult = await _authenticationService.VerifyTwoFactorAuthentication(user, request.TwoFactorCode);
                 if (!twoFactorResult.HasSucceeded())
                 {
                     result.IsTwoFactorRequired = true;
@@ -126,11 +126,11 @@ namespace Auth_Turkeysoftware.Controllers
                 UserSessionModel userModel;
                 userModel = await _loggedUserService.GetGeolocationByIpAddress(new UserSessionModel
                 {
-                    IdSessao = newIdSessao,
-                    FkIdUsuario = user.Id,
+                    SessionId = newIdSessao,
+                    FkUserId = user.Id,
                     RefreshToken = refreshToken,
                     IP = HttpContext.Items["IP"]?.ToString() ?? string.Empty,
-                    Platforma = HttpContext.Items["Platform"]?.ToString() ?? string.Empty,
+                    Platform = HttpContext.Items["Platform"]?.ToString() ?? string.Empty,
                     UserAgent = HttpContext.Items["UserAgent"]?.ToString() ?? string.Empty
                 });
 
@@ -169,11 +169,20 @@ namespace Auth_Turkeysoftware.Controllers
         [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> SendTwoFactorCode([FromBody] LoginRequest request)
         {
+            if (request.TwoFactorMode == null || request.TwoFactorMode <= 0) {
+                ModelState.AddModelError("twoFactorMode", "TwoFactorMode não pode ser nulo.");
+                return BadRequest("TwoFactorMode não pode ser nulo.");
+            }
+
             LoginResponse result = new LoginResponse();
 
             var user = await _userManager.FindByNameAsync(request.Email);
             if (user == null) {
                 return BadRequest("Email ou senha inválido!", result);
+            }
+
+            if (!user.TwoFactorEnabled) {
+                return Ok("Usuário não possui autenticação de 2 fatores", result);
             }
 
             var signInresult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
@@ -192,13 +201,43 @@ namespace Auth_Turkeysoftware.Controllers
                 return BadRequest("Email ou senha inválido!", result);
             }
 
-            if (!user.TwoFactorEnabled)
-            {
+            await _authenticationService.SendTwoFactorCodeAsync(user, request.TwoFactorMode);
+            return Ok("Código 2FA enviado.");
+        }
+
+        [HttpPost("list-2fa-options")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ListTwoFactorOption([FromBody] LoginRequest request)
+        {
+            LoginResponse result = new LoginResponse();
+
+            var user = await _userManager.FindByNameAsync(request.Email);
+            if (user == null) {
+                return BadRequest("Email ou senha inválido!", result);
+            }
+
+            if (!user.TwoFactorEnabled) {
                 return Ok("Usuário não possui autenticação de 2 fatores", result);
             }
 
-            await _authenticationService.SendTwoFactorCodeAsync(request.Email);
-            return Ok("Código 2FA enviado.");
+            var signInresult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+
+            if (!signInresult.Succeeded)
+            {
+                if (signInresult.IsLockedOut) {
+                    result.IsAccountLockedOut = true;
+                    return BadRequest("Sua conta foi bloqueada por excesso de tentativas de login.", result);
+                }
+
+                if (signInresult.IsNotAllowed) {
+                    if (!user.EmailConfirmed || !user.PhoneNumberConfirmed) {
+                        return BadRequest("É necessário confirmar a conta antes de fazer login.", result);
+                    }
+                }
+                return BadRequest("Email ou senha inválido!", result);
+            }
+
+            return Ok(await _authenticationService.ListActive2FAOptions(user));
         }
 
         /// <summary>

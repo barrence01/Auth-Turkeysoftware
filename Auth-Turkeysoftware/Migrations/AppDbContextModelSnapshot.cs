@@ -28,36 +28,37 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.HasSequence<int>("test_data_sequence");
 
+            modelBuilder.HasSequence("two_factor_auth_sequence");
+
             modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.AdminActionLogModel", b =>
                 {
-                    b.Property<long>("IdAction")
+                    b.Property<long>("AdminActionId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasColumnName("id_action")
+                        .HasColumnName("id_admin_action")
                         .HasDefaultValueSql("nextval('\"admin_action_sequence\"')");
 
-                    b.Property<string>("Argumentos")
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dt_inclusao");
+
+                    b.Property<string>("FkUserId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("fk_id_usuario");
+
+                    b.Property<string>("MethodArguments")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("ds_args");
 
-                    b.Property<DateTime>("DataInclusao")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("dt_inclusao");
-
-                    b.Property<string>("FkIdUsuario")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("fk_id_usuario");
-
-                    b.Property<string>("NomeMetodo")
+                    b.Property<string>("MethodName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("nm_class_metdo_exec");
 
-                    b.HasKey("IdAction");
+                    b.HasKey("AdminActionId");
 
                     b.ToTable("tb_log_admin_action");
                 });
@@ -166,7 +167,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.HistAplicationUserModel", b =>
                 {
-                    b.Property<int>("IdMudanca")
+                    b.Property<int>("HistoryId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValueSql("nextval('\"hist_aspnet_users_sequence\"')");
@@ -210,7 +211,7 @@ namespace Auth_Turkeysoftware.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.HasKey("IdMudanca");
+                    b.HasKey("HistoryId");
 
                     b.ToTable("tb_hist_aspnet_users", "auth", t =>
                         {
@@ -220,7 +221,12 @@ namespace Auth_Turkeysoftware.Migrations
 
             modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.HistUserLoginModel", b =>
                 {
-                    b.Property<DateTime>("DataInclusao")
+                    b.Property<string>("Country")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("nm_pais");
+
+                    b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("dt_inclusao");
 
@@ -230,10 +236,9 @@ namespace Auth_Turkeysoftware.Migrations
                     b.Property<DateTime>("DbOperationWhen")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("FkIdUsuario")
+                    b.Property<string>("FkUserId")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
+                        .HasColumnType("text")
                         .HasColumnName("fk_id_usuario");
 
                     b.Property<string>("IP")
@@ -242,25 +247,20 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("nr_ip");
 
-                    b.Property<string>("IdSessao")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("id_sessao");
-
-                    b.Property<string>("Pais")
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)")
-                        .HasColumnName("nm_pais");
-
-                    b.Property<string>("Platforma")
+                    b.Property<string>("Platform")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("nm_platform");
 
-                    b.Property<string>("Provedora")
+                    b.Property<string>("ServiceProvider")
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)")
                         .HasColumnName("nm_provedora");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("id_sessao");
 
                     b.Property<string>("UF")
                         .HasMaxLength(60)
@@ -275,24 +275,65 @@ namespace Auth_Turkeysoftware.Migrations
                     b.ToTable("tb_hist_usuar_login", "auth");
                 });
 
-            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.UserSessionModel", b =>
+            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.TwoFactorAuthModel", b =>
                 {
-                    b.Property<string>("IdSessao")
+                    b.Property<string>("FkUserId")
                         .HasColumnType("text")
-                        .HasColumnName("id_sessao");
+                        .HasColumnName("fk_id_usuario");
 
-                    b.Property<DateTime?>("DataAlteracao")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("dt_alteracao");
+                    b.Property<int>("TwoFactorMode")
+                        .HasColumnType("integer")
+                        .HasColumnName("in_two_factor_mode")
+                        .HasComment("1 - Email | 2 - SMS | 3 - Whatsapp | 4 - TOTP");
 
-                    b.Property<DateTime>("DataInclusao")
+                    b.Property<DateTime>("CreatedOn")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("dt_inclusao");
 
-                    b.Property<string>("FkIdUsuario")
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("in_reg_ativo")
+                        .HasComment("true - registro ativo | false - registro inativo");
+
+                    b.Property<byte[]>("RequiredParameters")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("tx_required_params")
+                        .HasComment("Um JSON contendo as informações necessárias para validar este tipo de autenticação");
+
+                    b.Property<int>("TwoFactorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("id_two_factor")
+                        .HasDefaultValueSql("nextval('\"two_factor_auth_sequence\"')");
+
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dt_alteracao");
+
+                    b.HasKey("FkUserId", "TwoFactorMode");
+
+                    b.HasIndex(new[] { "FkUserId" }, "IX_fk_id_usuar_2fa");
+
+                    b.ToTable("tb_two_factor_auth", "auth");
+                });
+
+            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.UserSessionModel", b =>
+                {
+                    b.Property<string>("SessionId")
+                        .HasColumnType("text")
+                        .HasColumnName("id_sessao");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("nm_pais");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dt_inclusao");
+
+                    b.Property<string>("FkUserId")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
+                        .HasColumnType("text")
                         .HasColumnName("fk_id_usuario");
 
                     b.Property<string>("IP")
@@ -301,25 +342,20 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("nr_ip");
 
-                    b.Property<string>("Pais")
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)")
-                        .HasColumnName("nm_pais");
-
-                    b.Property<string>("Platforma")
+                    b.Property<string>("Platform")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("nm_platforma");
-
-                    b.Property<string>("Provedora")
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)")
-                        .HasColumnName("nm_provedora");
 
                     b.Property<string>("RefreshToken")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("ds_refresh_token");
+
+                    b.Property<string>("ServiceProvider")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("nm_provedora");
 
                     b.Property<char>("TokenStatus")
                         .HasColumnType("character(1)")
@@ -331,21 +367,25 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasColumnType("character varying(60)")
                         .HasColumnName("nm_estado");
 
+                    b.Property<DateTime?>("UpdatedOn")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("dt_alteracao");
+
                     b.Property<string>("UserAgent")
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)")
-                        .HasColumnName("ds_userAgent");
+                        .HasColumnName("ds_user_agent");
 
-                    b.HasKey("IdSessao");
+                    b.HasKey("SessionId");
 
-                    b.HasIndex(new[] { "FkIdUsuario" }, "IX_fk_id_usuar_session");
+                    b.HasIndex(new[] { "FkUserId" }, "IX_fk_id_usuar_session");
 
                     b.ToTable("tb_usuar_session", "auth", t =>
                         {
                             t.HasTrigger("LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL");
                         });
 
-                    b.HasAnnotation("LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL", "CREATE FUNCTION \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_usuar_login\" (\"id_sessao\", \"fk_id_usuario\", \"dt_inclusao\", \"nm_estado\", \"nm_provedora\", \"nr_ip\", \"nm_platform\", \"ds_user_agent\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"id_sessao\", \r\n  NEW.\"fk_id_usuario\", \r\n  NEW.\"dt_inclusao\", \r\n  NEW.\"nm_estado\", \r\n  NEW.\"nm_provedora\", \r\n  NEW.\"nr_ip\", \r\n  NEW.\"nm_platforma\", \r\n  NEW.\"ds_userAgent\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL AFTER INSERT\r\nON \"auth\".\"tb_usuar_session\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"();");
+                    b.HasAnnotation("LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL", "CREATE FUNCTION \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_usuar_login\" (\"id_sessao\", \"fk_id_usuario\", \"dt_inclusao\", \"nm_estado\", \"nm_provedora\", \"nr_ip\", \"nm_platform\", \"ds_user_agent\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"id_sessao\", \r\n  NEW.\"fk_id_usuario\", \r\n  NEW.\"dt_inclusao\", \r\n  NEW.\"nm_estado\", \r\n  NEW.\"nm_provedora\", \r\n  NEW.\"nr_ip\", \r\n  NEW.\"nm_platforma\", \r\n  NEW.\"ds_user_agent\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL AFTER INSERT\r\nON \"auth\".\"tb_usuar_session\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"();");
                 });
 
             modelBuilder.Entity("Auth_Turkeysoftware.Test.Repositories.Models.TestDataModel", b =>
@@ -502,6 +542,17 @@ namespace Auth_Turkeysoftware.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.TwoFactorAuthModel", b =>
+                {
+                    b.HasOne("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", "User")
+                        .WithMany("Registered2FAModes")
+                        .HasForeignKey("FkUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -551,6 +602,11 @@ namespace Auth_Turkeysoftware.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Auth_Turkeysoftware.Repositories.DataBaseModels.ApplicationUser", b =>
+                {
+                    b.Navigation("Registered2FAModes");
                 });
 #pragma warning restore 612, 618
         }

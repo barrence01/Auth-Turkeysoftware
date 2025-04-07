@@ -35,7 +35,7 @@ namespace Auth_Turkeysoftware.Services
 
             try
             {
-                return await _dbContext.ExecuteWithTransactionAsync(async () =>
+                return await TransactionHelper.ExecuteWithTransactionAsync(_dbContext, async () =>
                 {
 
                     var userExists = await _userManager.FindByNameAsync(model.Email);
@@ -85,15 +85,17 @@ namespace Auth_Turkeysoftware.Services
             }
         }
 
-        private async Task<bool> CheckAndInsertDefaultRoles()
+        private async Task CheckAndInsertDefaultRoles()
         {
+            var roles = _roleManager.Roles.ToList();
+
             foreach (string userRole in Enum.GetNames(typeof(UserRolesEnum)))
             {
-                if (!await _roleManager.RoleExistsAsync(userRole.ToString())) { 
-                    await _roleManager.CreateAsync(new IdentityRole(userRole.ToString()));
+                if (!roles.Any(r => r.Name == userRole)) {
+                    await _roleManager.CreateAsync(new IdentityRole(userRole));
                 }
             }
-            return true;
+            return;
         }
     }
 }

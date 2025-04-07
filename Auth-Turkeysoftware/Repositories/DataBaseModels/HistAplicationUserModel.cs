@@ -9,7 +9,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
     public class HistAplicationUserModel
     {
         [Key]
-        public int IdMudanca { get; set; }
+        public int HistoryId { get; set; }
         [Required]
         public string? UserId { get; set; }
         [Required]

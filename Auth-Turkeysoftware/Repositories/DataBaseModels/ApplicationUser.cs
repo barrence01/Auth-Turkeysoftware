@@ -26,5 +26,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         [MaxLength(128)]
         [Required]
         public string Name { get; set; }
+
+        public ICollection<TwoFactorAuthModel>? Registered2FAModes { get; set; }
     }
 }

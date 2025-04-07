@@ -56,6 +56,8 @@ try
     builder.Services.AddDistributedMemoryCache();
     builder.Services.AddScoped<IPostgresCacheRepository, PostgresCacheRepository>();
     builder.Services.AddScoped<IDistributedCacheService, DistributedCacheService>();
+    builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<ITwoFactorRepository, TwoFactorRepository>();
     builder.Services.AddScoped<IUserSessionService, UserSessionService>();
     builder.Services.AddScoped<IUserSessionRepository, UserSessionRepository>();
     builder.Services.AddScoped<IExternalApiService, ExternalApiService>();
@@ -71,9 +73,11 @@ try
     builder.Services.AddSingleton<JwtSettingsSingleton>();
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
     builder.Services.AddSingleton<EmailSettingsSingleton>();
+    builder.Services.Configure<EmailTokenProviderSettings>(builder.Configuration.GetSection("EmailTokenProviderSettings"));
+    builder.Services.AddSingleton<EmailTokenProviderSingleton>();
 
     // Mail Service
-    builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
     builder.Services.AddTransient<IEmailService, EmailService>();
 
     // Filters
@@ -132,7 +136,9 @@ try
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
                     .AddEntityFrameworkStores<AppDbContext>()
                     .AddErrorDescriber<CustomIdentityErrorDescriber>()
-                    .AddDefaultTokenProviders();
+                    .AddDefaultTokenProviders()
+                    .AddTokenProvider<EmailTokenProvider<ApplicationUser>>(TokenOptions.DefaultEmailProvider);
+
 
     // Configurar requisitos para login de usuário
     builder.Services.Configure<IdentityOptions>(options =>

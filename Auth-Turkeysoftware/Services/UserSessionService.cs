@@ -71,9 +71,9 @@ namespace Auth_Turkeysoftware.Services
             //    IpDetailsDTO ipDetailsModel = await _externalApiService.GetIpDetails(loggedUserModel.IP);
             //    if (ipDetailsModel != null && ipDetailsModel.Status == "success")
             //    {
-            //        loggedUserModel.Provedora = ipDetailsModel.Org;
+            //        loggedUserModel.ServiceProvider = ipDetailsModel.Org;
             //        loggedUserModel.UF = ipDetailsModel.Region;
-            //        loggedUserModel.Pais = ipDetailsModel.Country;
+            //        loggedUserModel.Country = ipDetailsModel.Country;
             //    }
             //}
 

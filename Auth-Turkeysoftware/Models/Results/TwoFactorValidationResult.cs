@@ -1,15 +1,15 @@
-﻿namespace Auth_Turkeysoftware.Models.DTOs
+﻿namespace Auth_Turkeysoftware.Models.Results
 {
-    public class TwoFactorValidationDTO
+    public class TwoFactorValidationResult
     {
         public bool IsTwoFactorCodeEmpty { get; set; } = false;
         public bool IsMaxNumberOfTriesExceeded { get; set; } = false;
         public bool IsTwoFactorCodeExpired { get; set; } = false;
         public bool IsTwoFactorCodeInvalid { get; set; } = false;
 
-        public TwoFactorValidationDTO() { }
+        public TwoFactorValidationResult() { }
 
-        public TwoFactorValidationDTO(bool isEmpty, bool hasExceeded, bool isInvalid)
+        public TwoFactorValidationResult(bool isEmpty, bool hasExceeded, bool isInvalid)
         {
             IsTwoFactorCodeEmpty = isEmpty;
             IsMaxNumberOfTriesExceeded = hasExceeded;

@@ -23,6 +23,10 @@ namespace Auth_Turkeysoftware.Controllers.Handlers
                     statusCode = StatusCodes.Status503ServiceUnavailable;
                     title = "Service Unavailable";
                     break;
+                case NotImplementedException:
+                    statusCode = StatusCodes.Status500InternalServerError;
+                    title = "Not Implemented";
+                    break;
                 default:
                     statusCode = StatusCodes.Status500InternalServerError;
                     title = "Internal Server error";

@@ -7,17 +7,16 @@ using Auth_Turkeysoftware.Extensions;
 namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 {
     [Table("tb_usuar_session", Schema = "auth")]
-    [Index(nameof(FkIdUsuario), Name = "IX_fk_id_usuar_session")]
+    [Index(nameof(FkUserId), Name = "IX_fk_id_usuar_session")]
     public class UserSessionModel
     {
         [Key]
         [Column("id_sessao")]
-        public string IdSessao { get; set; }
+        public string SessionId { get; set; }
 
         [Column("fk_id_usuario")]
-        [MaxLength(255)]
         [Required]
-        public string? FkIdUsuario { get; set; }
+        public string? FkUserId { get; set; }
 
         [Column("ds_refresh_token")]
         [Required]
@@ -31,14 +30,14 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 
         [Column("dt_inclusao")]
         [Required]
-        public DateTime? DataInclusao { get; set; }
+        public DateTime? CreatedOn { get; set; }
 
         [Column("dt_alteracao")]
-        public DateTime? DataAlteracao { get; set; }
+        public DateTime? UpdatedOn { get; set; }
 
         [Column("nm_pais")]
         [MaxLength(60)]
-        public string? Pais { get; set; }
+        public string? Country { get; set; }
 
         [Column("nm_estado")]
         [MaxLength(60)]
@@ -46,7 +45,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 
         [Column("nm_provedora")]
         [MaxLength(60)]
-        public string? Provedora { get; set; }
+        public string? ServiceProvider { get; set; }
 
         [Column("nr_ip")]
         [MaxLength(50)]
@@ -55,9 +54,9 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 
         [Column("nm_platforma")]
         [MaxLength(30)]
-        public string? Platforma { get; set; }
+        public string? Platform { get; set; }
 
-        [Column("ds_userAgent")]
+        [Column("ds_user_agent")]
         [MaxLength(150)]
         public string? UserAgent { get; set; }
 
@@ -65,7 +64,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 
         public bool IsValidForInclusion()
         {
-            if (FkIdUsuario == null ||
+            if (FkUserId == null ||
                 string.IsNullOrEmpty(RefreshToken) || string.IsNullOrEmpty(IP))
             {
                 return false;
@@ -77,7 +76,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 
         public void DataNormalizer()
         {
-            Pais = Pais?.ToLowerInvariant();
+            Country = Country?.ToLowerInvariant();
             UF = UF?.ToLowerInvariant();
         }
     }

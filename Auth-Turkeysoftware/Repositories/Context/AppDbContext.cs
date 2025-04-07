@@ -4,6 +4,7 @@ using Auth_Turkeysoftware.Test.Repositories.Models;
 using Laraue.EfCoreTriggers.Common.Extensions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection.Emit;
 
 namespace Auth_Turkeysoftware.Repositories.Context
 {
@@ -13,6 +14,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<CacheEntryModel> DistributedCache { get; set; }
+        public DbSet<TwoFactorAuthModel> TwoFactorAuth { get; set; }
         public DbSet<UserSessionModel> LoggedUser { get; set; }
         public DbSet<AdminActionLogModel> AdminActionLog { get; set; }
         public DbSet<HistUserLoginModel> HistUserLogin { get; set; }
@@ -31,13 +33,13 @@ namespace Auth_Turkeysoftware.Repositories.Context
                        trigger.Action(action =>
                             action.Insert<HistUserLoginModel>(userSessionModel => new HistUserLoginModel
                             {
-                                IdSessao = userSessionModel.New.IdSessao,
-                                FkIdUsuario = userSessionModel.New.FkIdUsuario,
-                                DataInclusao = userSessionModel.New.DataInclusao,
+                                SessionId = userSessionModel.New.SessionId,
+                                FkUserId = userSessionModel.New.FkUserId,
+                                CreatedOn = userSessionModel.New.CreatedOn,
                                 UF = userSessionModel.New.UF,
-                                Provedora = userSessionModel.New.Provedora,
+                                ServiceProvider = userSessionModel.New.ServiceProvider,
                                 IP = userSessionModel.New.IP,
-                                Platforma = userSessionModel.New.Platforma,
+                                Platform = userSessionModel.New.Platform,
                                 UserAgent = userSessionModel.New.UserAgent,
                                 DbOperationType = (char)DbOperationTypeEnum.INCLUSAO,
                                 DbOperationWhen = DateTime.Now
@@ -53,7 +55,7 @@ namespace Auth_Turkeysoftware.Repositories.Context
                    .IncrementsBy(1);
 
             builder.Entity<HistAplicationUserModel>()
-                   .Property(e => e.IdMudanca)
+                   .Property(e => e.HistoryId)
                    .IsRequired()
                    .HasDefaultValueSql("nextval('\"hist_aspnet_users_sequence\"')");
 
@@ -99,9 +101,30 @@ namespace Auth_Turkeysoftware.Repositories.Context
                    .IncrementsBy(1);
 
             builder.Entity<AdminActionLogModel>()
-                   .Property(e => e.IdAction)
+                   .Property(e => e.AdminActionId)
                    .HasDefaultValueSql("nextval('\"admin_action_sequence\"')");
 
+            ////
+            // TABLE: tb_two_factor_auth
+            // MODEL: TwoFactorAuthModel
+            ////
+            builder.HasSequence<long>("two_factor_auth_sequence")
+                   .StartsAt(1)
+                   .IncrementsBy(1);
+
+            builder.Entity<TwoFactorAuthModel>()
+                   .Property(e => e.TwoFactorId)
+                   .HasDefaultValueSql("nextval('\"two_factor_auth_sequence\"')");
+
+            // Declaração de chave composta
+            builder.Entity<TwoFactorAuthModel>()
+                        .HasKey(e => new { e.FkUserId, e.TwoFactorMode });
+
+            builder.Entity<TwoFactorAuthModel>()
+                   .HasOne(e => e.User)
+                   .WithMany(f => f.Registered2FAModes)
+                   .HasForeignKey(e => e.FkUserId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
             ////
             // TABLE: tb_test

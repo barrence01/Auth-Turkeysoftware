@@ -10,20 +10,19 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
     {
         [Column("id_sessao")]
         [Required]
-        public string? IdSessao { get; set; }
+        public string? SessionId { get; set; }
 
         [Column("fk_id_usuario")]
         [Required]
-        [MaxLength(255)]
-        public string? FkIdUsuario { get; set; }
+        public string? FkUserId { get; set; }
 
         [Column("dt_inclusao")]
         [Required]
-        public DateTime? DataInclusao { get; set; }
+        public DateTime? CreatedOn { get; set; }
 
         [Column("nm_pais")]
         [MaxLength(60)]
-        public string? Pais { get; set; }
+        public string? Country { get; set; }
 
         [Column("nm_estado")]
         [MaxLength(60)]
@@ -31,7 +30,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 
         [Column("nm_provedora")]
         [MaxLength(60)]
-        public string? Provedora { get; set; }
+        public string? ServiceProvider { get; set; }
 
         [Column("nr_ip")]
         [Required]
@@ -40,7 +39,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
 
         [Column("nm_platform")]
         [MaxLength(30)]
-        public string? Platforma { get; set; }
+        public string? Platform { get; set; }
 
         [Column("ds_user_agent")]
         [MaxLength(150)]

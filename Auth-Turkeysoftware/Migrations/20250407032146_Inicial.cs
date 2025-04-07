@@ -24,6 +24,9 @@ namespace Auth_Turkeysoftware.Migrations
             migrationBuilder.CreateSequence<int>(
                 name: "test_data_sequence");
 
+            migrationBuilder.CreateSequence(
+                name: "two_factor_auth_sequence");
+
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -85,7 +88,7 @@ namespace Auth_Turkeysoftware.Migrations
                 schema: "auth",
                 columns: table => new
                 {
-                    IdMudanca = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "nextval('\"hist_aspnet_users_sequence\"')"),
+                    HistoryId = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "nextval('\"hist_aspnet_users_sequence\"')"),
                     UserId = table.Column<string>(type: "text", nullable: false),
                     UserName = table.Column<string>(type: "text", nullable: false),
                     NormalizedUserName = table.Column<string>(type: "text", nullable: false),
@@ -99,7 +102,7 @@ namespace Auth_Turkeysoftware.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_tb_hist_aspnet_users", x => x.IdMudanca);
+                    table.PrimaryKey("PK_tb_hist_aspnet_users", x => x.HistoryId);
                 },
                 comment: "Tracks the changes in the AspNetUsers table");
 
@@ -109,7 +112,7 @@ namespace Auth_Turkeysoftware.Migrations
                 columns: table => new
                 {
                     id_sessao = table.Column<string>(type: "text", nullable: false),
-                    fk_id_usuario = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    fk_id_usuario = table.Column<string>(type: "text", nullable: false),
                     dt_inclusao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     nm_pais = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: true),
                     nm_estado = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: true),
@@ -128,15 +131,15 @@ namespace Auth_Turkeysoftware.Migrations
                 name: "tb_log_admin_action",
                 columns: table => new
                 {
-                    id_action = table.Column<long>(type: "bigint", nullable: false, defaultValueSql: "nextval('\"admin_action_sequence\"')"),
-                    fk_id_usuario = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    id_admin_action = table.Column<long>(type: "bigint", nullable: false, defaultValueSql: "nextval('\"admin_action_sequence\"')"),
+                    fk_id_usuario = table.Column<string>(type: "text", nullable: false),
                     nm_class_metdo_exec = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     ds_args = table.Column<string>(type: "text", nullable: false),
                     dt_inclusao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_tb_log_admin_action", x => x.id_action);
+                    table.PrimaryKey("PK_tb_log_admin_action", x => x.id_admin_action);
                 });
 
             migrationBuilder.CreateTable(
@@ -159,7 +162,7 @@ namespace Auth_Turkeysoftware.Migrations
                 columns: table => new
                 {
                     id_sessao = table.Column<string>(type: "text", nullable: false),
-                    fk_id_usuario = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    fk_id_usuario = table.Column<string>(type: "text", nullable: false),
                     ds_refresh_token = table.Column<string>(type: "text", nullable: false),
                     st_token = table.Column<char>(type: "character(1)", nullable: false, comment: "A - Ativo | I - Inativo"),
                     dt_inclusao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -169,7 +172,7 @@ namespace Auth_Turkeysoftware.Migrations
                     nm_provedora = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: true),
                     nr_ip = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     nm_platforma = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: true),
-                    ds_userAgent = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true)
+                    ds_user_agent = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -282,6 +285,30 @@ namespace Auth_Turkeysoftware.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "tb_two_factor_auth",
+                schema: "auth",
+                columns: table => new
+                {
+                    fk_id_usuario = table.Column<string>(type: "text", nullable: false),
+                    in_two_factor_mode = table.Column<int>(type: "integer", nullable: false, comment: "1 - Email | 2 - SMS | 3 - Whatsapp | 4 - TOTP"),
+                    id_two_factor = table.Column<int>(type: "integer", nullable: false, defaultValueSql: "nextval('\"two_factor_auth_sequence\"')"),
+                    tx_required_params = table.Column<byte[]>(type: "jsonb", nullable: true, comment: "Um JSON contendo as informações necessárias para validar este tipo de autenticação"),
+                    in_reg_ativo = table.Column<bool>(type: "boolean", nullable: false, comment: "true - registro ativo | false - registro inativo"),
+                    dt_inclusao = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    dt_alteracao = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_tb_two_factor_auth", x => new { x.fk_id_usuario, x.in_two_factor_mode });
+                    table.ForeignKey(
+                        name: "FK_tb_two_factor_auth_AspNetUsers_fk_id_usuario",
+                        column: x => x.fk_id_usuario,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -320,6 +347,12 @@ namespace Auth_Turkeysoftware.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_fk_id_usuar_2fa",
+                schema: "auth",
+                table: "tb_two_factor_auth",
+                column: "fk_id_usuario");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_fk_id_usuar_session",
                 schema: "auth",
                 table: "tb_usuar_session",
@@ -329,7 +362,7 @@ namespace Auth_Turkeysoftware.Migrations
 
             migrationBuilder.Sql("CREATE FUNCTION \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"() RETURNS trigger as $LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_aspnet_users\" (\"UserId\", \"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\", \"PhoneNumber\", \"Name\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"Id\", \r\n  NEW.\"UserName\", \r\n  NEW.\"NormalizedUserName\", \r\n  NEW.\"Email\", \r\n  NEW.\"NormalizedEmail\", \r\n  NEW.\"PasswordHash\", \r\n  NEW.\"PhoneNumber\", \r\n  NEW.\"Name\", \r\n  'A', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER AFTER UPDATE\r\nON \"AspNetUsers\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_AFTER_UPDATE_APPLICATIONUSER\"();");
 
-            migrationBuilder.Sql("CREATE FUNCTION \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_usuar_login\" (\"id_sessao\", \"fk_id_usuario\", \"dt_inclusao\", \"nm_estado\", \"nm_provedora\", \"nr_ip\", \"nm_platform\", \"ds_user_agent\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"id_sessao\", \r\n  NEW.\"fk_id_usuario\", \r\n  NEW.\"dt_inclusao\", \r\n  NEW.\"nm_estado\", \r\n  NEW.\"nm_provedora\", \r\n  NEW.\"nr_ip\", \r\n  NEW.\"nm_platforma\", \r\n  NEW.\"ds_userAgent\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL AFTER INSERT\r\nON \"auth\".\"tb_usuar_session\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"();");
+            migrationBuilder.Sql("CREATE FUNCTION \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"() RETURNS trigger as $LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$\r\nBEGIN\r\n  INSERT INTO \"auth\".\"tb_hist_usuar_login\" (\"id_sessao\", \"fk_id_usuario\", \"dt_inclusao\", \"nm_estado\", \"nm_provedora\", \"nr_ip\", \"nm_platform\", \"ds_user_agent\", \"DbOperationType\", \"DbOperationWhen\") SELECT NEW.\"id_sessao\", \r\n  NEW.\"fk_id_usuario\", \r\n  NEW.\"dt_inclusao\", \r\n  NEW.\"nm_estado\", \r\n  NEW.\"nm_provedora\", \r\n  NEW.\"nr_ip\", \r\n  NEW.\"nm_platforma\", \r\n  NEW.\"ds_user_agent\", \r\n  'I', \r\n  NOW();\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL AFTER INSERT\r\nON \"auth\".\"tb_usuar_session\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"auth\".\"LC_TRIGGER_AFTER_INSERT_USERSESSIONMODEL\"();");
         }
 
         /// <inheritdoc />
@@ -376,6 +409,10 @@ namespace Auth_Turkeysoftware.Migrations
                 schema: "auth");
 
             migrationBuilder.DropTable(
+                name: "tb_two_factor_auth",
+                schema: "auth");
+
+            migrationBuilder.DropTable(
                 name: "tb_usuar_session",
                 schema: "auth");
 
@@ -393,6 +430,9 @@ namespace Auth_Turkeysoftware.Migrations
 
             migrationBuilder.DropSequence(
                 name: "test_data_sequence");
+
+            migrationBuilder.DropSequence(
+                name: "two_factor_auth_sequence");
         }
     }
 }
