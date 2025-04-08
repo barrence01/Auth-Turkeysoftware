@@ -40,7 +40,10 @@ namespace Auth_Turkeysoftware.Services
                 return;
             }
 
-            var token = RandomNumberGenerator.GetInt32(1000000, 9999999).ToString();
+            int initialRange = _emailTokenSettings.GetSettings().TokenInitialRange;
+            int finalRange = _emailTokenSettings.GetSettings().TokenFinalRange;
+
+            var token = RandomNumberGenerator.GetInt32(initialRange, finalRange).ToString();
             var tokenLifeSpanInMinutes = _emailTokenSettings.GetSettings().TokenLifeSpan;
             var maxNumberOfTries = _emailTokenSettings.GetSettings().MaxNumberOfTries;
 
@@ -108,6 +111,17 @@ namespace Auth_Turkeysoftware.Services
             });
         }
 
+        public async Task SendConfirmEmailRequest(ApplicationUser user)
+        {
+            string cacheKey = $"EmailConfirm:{user.Email}";
+            if (await _cache.IsCachedAsync(cacheKey)) {
+                return;
+            }
+            await _cache.SetAsync(cacheKey, "true", TimeSpan.FromHours(24));
+
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            await _commService.SendConfirmEmailRequest(user.Id, user.Email!, token);
+        }
 
         private static string Get2FAEnableCacheKey(string email)
         {

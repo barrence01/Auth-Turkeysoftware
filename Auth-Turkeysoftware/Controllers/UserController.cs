@@ -311,7 +311,37 @@ namespace Auth_Turkeysoftware.Controllers
                 }
                 throw new BusinessException("Houve um erro desconhecido durante a confirmação de 2FA.");
             }
+            return Ok();
+        }
 
+        /// <summary>
+        /// Envia um novo email de confirmação para o usuário autenticado.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:
+        /// 
+        ///      POST /api/User/send-confirm-email
+        ///      Authorization: Bearer {token}
+        /// 
+        /// O email será enviado para o endereço cadastrado do usuário autenticado.
+        /// </remarks>
+        /// <returns>Resultado da operação.</returns>
+        /// <response code="200">Email de confirmação enviado com sucesso.</response>
+        /// <response code="400">Usuário não encontrado.</response>
+        /// <response code="401">Não autorizado - Token inválido ou ausente.</response>
+        [HttpPost("send-confirm-email")]
+        [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> SendConfirmEmailRequest()
+        {
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value;
+            var user = await _userManager.FindByNameAsync(userName!);
+            if (user == null) {
+                return BadRequest("Usuário não encontrado");
+            }
+
+            await _userService.SendConfirmEmailRequest(user);
             return Ok();
         }
     }

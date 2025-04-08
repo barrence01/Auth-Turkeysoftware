@@ -7,6 +7,7 @@ using Auth_Turkeysoftware.Repositories.Context;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
+using YamlDotNet.Core.Tokens;
 
 namespace Auth_Turkeysoftware.Services
 {
@@ -14,22 +15,25 @@ namespace Auth_Turkeysoftware.Services
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ICommunicationService _commService;
         private readonly ILogger<RegisterUserService> _logger;
         internal AppDbContext _dbContext;
 
         public RegisterUserService(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
+            ICommunicationService commService,
             ILogger<RegisterUserService> logger,
             AppDbContext dataBaseContext)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _commService = commService;
             _logger = logger;
             _dbContext = dataBaseContext;
         }
 
-        public async Task<RegisterUserResult> RegisterUser(RegisterRequest model)
+        public async Task<RegisterUserResult> RegisterUser(RegisterRequest request)
         {
             RegisterUserResult result = new RegisterUserResult();
 
@@ -38,7 +42,7 @@ namespace Auth_Turkeysoftware.Services
                 return await TransactionHelper.ExecuteWithTransactionAsync(_dbContext, async () =>
                 {
 
-                    var userExists = await _userManager.FindByNameAsync(model.Email);
+                    var userExists = await _userManager.FindByNameAsync(request.Email);
 
                     if (userExists != null) {
                         result.UserAlreadyExists = true;
@@ -47,17 +51,17 @@ namespace Auth_Turkeysoftware.Services
 
                     ApplicationUser user = new()
                     {
-                        Email = model.Email,
-                        UserName = model.Email,
-                        Name = model.Name,
-                        PhoneNumber = model.PhoneNumber
+                        Email = request.Email,
+                        UserName = request.Email,
+                        Name = request.Name,
+                        PhoneNumber = request.PhoneNumber
                     };
 
-                    var createAsyncresult = await _userManager.CreateAsync(user, model.Password);
+                    var createUserResult = await _userManager.CreateAsync(user, request.Password);
 
-                    if (!createAsyncresult.Succeeded) {
-                        _logger.LogError("Houve uma falha durante a criação do usuário: {CreateAsyncresult}", createAsyncresult);
-                        result.identityErrors = createAsyncresult.Errors;
+                    if (!createUserResult.Succeeded) {
+                        _logger.LogError("Houve uma falha durante a criação do usuário: {CreateAsyncresult}", createUserResult);
+                        result.identityErrors = createUserResult.Errors;
                         throw new BusinessException("Houve uma falha durante a criação do usuário");
                     }
 
@@ -83,6 +87,18 @@ namespace Auth_Turkeysoftware.Services
 
                 return result;
             }
+        }
+
+        public async Task SendConfirmEmailRequest(ApplicationUser user)
+        {
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            await _commService.SendConfirmEmailRequest(user.Id, user.Email!, token);
+        }
+
+        public async Task<bool> ConfirmEmailRequest(ApplicationUser user, string token)
+        {
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            return result.Succeeded;
         }
 
         private async Task CheckAndInsertDefaultRoles()

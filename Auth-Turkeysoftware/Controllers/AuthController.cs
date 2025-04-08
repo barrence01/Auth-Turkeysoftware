@@ -226,7 +226,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <remarks>
         /// Exemplo de requisição:<br/>
         /// 
-        ///     POST /api/auth/list-2fa-options<br/>
+        ///     POST /api/Auth/list-2fa-options<br/>
         ///     {
         ///         "email": "usuario@exemplo.com",
         ///         "password": "SenhaSegura123"

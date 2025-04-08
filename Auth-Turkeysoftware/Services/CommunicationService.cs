@@ -1,4 +1,6 @@
-﻿using Auth_Turkeysoftware.Models.DTOs;
+﻿using Auth_Turkeysoftware.Configurations.Services;
+using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Services.DistributedCacheService;
 using Auth_Turkeysoftware.Services.MailService;
 
 namespace Auth_Turkeysoftware.Services
@@ -6,9 +8,13 @@ namespace Auth_Turkeysoftware.Services
     public class CommunicationService : ICommunicationService
     {
         private readonly IEmailService _emailService;
-        public CommunicationService(IEmailService emailService)
+        private readonly EmailTokenProviderSingleton _emailTokenSettings;
+        private readonly IDistributedCacheService _cache;
+        public CommunicationService(IEmailService emailService, EmailTokenProviderSingleton emailTokenSettings, IDistributedCacheService cacheService)
         {
             _emailService = emailService;
+            _emailTokenSettings = emailTokenSettings;
+            _cache = cacheService;
         }
 
         public async Task Send2FAEmailAsync(string email, string twoFactorCode, string tokenLifeSpanInMinutes)
@@ -19,7 +25,6 @@ namespace Auth_Turkeysoftware.Services
                 Body = $"Seu código de autenticação é: <b>{twoFactorCode}</b>. Este código irá expirar em {tokenLifeSpanInMinutes} minutos."
             };
             emailRequest.To.Add(email);
-
             await _emailService.SendEmailAsync(emailRequest);
         }
 
@@ -31,7 +36,6 @@ namespace Auth_Turkeysoftware.Services
                 Body = $"Seu código de ativação é: <b>{twoFactorCode}</b>. Este código irá expirar em {tokenLifeSpanInMinutes} minutos."
             };
             emailRequest.To.Add(email);
-
             await _emailService.SendEmailAsync(emailRequest);
         }
 
@@ -45,7 +49,19 @@ namespace Auth_Turkeysoftware.Services
             };
 
             emailRequest.To.Add(email);
+            await _emailService.SendEmailAsync(emailRequest);
+        }
 
+        public async Task SendConfirmEmailRequest(string userId, string email, string confirmToken)
+        {
+            var confirmLink = $"https://yourfrontend.com/confirm-email?token={Uri.EscapeDataString(confirmToken)}&email={email}&userId={userId}";
+            var emailRequest = new SendEmailDto
+            {
+                Subject = "Confirmação de email - TurkeySoftware",
+                Body = $"Clique no link para confirmar seu email: {confirmLink}"
+            };
+
+            emailRequest.To.Add(email);
             await _emailService.SendEmailAsync(emailRequest);
         }
     }

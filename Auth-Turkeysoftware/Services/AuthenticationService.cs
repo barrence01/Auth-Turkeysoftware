@@ -42,12 +42,14 @@ namespace Auth_Turkeysoftware.Services
         {
             string cacheKey = Get2FACacheKey(user.UserName!);
 
-            if (await _cache.IsCachedAsync(cacheKey))
-            {
+            if (await _cache.IsCachedAsync(cacheKey)) {
                 return;
             }
 
-            string token = RandomNumberGenerator.GetInt32(1000000, 9999999).ToString();
+            int initialRange = _emailTokenSettings.GetSettings().TokenInitialRange;
+            int finalRange = _emailTokenSettings.GetSettings().TokenFinalRange;
+
+            string token = RandomNumberGenerator.GetInt32(initialRange, finalRange).ToString();
             var tokenLifeSpanInMinutes = _emailTokenSettings.GetSettings().TokenLifeSpan;
             var maxNumberOfTries = _emailTokenSettings.GetSettings().MaxNumberOfTries;
 
