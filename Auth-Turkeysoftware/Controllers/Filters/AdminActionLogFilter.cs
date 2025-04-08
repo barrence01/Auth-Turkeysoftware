@@ -30,7 +30,7 @@ namespace Auth_Turkeysoftware.Controllers.Filters
                             ? JsonSerializer.Serialize(context.ActionArguments)
                             : "No arguments";
 
-            _logger.LogWarning("Operação administrativa realizada: {methodName} por {userName} com os argumentos {arguments}",
+            _logger.LogWarning("Operação administrativa realizada: {MethodName} por {UserName} com os argumentos {Arguments}",
                                 methodName, userName, arguments);
 
             var logEntry = new AdminActionLogModel(userName, methodName, arguments);

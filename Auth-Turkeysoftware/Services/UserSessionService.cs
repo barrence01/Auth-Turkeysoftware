@@ -11,13 +11,9 @@ namespace Auth_Turkeysoftware.Services
     {
         private readonly IUserSessionRepository _userSessionRepository;
 
-        private readonly IExternalApiService _externalApiService;
-
-        public UserSessionService(IUserSessionRepository loggedUserRepository,
-                                 IExternalApiService externalApiService)
+        public UserSessionService(IUserSessionRepository loggedUserRepository)
         {
             _userSessionRepository = loggedUserRepository;
-            _externalApiService = externalApiService;
         }
 
         /// <inheritdoc/>
@@ -27,15 +23,15 @@ namespace Auth_Turkeysoftware.Services
         }
 
         /// <inheritdoc/>
-        public async Task InvalidateUserSession(string userId, string idSessao)
+        public async Task InvalidateUserSession(string userId, string sessionId)
         {
-            await _userSessionRepository.InvalidateUserSession(userId, idSessao);
+            await _userSessionRepository.InvalidateUserSession(userId, sessionId);
         }
 
         /// <inheritdoc/>
-        public async Task InvalidateAllUserSession(string userId, string idSessao)
+        public async Task InvalidateAllUserSession(string userId, string sessionId)
         {
-            await _userSessionRepository.InvalidateUserSession(userId, idSessao);
+            await _userSessionRepository.InvalidateUserSession(userId, sessionId);
         }
 
         /// <inheritdoc/>
@@ -55,29 +51,12 @@ namespace Auth_Turkeysoftware.Services
         }
 
         /// <inheritdoc/>
-        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page)
+        public async Task<PaginationDto<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page)
         {
             if (page <= 0)
                 page = 1;
 
             return await _userSessionRepository.ListUserActiveSessionsPaginated(userId, page, 10);
-        }
-
-        /// <inheritdoc/>
-        public async Task<UserSessionModel> GetGeolocationByIpAddress(UserSessionModel loggedUserModel)
-        {
-            //if (!string.IsNullOrWhiteSpace(loggedUserModel.IP))
-            //{
-            //    IpDetailsDTO ipDetailsModel = await _externalApiService.GetIpDetails(loggedUserModel.IP);
-            //    if (ipDetailsModel != null && ipDetailsModel.Status == "success")
-            //    {
-            //        loggedUserModel.ServiceProvider = ipDetailsModel.Org;
-            //        loggedUserModel.UF = ipDetailsModel.Region;
-            //        loggedUserModel.Country = ipDetailsModel.Country;
-            //    }
-            //}
-
-            return loggedUserModel;
         }
     }
 }

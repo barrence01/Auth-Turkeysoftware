@@ -1,47 +1,91 @@
 ﻿using Auth_Turkeysoftware.Models.DTOs;
+using Auth_Turkeysoftware.Models.Results;
+using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services.DistributedCacheService;
 using Auth_Turkeysoftware.Services.MailService;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
+using Newtonsoft.Json.Linq;
+using YamlDotNet.Core.Tokens;
 
 namespace Auth_Turkeysoftware.Services
 {
     public class AccountRecoveryService : IAccountRecoveryService
     {
-        private readonly IEmailService _emailService;
+        private readonly ICommunicationService _commService;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IDistributedCacheService _cache;
-        private const int LIFE_SPAN_PASS_RESET_HOURS = 3;
+        private const int RESET_CODE_LIFE_IN_HOURS = 3;
 
-        public AccountRecoveryService(IEmailService emailService, IDistributedCacheService cacheService)
+        public AccountRecoveryService(ICommunicationService communicationService, UserManager<ApplicationUser> userManager, IDistributedCacheService cacheService)
         {
-            _emailService = emailService;
+            _commService = communicationService;
+            _userManager = userManager;
             _cache = cacheService;
         }
 
         /// <summary>
         /// Envia um email de redefinição de senha para o usuário.
         /// </summary>
-        /// <param name="resetToken">O token de redefinição de senha.</param>
-        /// <param name="userEmail">O email do usuário que receberá o link de redefinição de senha.</param>
+        /// <param name="user">O objeto que representa o usuário.</param>
         /// <returns>Uma tarefa que representa a operação assíncrona.</returns>
-        public async Task SendPasswordResetEmail(string resetToken, string userEmail)
+        public async Task SendPasswordResetEmail(ApplicationUser user)
         {
-            string passResetCacheKey = GetPassResetCacheKey(userEmail);
+            string passResetKey = GetPassResetKey(user.Email!);
 
-            if (await _cache.IsCachedAsync(passResetCacheKey)) {
+            if (await _cache.IsCachedAsync(passResetKey)) {
                 return;
             }
 
-            await _cache.SetAsync(passResetCacheKey, "true", TimeSpan.FromHours(LIFE_SPAN_PASS_RESET_HOURS));
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            var resetLink = $"https://yourfrontend.com/reset-password?token={Uri.EscapeDataString(resetToken)}&email={userEmail}";
-            var emailRequest = new SendEmailDTO
-            {
-                Subject = "Recuperação de senha - TurkeySoftware",
-                Body = $"Clique no link para resetar sua senha: {resetLink}"
-            };
+            TwoFactorRetryDto retryInfo = new TwoFactorRetryDto { UserId = user.Id, TwoFactorCode = resetToken, MaxNumberOfTries = 15 };
 
-            emailRequest.To.Add(userEmail);
+            await _cache.SetAsync(passResetKey, retryInfo, TimeSpan.FromHours(RESET_CODE_LIFE_IN_HOURS));
 
-            //await _emailService.SendEmailAsync(emailRequest);
+            await _commService.SendPasswordResetEmail(user.Email!, resetToken);
+        }
+
+        public async Task<ResetPasswordValidationResult> ResetPassword(ApplicationUser user, ResetPasswordRequest request)
+        {
+            if (user == null) {
+                throw new ArgumentNullException(nameof(user),"Usuário não pode ser nulo.");
+            }
+
+            ResetPasswordValidationResult result = new ResetPasswordValidationResult();
+            if (string.IsNullOrEmpty(request.ResetCode)) {
+                result.IsResetCodeEmpty = true;
+                return result;
+            }
+            else if (string.IsNullOrEmpty(request.NewPassword)) { 
+                result.IsNewPasswordEmpty = true;
+                return result;
+            }
+
+            string cacheKey = GetPassResetKey(user.UserName!);
+            TwoFactorRetryDto? retryInfo = await _cache.GetAsync<TwoFactorRetryDto>(cacheKey);
+            if (retryInfo == null) {
+                result.IsResetCodeExpired = true;
+                return result;
+            }
+
+            retryInfo.NumberOfTries += 1;
+            await _cache.SetAsync(cacheKey, retryInfo);
+
+            if (retryInfo.NumberOfTries >= retryInfo.MaxNumberOfTries) {
+                await _cache.RemoveAsync(cacheKey);
+                result.IsResetCodeExpired = true;
+                return result;
+            }
+
+            var passResetResult = await _userManager.ResetPasswordAsync(user, request.ResetCode, request.NewPassword);
+
+            if (!passResetResult.Succeeded) {
+                result.Errors = (List<IdentityError>)passResetResult.Errors;
+                return result;
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -49,7 +93,7 @@ namespace Auth_Turkeysoftware.Services
         /// </summary>
         /// <param name="email">Email ou Username do usuário.</param>
         /// <returns>Uma string contendo a chave a ser utilizada.</returns>
-        private static string GetPassResetCacheKey(string email)
+        private static string GetPassResetKey(string email)
         {
             return $"PassReset:{email}";
         }

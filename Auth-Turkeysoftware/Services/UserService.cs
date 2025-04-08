@@ -7,27 +7,24 @@ using Auth_Turkeysoftware.Repositories;
 using Auth_Turkeysoftware.Repositories.Context;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services.DistributedCacheService;
-using Auth_Turkeysoftware.Services.MailService;
 using Microsoft.AspNetCore.Identity;
-using Serilog;
 using System.Security.Cryptography;
-using System.Text.Json;
 
 namespace Auth_Turkeysoftware.Services
 {
     public class UserService : IUserService
     {
-        private readonly IEmailService _emailService;
+        private readonly ICommunicationService _commService;
         private readonly IDistributedCacheService _cache;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly EmailTokenProviderSingleton _emailTokenSettings;
         private readonly ITwoFactorRepository _twoFactorRepository;
         internal AppDbContext _dbContext;
 
-        public UserService(IEmailService emailService, IDistributedCacheService cacheService, UserManager<ApplicationUser> userManager,
+        public UserService(ICommunicationService communicationService, IDistributedCacheService cacheService, UserManager<ApplicationUser> userManager,
                            EmailTokenProviderSingleton emailTokenSettings, ITwoFactorRepository twoFactorRepository, AppDbContext dbContext)
         {
-            _emailService = emailService;
+            _commService = communicationService;
             _cache = cacheService;
             _userManager = userManager;
             _emailTokenSettings = emailTokenSettings;
@@ -47,26 +44,18 @@ namespace Auth_Turkeysoftware.Services
             var tokenLifeSpanInMinutes = _emailTokenSettings.GetSettings().TokenLifeSpan;
             var maxNumberOfTries = _emailTokenSettings.GetSettings().MaxNumberOfTries;
 
-            TwoFactorRetryDTO twoFactorDto = new TwoFactorRetryDTO { UserId = user.Id, TwoFactorCode = token, MaxNumberOfTries = maxNumberOfTries };
+            TwoFactorRetryDto retryInfo = new TwoFactorRetryDto { UserId = user.Id, TwoFactorCode = token, MaxNumberOfTries = maxNumberOfTries };
 
-            await _cache.SetAsync(cacheKey, twoFactorDto, tokenLifeSpanInMinutes);
+            await _cache.SetAsync(cacheKey, retryInfo, tokenLifeSpanInMinutes);
 
-            var emailRequest = new SendEmailDTO
-            {
-                Subject = "Código de ativação do 2FA - TurkeySoftware",
-                Body = $"Seu código de ativação é: <b>{token}</b>. Este código irá expirar em {tokenLifeSpanInMinutes} minutos."
-            };
-            emailRequest.To.Add(email);
-
-            Log.Information(JsonSerializer.Serialize(emailRequest));
-            //await _emailService.SendEmailAsync(emailRequest);
+            await _commService.SendEnable2FAEmailAsync(email, token, tokenLifeSpanInMinutes.ToString());
         }
 
         /// <inheritdoc/>
         public async Task<TwoFactorValidationResult> ConfirmEnable2FA(ApplicationUser user, string? twoFactorCode)
         {
             if (user == null) {
-                throw new ArgumentNullException("Nome de usuário não pode ser nulo.");
+                throw new ArgumentNullException(nameof(user),"Usuário não pode ser nulo.");
             }
 
             var result = new TwoFactorValidationResult();
@@ -77,7 +66,7 @@ namespace Auth_Turkeysoftware.Services
             }
 
             string cacheKey = Get2FAEnableCacheKey(user.UserName!);
-            TwoFactorRetryDTO? retryInfo = await _cache.GetAsync<TwoFactorRetryDTO>(cacheKey);
+            TwoFactorRetryDto? retryInfo = await _cache.GetAsync<TwoFactorRetryDto>(cacheKey);
             if (retryInfo == null) {
                 result.IsTwoFactorCodeExpired = true;
                 return result;
@@ -106,7 +95,7 @@ namespace Auth_Turkeysoftware.Services
         private async Task Enable2FA(ApplicationUser user)
         {
             if (user == null) {
-                throw new ArgumentNullException("Nome de usuário não pode ser nulo.");
+                throw new ArgumentNullException(nameof(user),"usuário não pode ser nulo.");
             }
 
             TwoFactorAuthModel model = new TwoFactorAuthModel(user.Id, (int)TwoFactorModeEnum.EMAIL);

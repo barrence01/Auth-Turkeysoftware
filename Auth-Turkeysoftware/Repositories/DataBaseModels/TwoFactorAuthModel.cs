@@ -12,7 +12,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
     {
         [Key]
         [Column("id_two_factor")]
-        public int TwoFactorId { get; set; }
+        public int? TwoFactorId { get; set; }
 
         [Column("fk_id_usuario")]
         [Required]
@@ -31,7 +31,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         [Column("in_reg_ativo")]
         [Required]
         [Comment("true - registro ativo | false - registro inativo")]
-        public bool IsActive { get; set; }
+        public bool? IsActive { get; set; }
 
         [Column("dt_inclusao")]
         [Required]
@@ -40,7 +40,8 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
         [Column("dt_alteracao")]
         public DateTime? UpdatedOn { get; set; }
 
-        public ApplicationUser User { get; set; }
+        [Required]
+        public ApplicationUser? User { get; set; }
 
         public TwoFactorAuthModel() { }
 

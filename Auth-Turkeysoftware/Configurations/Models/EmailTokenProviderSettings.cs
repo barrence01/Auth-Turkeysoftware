@@ -6,6 +6,6 @@
         public int TokenLength { get; init; } = 8;
         public string TokenFormat { get; init; } = "D8";
 
-        public int MaxNumberOfTries { get; init; } = 5;
+        public int MaxNumberOfTries { get; init; } = 15;
     }
 }

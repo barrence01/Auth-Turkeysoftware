@@ -96,7 +96,7 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page, int pageSize)
+        public async Task<PaginationDto<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page, int pageSize)
         {
             DateTime currentDate = DateTime.Now.ToUniversalTime();
             DateTime sevenDaysAgo = currentDate.AddDays(-7).ToUniversalTime();
@@ -105,7 +105,7 @@ namespace Auth_Turkeysoftware.Repositories
             int pageCount = (int)Math.Ceiling((double)rowsCount / (double)pageSize);
 
             if (rowsCount <= 0 || page > pageCount) {
-                return new PaginationDTO<UserSessionResponse>([], page, pageSize, rowsCount);
+                return new PaginationDto<UserSessionResponse>([], page, pageSize, rowsCount);
             }
 
             var sessoes = await dbContext.LoggedUser
@@ -127,15 +127,15 @@ namespace Auth_Turkeysoftware.Repositories
                                          .Take(pageSize)
                                          .ToListAsync();
 
-            return new PaginationDTO<UserSessionResponse>(sessoes, page, pageSize, rowsCount);
+            return new PaginationDto<UserSessionResponse>(sessoes, page, pageSize, rowsCount);
         }
 
-        public async Task<long> ListUserActiveSessionsCount(string userId, DateTime minDay)
+        public async Task<long> ListUserActiveSessionsCount(string userId, DateTime dayLimit)
         {
             return await dbContext.LoggedUser
                                   .AsNoTracking()
                                   .Where(p => p.FkUserId == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
-                                           && (p.UpdatedOn > minDay || (p.CreatedOn > minDay && p.UpdatedOn == null)))
+                                           && (p.UpdatedOn > dayLimit || (p.CreatedOn > dayLimit && p.UpdatedOn == null)))
                                   .OrderByDescending(p => p.CreatedOn)
                                   .CountAsync();
         }

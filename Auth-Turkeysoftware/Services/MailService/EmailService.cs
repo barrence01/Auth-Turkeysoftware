@@ -11,7 +11,7 @@ namespace Auth_Turkeysoftware.Services.MailService
     {
         protected readonly EmailSettingsSingleton _emailSettings;
 
-        ILogger<EmailService> _logger;
+        private readonly ILogger<EmailService> _logger;
 
         public EmailService(EmailSettingsSingleton emailSettings,
             ILogger<EmailService> logger)
@@ -20,7 +20,7 @@ namespace Auth_Turkeysoftware.Services.MailService
             _logger = logger;
         }
 
-        public async Task<bool> SendEmailAsync(SendEmailDTO emailRequest)
+        public async Task<bool> SendEmailAsync(SendEmailDto emailRequest)
         {
             try
             {

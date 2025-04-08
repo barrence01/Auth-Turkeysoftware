@@ -14,7 +14,7 @@ namespace Auth_Turkeysoftware.Repositories
 
         Task UpdateSessionRefreshToken(string userId, string sessionId, string oldRefreshToken, string newRefreshToken);
 
-        Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page, int pageSize);
+        Task<PaginationDto<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page, int pageSize);
 
         Task<long> ListUserActiveSessionsCount(string userId, DateTime dayLimit);
 

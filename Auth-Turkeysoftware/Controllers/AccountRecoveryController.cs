@@ -6,6 +6,7 @@ using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Models.Response;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Auth_Turkeysoftware.Controllers
 {
@@ -16,7 +17,6 @@ namespace Auth_Turkeysoftware.Controllers
     /// </summary>
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "DenyGuests")]
     [AllowAnonymous]
     public class AccountRecoveryController : CommonControllerBase
     {
@@ -59,9 +59,7 @@ namespace Auth_Turkeysoftware.Controllers
                 return BadRequest("Endereço de e-mail inválido.");
             }
 
-            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-            await _accountRecoveryService.SendPasswordResetEmail(resetToken, userEmail);
+            await _accountRecoveryService.SendPasswordResetEmail(user);
          
             return Ok("E-mail de recuperação de senha enviado.");
         }
@@ -97,9 +95,15 @@ namespace Auth_Turkeysoftware.Controllers
                 return BadRequest("Endereço de e-mail inválido.");
             }
 
-            var result = await _userManager.ResetPasswordAsync(user, request.ResetCode, request.NewPassword);
-            if (!result.Succeeded) {
-                return BadRequest(result.Errors.Select(e => e.Description));
+            var result = await _accountRecoveryService.ResetPassword(user, request);
+
+            if (!result.HasSucceeded()) {
+                if (result.Errors.Count > 0) {
+                    foreach (var error in result.Errors) {
+                        ModelState.AddModelError("Errors", error.Description);
+                    }
+                }
+                ModelState.AddModelError("Errors", "Não foi possível resetar a senha.");
             }
 
             return Ok("Senha resetada com sucesso.");

@@ -65,7 +65,7 @@ namespace Auth_Turkeysoftware.Repositories
         {
             var cacheEntry = await _dbContext.DistributedCache.FindAsync(key);
 
-            return await ValidateDeserializeCachedElement<T>(key, cacheEntry);
+            return await ValidateDeserializeCachedElement<T>(cacheEntry);
         }
 
         /// <inheritdoc/>
@@ -97,7 +97,7 @@ namespace Auth_Turkeysoftware.Repositories
                                                           .Take(1)
                                                           .FirstOrDefaultAsync();
 
-            if (await ValidateCachedElement(key, cacheEntry) == null)  {
+            if (await ValidateCachedElement(cacheEntry) == null) {
                 return false;
             }
             return true;
@@ -160,15 +160,14 @@ namespace Auth_Turkeysoftware.Repositories
         }
 
         /// <summary>
-        /// Valida um elemento em cache, verificando expiração e apenas o retornando se for uma entrada válida.
+        /// Valida um elemento em cache, verificando expiração e aplica expiração deslizante.
         /// </summary>
         /// <typeparam name="T">Tipo do objeto armazenado em cache.</typeparam>
-        /// <param name="key">Chave da entrada no cache.</param>
         /// <param name="cacheEntry">Entrada de cache a ser validada, ou null se não encontrada.</param>
         /// <returns>
         /// O valor desserializado se válido; caso contrário remove a entrada expirada e retorna default(T).
         /// </returns>
-        private async Task<T?> ValidateDeserializeCachedElement<T>(string key, CacheEntryModel? cacheEntry)
+        private async Task<T?> ValidateDeserializeCachedElement<T>(CacheEntryModel? cacheEntry)
         {
 
             DateTimeOffset currentTime = DateTimeOffset.UtcNow;
@@ -190,14 +189,13 @@ namespace Auth_Turkeysoftware.Repositories
         }
 
         /// <summary>
-        /// Valida um elemento em cache, verificando expiração e apenas o retornando se for uma entrada válida.
+        /// Valida um elemento em cache, verificando expiração e aplica expiração deslizante.
         /// </summary>
-        /// <param name="key">Chave da entrada no cache.</param>
         /// <param name="cacheEntry">Entrada de cache a ser validada, ou null se não encontrada.</param>
         /// <returns>
         /// Retorna o cacheEntry se não estiver expirado.
         /// </returns>
-        private async Task<CacheEntryModel?> ValidateCachedElement(string key, CacheEntryModel? cacheEntry)
+        private async Task<CacheEntryModel?> ValidateCachedElement(CacheEntryModel? cacheEntry)
         {
             DateTimeOffset currentTime = DateTimeOffset.UtcNow;
 

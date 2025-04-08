@@ -65,10 +65,11 @@ try
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
     builder.Services.AddScoped<IAccountRecoveryService, AccountRecoveryService>();
     builder.Services.AddScoped<IRegisterUserService, RegisterUserService>();
-    builder.Services.AddSingleton<HttpClientSingleton>();
+    builder.Services.AddScoped<ICommunicationService, CommunicationService>();
     builder.Services.AddScoped<ITestDataRepository, TestDataRepository>();
 
     // Singleton Service
+    builder.Services.AddSingleton<HttpClientSingleton>();
     builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
     builder.Services.AddSingleton<JwtSettingsSingleton>();
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -236,18 +237,18 @@ try
                               .AllowAnyMethod();
                           });
         options.AddPolicy(name: "Production",
-                  policy =>
-                  {
-                      policy.WithOrigins(@"http://meudominio.com.br")
-                      .AllowCredentials()
-                      .AllowAnyHeader()
-                      .AllowAnyMethod();
-                  });
+                          policy =>
+                          {
+                              policy.WithOrigins(@"http://meudominio.com.br")
+                              .AllowCredentials()
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                          });
     });
 
     var app = builder.Build();
 
-    app.UseExceptionHandler(o => { });
+    app.UseExceptionHandler(o => {});
 
     #if !DEBUG
         app.UseCors("Production");
@@ -296,7 +297,7 @@ try
     Log.Warning("To access swagger add path '/swagger/index.html'.");
     Log.Warning("Example: https://localhost:7157/swagger/index.html");
 
-   app.Run();
+   await app.RunAsync();
 }
 catch (HostAbortedException) {
     Log.Information("Aplicação foi finalizada.");
@@ -307,5 +308,5 @@ catch (Exception ex)
 }
 finally
 {
-    Log.CloseAndFlush();
+    await Log.CloseAndFlushAsync();
 }

@@ -9,7 +9,7 @@ namespace Auth_Turkeysoftware.Services
         /// Gera um código de autenticação de dois fatores aleatório, armazena-o no cache e o envia para o email especificado.
         /// </summary>
         /// <param name="user">O objeto do usuário</param>
-        /// <param name="TwoFactorMode">Tipo de autorização de 2 fatores</param>
+        /// <param name="twoFactorMode">Tipo de autorização de 2 fatores</param>
         /// <returns>Uma tarefa que representa a operação assíncrona.</returns>
         Task SendTwoFactorCodeAsync(ApplicationUser user, int twoFactorMode);
 
@@ -21,6 +21,6 @@ namespace Auth_Turkeysoftware.Services
         /// <returns>Um <see cref="TwoFactorValidationResult"/> contendo o resultado da verificação.</returns>
         Task<TwoFactorValidationResult> VerifyTwoFactorAuthentication(ApplicationUser user, string? twoFactorCode);
 
-        Task<List<TwoFactorAuthResponse>> ListActive2FAOptions(ApplicationUser user);
+        Task<List<TwoFactorAuthResponse>> ListUserTwoFactorOptions(ApplicationUser user);
     }
 }

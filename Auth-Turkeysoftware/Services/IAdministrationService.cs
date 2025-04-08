@@ -7,6 +7,6 @@ namespace Auth_Turkeysoftware.Services
     {
         Task InvalidateUserSession(string userId, string sessionId);
         Task InvalidateAllUserSession(string userId);
-        Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessions(string userId, int page);
+        Task<PaginationDto<UserSessionResponse>> ListUserActiveSessions(string userId, int page);
     }
 }

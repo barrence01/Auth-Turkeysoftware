@@ -12,7 +12,7 @@ namespace Auth_Turkeysoftware.Repositories.DataBaseModels
     {
         [Key]
         [Column("id_sessao")]
-        public string SessionId { get; set; }
+        public string? SessionId { get; set; }
 
         [Column("fk_id_usuario")]
         [Required]

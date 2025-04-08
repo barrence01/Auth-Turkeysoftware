@@ -103,18 +103,20 @@ namespace Auth_Turkeysoftware.Controllers
                     }
                     else if (twoFactorResult.IsMaxNumberOfTriesExceeded || twoFactorResult.IsTwoFactorCodeExpired)
                     {
+                        if (twoFactorResult.IsMaxNumberOfTriesExceeded) {
+                            await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.Add(TimeSpan.FromMinutes(30)));
+                        }
                         result.IsTwoFactorCodeExpired = true;
-                        return BadRequest("O código de dois fatores expirou.", result);
+                        return BadRequest("O código de 2 fatores expirou.", result);
                     }
                     else if (twoFactorResult.IsTwoFactorCodeInvalid)
                     {
                         result.IsTwoFactorCodeInvalid = true;
-                        return BadRequest("O código 2FA fornecido é inválido", result);
+                        return BadRequest("O código de 2 fatores fornecido é inválido", result);
                     }
                     throw new BusinessException("Houve um erro desconhecido durante o login.");
                 }
 
-                var userRoles = await _userManager.GetRolesAsync(user);
                 var userClaims = await _userManager.GetClaimsAsync(user);
 
                 string newIdSessao = Guid.CreateVersion7().ToString("N");
@@ -124,7 +126,7 @@ namespace Auth_Turkeysoftware.Controllers
                 string refreshToken = GenerateRefreshToken(userClaims);
 
                 UserSessionModel userModel;
-                userModel = await _loggedUserService.GetGeolocationByIpAddress(new UserSessionModel
+                userModel = new UserSessionModel
                 {
                     SessionId = newIdSessao,
                     FkUserId = user.Id,
@@ -132,7 +134,7 @@ namespace Auth_Turkeysoftware.Controllers
                     IP = HttpContext.Items["IP"]?.ToString() ?? string.Empty,
                     Platform = HttpContext.Items["Platform"]?.ToString() ?? string.Empty,
                     UserAgent = HttpContext.Items["UserAgent"]?.ToString() ?? string.Empty
-                });
+                };
 
                 await _loggedUserService.AddLoggedUser(userModel);
 
@@ -169,7 +171,7 @@ namespace Auth_Turkeysoftware.Controllers
         [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> SendTwoFactorCode([FromBody] LoginRequest request)
         {
-            if (request.TwoFactorMode == null || request.TwoFactorMode <= 0) {
+            if (request.TwoFactorMode <= 0) {
                 ModelState.AddModelError("twoFactorMode", "TwoFactorMode não pode ser nulo.");
                 return BadRequest("TwoFactorMode não pode ser nulo.");
             }
@@ -202,12 +204,12 @@ namespace Auth_Turkeysoftware.Controllers
             }
 
             await _authenticationService.SendTwoFactorCodeAsync(user, request.TwoFactorMode);
-            return Ok("Código 2FA enviado.");
+            return Ok("Código de 2 fatores enviado.");
         }
 
         [HttpPost("list-2fa-options")]
         [AllowAnonymous]
-        public async Task<IActionResult> ListTwoFactorOption([FromBody] LoginRequest request)
+        public async Task<IActionResult> ListUserTwoFactorOptions([FromBody] LoginRequest request)
         {
             LoginResponse result = new LoginResponse();
 
@@ -237,7 +239,7 @@ namespace Auth_Turkeysoftware.Controllers
                 return BadRequest("Email ou senha inválido!", result);
             }
 
-            return Ok(await _authenticationService.ListActive2FAOptions(user));
+            return Ok(await _authenticationService.ListUserTwoFactorOptions(user));
         }
 
         /// <summary>
@@ -298,8 +300,8 @@ namespace Auth_Turkeysoftware.Controllers
                 return Ok();
             }
             catch (BusinessException e)
-            {
-                _logger.LogError($"RefreshToken não gerado: {e.Message}");
+            { 
+                _logger.LogError(e, "RefreshToken não gerado: {Message}", e.Message);
                 return Unauthorized(ERROR_SESSAO_INVALIDA);
             }
         }

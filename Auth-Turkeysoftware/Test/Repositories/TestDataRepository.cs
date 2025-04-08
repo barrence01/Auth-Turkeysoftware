@@ -9,9 +9,9 @@ namespace Auth_Turkeysoftware.Test.Repositories
     public class TestDataRepository : ITestDataRepository
     {
         internal AppDbContext dataBaseContext;
-        private readonly ILogger<UserSessionRepository> _logger;
+        private readonly ILogger<TestDataRepository> _logger;
 
-        public TestDataRepository(AppDbContext dataBaseContext, ILogger<UserSessionRepository> logger)
+        public TestDataRepository(AppDbContext dataBaseContext, ILogger<TestDataRepository> logger)
         {
             this.dataBaseContext = dataBaseContext;
             _logger = logger;

@@ -19,20 +19,19 @@
         {
             try
             {
-                _logger.LogInformation($"Requisição Externa. Executando método GET: {url}");
+                _logger.LogInformation("Requisição Externa. Executando método GET: {Url}", url);
                 using var response = await _httpClient.GetAsync(url);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadAsStringAsync();
             }
-            catch (TaskCanceledException)
+            catch (TaskCanceledException ex)
             {
-                _logger.LogInformation($"A requisição ultrapassou o limite de tempo.: {url}");
+                _logger.LogInformation(ex, "A requisição ultrapassou o limite de tempo.: {Url}", url);
                 return null;
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError($"Ocorreu um erro durante a requisição: {url}");
-                _logger.LogError(ex.Message);
+                _logger.LogError(ex, "Ocorreu um erro durante a requisição: {Url}", url);
                 return null;
             }
         }
@@ -43,20 +42,19 @@
             {
                 try
                 {
-                    _logger.LogInformation($"Requisição Externa. Executando método GET: {url}");
+                    _logger.LogInformation("Requisição Externa. Executando método GET: {Url}", url);
                     using var response = await _httpClient.GetAsync(url, cts.Token);
                     response.EnsureSuccessStatusCode();
                     return await response.Content.ReadAsStringAsync();
                 }
-                catch (TaskCanceledException)
+                catch (TaskCanceledException ex)
                 {
-                    _logger.LogInformation($"A requisição ultrapassou o limite de tempo.: {url}");
+                    _logger.LogInformation(ex, "A requisição ultrapassou o limite de tempo.: {Url}", url);
                     return null;
                 }
                 catch (HttpRequestException ex)
                 {
-                    _logger.LogError($"Ocorreu um erro durante a requisição: {url}");
-                    _logger.LogError(ex.Message);
+                    _logger.LogError(ex, "Ocorreu um erro durante a requisição: {Url}", url);
                     return null;
                 }
             }

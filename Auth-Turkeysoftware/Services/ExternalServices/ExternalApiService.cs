@@ -14,18 +14,18 @@ namespace Auth_Turkeysoftware.Services.ExternalServices
             _httpClientSingleton = httpClientSingleton;
         }
 
-        public async Task<IpDetailsDTO?> GetIpDetails(string address)
+        public async Task<IpDetailsDto?> GetIpDetails(string ipAddress)
         {
             _logger.LogInformation("Executando método GetIpDetails :: ExternalApiService");
             try
             {
-                string url = string.Concat(@"http://ip-api.com/json/", address);
+                string url = string.Concat(@"http://ip-api.com/json/", ipAddress);
                 string? json = await _httpClientSingleton.GetAsync(url, TimeSpan.FromSeconds(0.5));
                 if (string.IsNullOrEmpty(json))
                     return null;
 
-                _logger.LogInformation($"Response: {json}");
-                return JsonSerializer.Deserialize<IpDetailsDTO>(json);
+                _logger.LogInformation("Response: {Json}", json);
+                return JsonSerializer.Deserialize<IpDetailsDto>(json);
             }
             catch (JsonException ex)
             {

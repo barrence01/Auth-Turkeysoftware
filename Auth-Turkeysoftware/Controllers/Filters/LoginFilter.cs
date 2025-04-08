@@ -46,7 +46,7 @@ namespace Auth_Turkeysoftware.Controllers.Filters
         /// </summary>
         /// <param name="request">The HTTP request.</param>
         /// <returns>A tuple containing the IP, Platform, and UserAgent values.</returns>
-        private async Task<(string? ip, string? platform, string? userAgent)> GetValuesFromRequestBodyAsync(HttpRequest request)
+        private static async Task<(string? ip, string? platform, string? userAgent)> GetValuesFromRequestBodyAsync(HttpRequest request)
         {
             // Allow the request body to be read multiple times
             request.EnableBuffering();

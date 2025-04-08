@@ -20,17 +20,14 @@ namespace Auth_Turkeysoftware.Controllers
         private const string ERROR_USUARIO_INVALIDO = "Usuário inválido.";
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserSessionService _userSessionService;
-        private readonly ILogger<UserSessionController> _logger;
 
         public UserSessionController(
             UserManager<ApplicationUser> userManager,
             JwtSettingsSingleton jwtSettingsSingleton,
-            IUserSessionService userSessionService,
-            ILogger<UserSessionController> logger) : base(jwtSettingsSingleton)
+            IUserSessionService userSessionService) : base(jwtSettingsSingleton)
         {
             _userManager = userManager;
             _userSessionService = userSessionService;
-            _logger = logger;
         }
 
         /// <summary>
@@ -49,7 +46,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <response code="400">Usuário inválido ou parâmetros incorretos.</response>
         /// <response code="401">Não autorizado - token inválido ou ausente.</response>
         [HttpGet("all-sessions")]
-        [ProducesResponseType(typeof(Response<PaginationDTO<UserSessionResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<PaginationDto<UserSessionResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> ListAllSessions([FromQuery] int pagina)
@@ -134,7 +131,7 @@ namespace Auth_Turkeysoftware.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var userEmail = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
+                var userEmail = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
                 if (userEmail == null) {
                     return BadRequest(ERROR_USUARIO_INVALIDO);
                 }

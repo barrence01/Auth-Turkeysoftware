@@ -52,7 +52,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <response code="200">Retorna a lista de sessões ativas.</response>
         /// <response code="400">Usuário não encontrado ou parâmetros inválidos.</response>
         [HttpPost("ListUserActiveSessions")]
-        [ProducesResponseType(typeof(Response<PaginationDTO<UserSessionResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<PaginationDto<UserSessionResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ListUserActiveSessions([FromBody] ListAllUserSessionsRequest request)
         {

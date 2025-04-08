@@ -5,27 +5,22 @@ using Auth_Turkeysoftware.Models.Results;
 using Auth_Turkeysoftware.Repositories;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services.DistributedCacheService;
-using Auth_Turkeysoftware.Services.MailService;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System.Security.Cryptography;
-using YamlDotNet.Core.Tokens;
 
 namespace Auth_Turkeysoftware.Services
 {
     public class AuthenticationService : IAuthenticationService
     {
-        private readonly IEmailService _emailService;
+        private readonly ICommunicationService _commService;
         private readonly IDistributedCacheService _cache;
-        private readonly ILogger<AuthenticationService> _logger;
         private readonly ITwoFactorRepository _twoFactorRepository;
         private readonly EmailTokenProviderSingleton _emailTokenSettings;
 
-        public AuthenticationService(IEmailService emailService, IDistributedCacheService cacheService, ILogger<AuthenticationService> logger,
+        public AuthenticationService(ICommunicationService communicationService, IDistributedCacheService cacheService, 
                                      ITwoFactorRepository twoFactorRepository, EmailTokenProviderSingleton emailTokenSettings)
         {
-            _emailService = emailService;
+            _commService = communicationService;
             _cache = cacheService;
-            _logger = logger;
             _twoFactorRepository = twoFactorRepository;
             _emailTokenSettings = emailTokenSettings;
         }
@@ -56,26 +51,19 @@ namespace Auth_Turkeysoftware.Services
             var tokenLifeSpanInMinutes = _emailTokenSettings.GetSettings().TokenLifeSpan;
             var maxNumberOfTries = _emailTokenSettings.GetSettings().MaxNumberOfTries;
 
-            TwoFactorRetryDTO retryInfo = new TwoFactorRetryDTO { UserId = user.Id, TwoFactorCode = token, MaxNumberOfTries = maxNumberOfTries };
+            TwoFactorRetryDto retryInfo = new TwoFactorRetryDto { UserId = user.Id, TwoFactorCode = token, MaxNumberOfTries = maxNumberOfTries };
 
 
             await _cache.SetAsync(cacheKey, retryInfo, tokenLifeSpanInMinutes);
 
-            var emailRequest = new SendEmailDTO
-            {
-                Subject = "Código de autenticação 2FA - TurkeySoftware",
-                Body = $"Seu código de autenticação é: <b>{token}</b>. Este código irá expirar em {tokenLifeSpanInMinutes} minutos."
-            };
-            emailRequest.To.Add(user.UserName!);
-
-            //await _emailService.SendEmailAsync(emailRequest);
+            await _commService.Send2FAEmailAsync(user.UserName!, token, tokenLifeSpanInMinutes.ToString());
         }
 
         /// <inheritdoc/>
         public async Task<TwoFactorValidationResult> VerifyTwoFactorAuthentication(ApplicationUser user, string? twoFactorCode)
         {
             if (user.UserName == null) { 
-                throw new ArgumentNullException("Nome de usuário não pode ser nulo.");
+                throw new ArgumentNullException(nameof(user),"Nome de usuário não pode ser nulo.");
             }
 
             var result = new TwoFactorValidationResult();
@@ -90,7 +78,7 @@ namespace Auth_Turkeysoftware.Services
             }
 
             string cacheKey = Get2FACacheKey(user.UserName);
-            TwoFactorRetryDTO? retryInfo = await _cache.GetAsync<TwoFactorRetryDTO>(cacheKey);
+            TwoFactorRetryDto? retryInfo = await _cache.GetAsync<TwoFactorRetryDto>(cacheKey);
             if (retryInfo == null) {
                 result.IsTwoFactorCodeExpired = true;
                 return result;
@@ -115,29 +103,19 @@ namespace Auth_Turkeysoftware.Services
             }
         }
 
-        public async Task<List<TwoFactorAuthResponse>> ListActive2FAOptions(ApplicationUser user) {
+        public async Task<List<TwoFactorAuthResponse>> ListUserTwoFactorOptions(ApplicationUser user)
+        {
             var twoFactorOptions = await _twoFactorRepository.ListActive2FAOptionsAsync(user.Id);
 
-            List<TwoFactorAuthResponse> list = new List<TwoFactorAuthResponse>();
-            foreach (var twoFactorOption in twoFactorOptions)
+            return twoFactorOptions.Select(option => new TwoFactorAuthResponse
             {
-                TwoFactorAuthResponse option = new TwoFactorAuthResponse();
-                option.TwoFactorMode = twoFactorOption.TwoFactorMode;
-
-                switch (twoFactorOption.TwoFactorMode) {
-                    case (int)TwoFactorModeEnum.EMAIL:
-                        option.To = user.UserName;
-                        break;
-                    case (int)TwoFactorModeEnum.WHATSAPP:
-                    case (int)TwoFactorModeEnum.SMS:
-                        option.To = user.PhoneNumber;
-                        break;
-                    default:
-                            break;
-                }
-                list.Add(option);
-            }
-            return list;
+                TwoFactorMode = option.TwoFactorMode,
+                To = option.TwoFactorMode switch {
+                                                    (int)TwoFactorModeEnum.EMAIL => user.UserName,
+                                                    (int)TwoFactorModeEnum.WHATSAPP or (int)TwoFactorModeEnum.SMS => user.PhoneNumber,
+                                                    _ => null
+                                                 }
+            }).ToList();
         }
 
         /// <summary>

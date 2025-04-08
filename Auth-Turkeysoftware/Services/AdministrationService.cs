@@ -23,7 +23,7 @@ namespace Auth_Turkeysoftware.Services
             await _userSessionRepository.InvalidateAllUserSessions(userId);
         }
 
-        public async Task<PaginationDTO<UserSessionResponse>> ListUserActiveSessions(string userId, int page)
+        public async Task<PaginationDto<UserSessionResponse>> ListUserActiveSessions(string userId, int page)
         {
             if (page <= 0)
                 page = 1;

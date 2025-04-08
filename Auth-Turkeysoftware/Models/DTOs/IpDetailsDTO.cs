@@ -2,7 +2,7 @@
 
 namespace Auth_Turkeysoftware.Models.DTOs
 {
-    public class IpDetailsDTO
+    public class IpDetailsDto
     {
         [JsonPropertyName("status")]
         public string? Status { get; set; }

@@ -23,17 +23,14 @@ namespace Auth_Turkeysoftware.Controllers
         private const string ERROR_USUARIO_INVALIDO = "Usuário inválido.";
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUserService _userService;
-        private readonly ILogger<UserSessionController> _logger;
 
         public UserController(
             UserManager<ApplicationUser> userManager,
             JwtSettingsSingleton jwtSettingsSingleton,
-            IUserService userService,
-            ILogger<UserSessionController> logger) : base(jwtSettingsSingleton)
+            IUserService userService) : base(jwtSettingsSingleton)
         {
             _userManager = userManager;
             _userService = userService;
-            _logger = logger;
         }
 
         /// <summary>
@@ -97,7 +94,6 @@ namespace Auth_Turkeysoftware.Controllers
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             var userName = User.FindFirst(ClaimTypes.Name)?.Value;
-            var userEmail = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var user = await _userManager.FindByNameAsync(userName!);
@@ -109,7 +105,7 @@ namespace Auth_Turkeysoftware.Controllers
             }
             else if (!await _userManager.CheckPasswordAsync(user, request.CurrentPassword)) {
                 return BadRequest("Senha inválida");
-            };
+            }
 
             var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
 
@@ -142,7 +138,7 @@ namespace Auth_Turkeysoftware.Controllers
         public async Task<IActionResult> DeleteAccount([FromBody] PasswordRequest request)
         {
             var userName = User.FindFirst(ClaimTypes.Name)?.Value;
-            var userEmail = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
+            var userEmail = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByNameAsync(userEmail!);
 
@@ -158,7 +154,7 @@ namespace Auth_Turkeysoftware.Controllers
             else if (!await _userManager.CheckPasswordAsync(user, request.Password))
             {
                 return BadRequest("Senha inválida");
-            };
+            }
 
             var result = await _userManager.DeleteAsync(user);
 

@@ -8,7 +8,7 @@ namespace Auth_Turkeysoftware.Test.Repositories.Models
     {
         [Key]
         [Column("id_test")]
-        public string IdTest { get; set; }
+        public string? IdTest { get; set; }
 
         [Column("nr_number")]
         public int number { get; set; } = 324;

@@ -21,8 +21,6 @@ namespace Auth_Turkeysoftware.Test.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly IUserSessionService _loggedUserService;
-        private readonly ITestDataRepository _testDataRepository;
 
         public TestController(
             UserManager<ApplicationUser> userManager,
@@ -33,8 +31,6 @@ namespace Auth_Turkeysoftware.Test.Controllers
         {
             _userManager = userManager;
             _roleManager = roleManager;
-            _loggedUserService = loggedUserService;
-            _testDataRepository = testDataRepository;
         }
 
 #if DEBUG
@@ -44,18 +40,13 @@ namespace Auth_Turkeysoftware.Test.Controllers
         {
             Log.Information("Hello, world!");
             Log.Information("Doing magic asynchronously!");
-            Log.Information(JsonSerializer.Serialize("text"));
-            //await _testDataRepository.AddData();
             // Simulate a long running task
-            //Thread.Sleep(5000);
-            //await Task.Run(() =>
-            //{
-            //    Log.Information("Doing magic asynchronously!");
-            //    // Simulate a long running task
-            //    Thread.Sleep(5000);
-            //});
-            //var email2 = User.Claims.Where(x => x.Type == ClaimTypes.Email).FirstOrDefault()?.Value;
-            //Log.Information();
+            await Task.Run(() =>
+            {
+                Log.Information("Doing magic asynchronously!");
+                // Simulate a long running task
+                Thread.Sleep(5000);
+            });
             return BadRequest();
         }
 
@@ -113,7 +104,7 @@ namespace Auth_Turkeysoftware.Test.Controllers
 
             if (!result.Succeeded)
             {
-                Log.Error($"Houve uma falha na criação de usuário: {result}");
+                Log.Error("Houve uma falha na criação de usuário: {Result}", result);
                 return BadRequest("Criação de usuário falhou!", result.Errors);
             }
 
@@ -144,7 +135,6 @@ namespace Auth_Turkeysoftware.Test.Controllers
                     await _roleManager.CreateAsync(new IdentityRole(userRole));
                 }
             }
-            return;
         }
 #endif
     }

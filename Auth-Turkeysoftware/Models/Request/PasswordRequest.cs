@@ -5,6 +5,6 @@ namespace Auth_Turkeysoftware.Models.Request
     public class PasswordRequest
     {
         [Required(ErrorMessage = "A senha é inválida")]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
     }
 }

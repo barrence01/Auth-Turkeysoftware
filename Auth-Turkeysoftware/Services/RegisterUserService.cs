@@ -56,7 +56,7 @@ namespace Auth_Turkeysoftware.Services
                     var createAsyncresult = await _userManager.CreateAsync(user, model.Password);
 
                     if (!createAsyncresult.Succeeded) {
-                        _logger.LogError($"Houve uma falha durante a criação do usuário: {createAsyncresult}");
+                        _logger.LogError("Houve uma falha durante a criação do usuário: {CreateAsyncresult}", createAsyncresult);
                         result.identityErrors = createAsyncresult.Errors;
                         throw new BusinessException("Houve uma falha durante a criação do usuário");
                     }
@@ -95,7 +95,6 @@ namespace Auth_Turkeysoftware.Services
                     await _roleManager.CreateAsync(new IdentityRole(userRole));
                 }
             }
-            return;
         }
     }
 }
