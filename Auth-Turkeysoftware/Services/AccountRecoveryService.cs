@@ -2,11 +2,8 @@
 using Auth_Turkeysoftware.Models.Result;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services.DistributedCacheService;
-using Auth_Turkeysoftware.Services.MailService;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
-using Newtonsoft.Json.Linq;
-using YamlDotNet.Core.Tokens;
 
 namespace Auth_Turkeysoftware.Services
 {

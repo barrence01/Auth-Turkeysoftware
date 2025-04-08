@@ -3,7 +3,6 @@ using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Models.Response;
 using Auth_Turkeysoftware.Repositories;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
-using Auth_Turkeysoftware.Services.ExternalServices;
 
 namespace Auth_Turkeysoftware.Services
 {
