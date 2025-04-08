@@ -1,5 +1,5 @@
 ﻿using Auth_Turkeysoftware.Models.DTOs;
-using Auth_Turkeysoftware.Models.Results;
+using Auth_Turkeysoftware.Models.Result;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services.DistributedCacheService;
 using Auth_Turkeysoftware.Services.MailService;

@@ -2,16 +2,13 @@
 using Auth_Turkeysoftware.Controllers.Bases;
 using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Models.Response;
-using Auth_Turkeysoftware.Models.Results;
+using Auth_Turkeysoftware.Models.Result;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System.Security.Claims;
 
 namespace Auth_Turkeysoftware.Controllers
@@ -168,22 +165,46 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         /// <summary>
-        /// Habilita a autenticação de dois fatores (2FA) para o usuário autenticado.
+        /// Solicita a ativação da autenticação de dois fatores (2FA) para o usuário autenticado.
         /// </summary>
         /// <remarks>
-        /// Exemplo de requisição:
+        /// Envia um código de verificação para o método de autenticação escolhido (email, SMS, etc.).
         /// 
-        ///     POST /api/User/enable-two-factor
-        ///     Authorization: Bearer {token}
-        ///
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///      POST /api/User/enable-two-factor
+        ///      Authorization: Bearer {token}
+        ///      {
+        ///         "password": "SenhaDoUsuario123",
+        ///         "operationMode": 1 // 1 = Email
+        ///      }
+        /// 
         /// </remarks>
-        /// <returns>Resultado da operação.</returns>
-        /// <response code="200">2FA habilitado com sucesso.</response>
-        /// <response code="401">Não autorizado - token inválido ou ausente.</response>
+        /// <param name="request">
+        /// Dados para solicitação de ativação do 2FA:
+        /// <list type="bullet">
+        /// <item><description>password: Senha do usuário para confirmação</description></item>
+        /// <item><description>operationMode: Método de autenticação (1 = Email)</description></item>
+        /// </list>
+        /// </param>
+        /// <returns>
+        /// Resultado da operação. Em caso de sucesso, um código de verificação será enviado.
+        /// </returns>
+        /// <response code="200">Solicitação processada com sucesso. Código de verificação enviado.</response>
+        /// <response code="400">
+        /// Possíveis erros:
+        /// <list type="bullet">
+        /// <item><description>Email não confirmado (IsEmailNotConfirmed = true)</description></item>
+        /// <item><description>Senha inválida (IsPasswordInvalid = true)</description></item>
+        /// <item><description>Método de autenticação não implementado</description></item>
+        /// </list>
+        /// </response>
+        /// <response code="401">Não autorizado - Token inválido ou ausente.</response>
         [HttpPost("enable-two-factor")]
         [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(EnableTwoFactorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> EnableTwoFactor([FromBody] EnableTwoFactorRequest request)
+        public async Task<IActionResult> EnableTwoFactorRequest([FromBody] EnableTwoFactorRequest request)
         {
             EnableTwoFactorResponse response = new EnableTwoFactorResponse();
 
@@ -193,8 +214,7 @@ namespace Auth_Turkeysoftware.Controllers
             if (user == null) {
                 throw new BusinessException("Usuário não encontrado");
             }
-
-            if (!user.EmailConfirmed) {
+            else if (!user.EmailConfirmed) {
                 response.IsEmailNotConfirmed = true;
                 return BadRequest(response);
             }
@@ -219,20 +239,33 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         /// <summary>
-        /// Habilita a autenticação de dois fatores (2FA) para o usuário autenticado.
+        /// Confirma a habilitação da autenticação de dois fatores (2FA) com o código de verificação.
         /// </summary>
         /// <remarks>
-        /// Exemplo de requisição:
+        /// Exemplo de requisição:<br/>
         /// 
-        ///     POST /api/User/confirm-enable-two-factor
-        ///     Authorization: Bearer {token}
-        ///
+        ///      POST /api/User/confirm-enable-two-factor
+        ///      Authorization: Bearer {token}
+        ///      {
+        ///         "code": "123456",
+        ///         "operationMode": 1 // 1=Email
+        ///      }
+        /// 
         /// </remarks>
-        /// <returns>Resultado da operação.</returns>
+        /// <param name="request">Dados de confirmação contendo código de verificação e modo de operação.</param>
+        /// <returns>Resultado da confirmação do 2FA.</returns>
         /// <response code="200">2FA habilitado com sucesso.</response>
+        /// <response code="400">
+        /// Falha devido a:
+        /// - Email não confirmado
+        /// - Código 2FA inválido/expirado
+        /// - Número máximo de tentativas excedido
+        /// - Modo de operação não implementado
+        /// </response>
         /// <response code="401">Não autorizado - token inválido ou ausente.</response>
         [HttpPost("confirm-enable-two-factor")]
         [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(EnableTwoFactorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> ConfirmEnableTwoFactor([FromBody] ConfirmEnableTwoFactorRequest request)
         {

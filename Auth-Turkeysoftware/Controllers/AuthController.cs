@@ -4,7 +4,7 @@ using Auth_Turkeysoftware.Controllers.Filters;
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Models.Response;
-using Auth_Turkeysoftware.Models.Results;
+using Auth_Turkeysoftware.Models.Result;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -47,7 +47,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <remarks>
         /// Exemplo de requisição:<br/>
         /// 
-        ///     POST /api/auth/login<br/>
+        ///     POST /api/Auth/login<br/>
         ///     {
         ///         "email": "usuario@exemplo.com",
         ///         "password": "SenhaSegura123",
@@ -154,17 +154,28 @@ namespace Auth_Turkeysoftware.Controllers
         /// <remarks>
         /// Exemplo de requisição:<br/>
         /// 
-        ///     POST /api/auth/send-2fa<br/>
+        ///     POST /api/Auth/send-2fa<br/>
         ///     {
         ///         "email": "usuario@exemplo.com",
-        ///         "password": "SenhaSegura123"
+        ///         "password": "SenhaSegura123",
+        ///         "twoFactorMode": 1
         ///     }
         ///     
         /// </remarks>
-        /// <param name="request">Dados de login (email e senha).</param>
-        /// <returns> Retorna uma mensagem de sucesso se o 2FA for enviado ou avisos sobre estado da conta. </returns>
-        /// <response code="200"> Código 2FA enviado com sucesso OU usuário não possui 2FA habilitado. </response>
-        /// <response code="400"> Credenciais inválidas, conta não confirmada ou bloqueada. </response>
+        /// <param name="request">Dados de login contendo email, senha e modo de 2FA.</param>
+        /// <returns>Resultado da operação de envio do código 2FA.</returns>
+        /// <response code="200">
+        /// Retorna:
+        /// - Sucesso se o 2FA for enviado
+        /// - Se não houver 2FA então IsTwoFactorRequired = false
+        /// </response>
+        /// <response code="400">
+        /// Falha devido a:
+        /// - Credenciais inválidas
+        /// - Conta não confirmada
+        /// - Conta bloqueada
+        /// - TwoFactorMode inválido
+        /// </response>
         [HttpPost("send-2fa")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
@@ -187,6 +198,8 @@ namespace Auth_Turkeysoftware.Controllers
                 return Ok("Usuário não possui autenticação de 2 fatores", result);
             }
 
+            result.IsTwoFactorRequired = true;
+
             var signInresult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
 
             if (!signInresult.Succeeded) {
@@ -207,8 +220,32 @@ namespace Auth_Turkeysoftware.Controllers
             return Ok("Código de 2 fatores enviado.");
         }
 
+        /// <summary>
+        /// Lista as opções de autenticação de dois fatores (2FA) disponíveis para o usuário.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/auth/list-2fa-options<br/>
+        ///     {
+        ///         "email": "usuario@exemplo.com",
+        ///         "password": "SenhaSegura123"
+        ///     }
+        ///     
+        /// </remarks>
+        /// <param name="request">Dados de login contendo email e senha.</param>
+        /// <returns>Lista de métodos 2FA disponíveis para o usuário.</returns>
+        /// <response code="200">Lista de opções 2FA ou mensagem informando que 2FA não está habilitado.</response>
+        /// <response code="400">
+        /// Falha devido a:
+        /// - Credenciais inválidas
+        /// - Conta não confirmada
+        /// - Conta bloqueada
+        /// </response>
         [HttpPost("list-2fa-options")]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(Response<List<TwoFactorAuthResponse>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> ListUserTwoFactorOptions([FromBody] LoginRequest request)
         {
             LoginResponse result = new LoginResponse();
@@ -248,7 +285,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <remarks>
         /// Exemplo de requisição:<br/>
         /// 
-        ///     POST /api/auth/refresh-token<br/>
+        ///     POST /api/Auth/refresh-token<br/>
         ///     {
         ///         // (O refresh token deve ser enviado como cookie)
         ///     }

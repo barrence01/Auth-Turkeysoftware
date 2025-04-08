@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace Auth_Turkeysoftware.Models.Results
+namespace Auth_Turkeysoftware.Models.Result
 {
     public class RegisterUserResult()
     {

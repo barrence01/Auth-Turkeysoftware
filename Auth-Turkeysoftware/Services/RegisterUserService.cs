@@ -2,7 +2,7 @@
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Helpers;
 using Auth_Turkeysoftware.Models.Request;
-using Auth_Turkeysoftware.Models.Results;
+using Auth_Turkeysoftware.Models.Result;
 using Auth_Turkeysoftware.Repositories.Context;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Microsoft.AspNetCore.Identity;

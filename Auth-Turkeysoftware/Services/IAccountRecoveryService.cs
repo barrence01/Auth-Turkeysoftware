@@ -1,4 +1,4 @@
-﻿using Auth_Turkeysoftware.Models.Results;
+﻿using Auth_Turkeysoftware.Models.Result;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Microsoft.AspNetCore.Identity.Data;
 

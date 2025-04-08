@@ -2,7 +2,7 @@
 using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Helpers;
 using Auth_Turkeysoftware.Models.DTOs;
-using Auth_Turkeysoftware.Models.Results;
+using Auth_Turkeysoftware.Models.Result;
 using Auth_Turkeysoftware.Repositories;
 using Auth_Turkeysoftware.Repositories.Context;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
