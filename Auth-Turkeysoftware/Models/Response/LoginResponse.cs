@@ -5,6 +5,5 @@
         public bool IsTwoFactorRequired { get; set; } = false;
         public bool IsTwoFactorCodeExpired { get; set; } = false;
         public bool IsTwoFactorCodeInvalid { get; set; } = false;
-        public bool IsAccountLockedOut { get; set; } = false;
     }
 }

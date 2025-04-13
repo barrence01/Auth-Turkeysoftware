@@ -17,6 +17,11 @@ namespace Auth_Turkeysoftware.Configurations.Services
             return _jwtSettings;
         }
 
+        public string GetJwtLoginSecretKey()
+        {
+            return GetJwtSettings().LoginSecretKey;
+        }
+
         public string GetJwtAccessSecretKey()
         {
             return GetJwtSettings().AccessSecretKey;

@@ -2,7 +2,7 @@
 
 namespace Auth_Turkeysoftware.Models.Request
 {
-    public class LoginRequest
+    public class TryLoginRequest
     {
         private string _email = string.Empty;
 
@@ -16,8 +16,5 @@ namespace Auth_Turkeysoftware.Models.Request
         [Required(ErrorMessage = "Password é obrigatório")]
         public string Password { get; set; } = string.Empty;
 
-        public string? TwoFactorCode { get; set; } = string.Empty;
-
-        public int TwoFactorMode { get; set; } = 0;
     }
 }

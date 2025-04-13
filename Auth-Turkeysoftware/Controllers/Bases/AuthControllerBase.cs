@@ -10,6 +10,7 @@ namespace Auth_Turkeysoftware.Controllers.Bases
     [ApiController]
     public class AuthControllerBase : CommonControllerBase
     {
+        protected const string LOGIN_TOKEN = "TurkeySoftware-LoginToken";
         protected const string ACCESS_TOKEN = "TurkeySoftware-AccessToken";
         protected const string REFRESH_TOKEN = "TurkeySoftware-RefreshToken";
         protected readonly JwtSettingsSingleton _jwtSettings;
@@ -17,6 +18,24 @@ namespace Auth_Turkeysoftware.Controllers.Bases
         protected AuthControllerBase(JwtSettingsSingleton jwtSettingsSingleton)
         {
             _jwtSettings = jwtSettingsSingleton;
+        }
+
+        protected string GenerateLoginToken(IList<Claim> authClaims)
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.GetJwtLoginSecretKey()));
+            var signingCredentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(authClaims),
+                Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.GetAccessTokenValidityInMinutes()),
+                Issuer = _jwtSettings.GetJwtIssuer(),
+                Audience = _jwtSettings.GetJwtAudience(),
+                SigningCredentials = signingCredentials
+            };
+
+            var handler = new JsonWebTokenHandler();
+            return handler.CreateToken(tokenDescriptor); ;
         }
 
         protected string GenerateAccessToken(IList<Claim> authClaims)
@@ -79,6 +98,21 @@ namespace Auth_Turkeysoftware.Controllers.Bases
                     Path = _jwtSettings.GetAccessTokenPath()
                 });
         }
+        protected void AddLoginTokenToCookies(string loginToken)
+        {
+            HttpContext.Response.Cookies.Append(LOGIN_TOKEN, loginToken,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    IsEssential = true,
+                    SameSite = SameSiteMode.None,
+                    Domain = _jwtSettings.GetJwtDomain(),
+                    Path = _jwtSettings.GetAccessTokenPath(),
+                    Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.GetAccessTokenValidityInMinutes())
+                });
+        }
+
         protected void AddTokensToCookies(string refreshToken, string accessToken)
         {
             DeletePreviousTokenFromCookies();
@@ -122,6 +156,28 @@ namespace Auth_Turkeysoftware.Controllers.Bases
 
             var handler = new JsonWebTokenHandler();
             var result = await handler.ValidateTokenAsync(refreshToken, validationParameters);
+
+            if (!result.IsValid)
+                throw new SecurityTokenException("Invalid token.");
+
+            return new ClaimsPrincipal(result.ClaimsIdentity);
+        }
+
+        protected async Task<ClaimsPrincipal> GetPrincipalFromLoginToken(string? loginToken)
+        {
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = true,
+                ValidAudience = _jwtSettings.GetJwtAudience(),
+                ValidateIssuer = true,
+                ValidIssuer = _jwtSettings.GetJwtIssuer(),
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.GetJwtLoginSecretKey())),
+                ValidateLifetime = true
+            };
+
+            var handler = new JsonWebTokenHandler();
+            var result = await handler.ValidateTokenAsync(loginToken, validationParameters);
 
             if (!result.IsValid)
                 throw new SecurityTokenException("Invalid token.");

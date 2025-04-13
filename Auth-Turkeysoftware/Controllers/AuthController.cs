@@ -10,6 +10,7 @@ using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -19,7 +20,7 @@ namespace Auth_Turkeysoftware.Controllers
     [ApiController]
     public class AuthController : AuthControllerBase
     {
-        private const string ERROR_SESSAO_INVALIDA = "Não foi possível autorizar o token recebido.";
+        private const string ERROR_SESSAO_INVALIDA = "Não foi possível reconhecer a sessão do usuário";
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IUserSessionService _loggedUserService;
@@ -42,7 +43,7 @@ namespace Auth_Turkeysoftware.Controllers
         }
 
         /// <summary>
-        /// Realiza a autenticação do usuário com validação de credenciais e código 2FA quando necessário.
+        /// Verifica as credenciais do usuário e inicia o processo de autenticação.
         /// </summary>
         /// <remarks>
         /// Exemplo de requisição:<br/>
@@ -50,69 +51,140 @@ namespace Auth_Turkeysoftware.Controllers
         ///     POST /api/Auth/login<br/>
         ///     {
         ///         "email": "usuario@exemplo.com",
-        ///         "password": "SenhaSegura123",
-        ///         "twoFactorCode": "123456" (Obrigatório apenas se 2FA estiver habilitado)
+        ///         "password": "SenhaSegura123"
         ///     }
         ///     
         /// </remarks>
-        /// <param name="request">Dados de login (email, senha e código 2FA quando aplicável).</param>
-        /// <returns>Retorna tokens de autenticação em cookies HTTP-only e mensagem de status.</returns>
-        /// <response code="200">Login realizado com sucesso (tokens armazenados em cookies).</response>
-        /// <response code="400">Falha na autenticação (credenciais inválidas, conta bloqueada, 2FA requerido/inválido ou conta não confirmada).</response>
-        [HttpPost("login")]
+        /// <param name="request">Dados de login contendo email e senha.</param>
+        /// <returns>
+        /// Resultado da tentativa de login. Pode indicar necessidade de 2FA e retorna token temporário.
+        /// </returns>
+        /// <response code="200">
+        /// Retorna:
+        /// - Token temporário se credenciais válidas
+        /// - IsTwoFactorRequired=true se 2FA necessário
+        /// </response>
+        /// <response code="400">
+        /// Falha devido a:
+        /// - Credenciais inválidas
+        /// - Conta bloqueada
+        /// - Conta não confirmada
+        /// </response>
+        [HttpPost("try-login")]
         [TypeFilter(typeof(LoginFilter))]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        [ProducesResponseType(typeof(Response<TryLoginResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<TryLoginResponse>), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> TryLogin([FromBody] TryLoginRequest request)
         {
             try
             {
-                LoginResponse result = new LoginResponse();
+                TryLoginResponse response = new TryLoginResponse();
 
                 var user = await _userManager.FindByNameAsync(request.Email);
                 if (user == null) {
-                    return BadRequest("Email ou senha inválido!", result);
+                    return BadRequest("Email ou senha inválido!", response);
                 }
 
                 var signInresult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
 
-                if (!signInresult.Succeeded)
-                {
+                if (!signInresult.Succeeded) {
                     if (signInresult.IsLockedOut) {
-                        result.IsAccountLockedOut = true;
-                        return BadRequest("Sua conta foi bloqueada por excesso de tentativas de login.", result);
+                        response.IsAccountLockedOut = true;
+                        return BadRequest("Sua conta foi bloqueada por excesso de tentativas de login.", response);
                     }
 
                     if (signInresult.IsNotAllowed) {
                         if (!user.EmailConfirmed || !user.PhoneNumberConfirmed) {
-                            return BadRequest("É necessário confirmar a conta antes de fazer login.", result);
+                            return BadRequest("É necessário confirmar a conta antes de fazer login.", response);
                         }
+                        response.IsPasswordEmailInvalid = true;
                     }
-                    return BadRequest("Email ou senha inválido!", result);
+                    response.IsPasswordEmailInvalid = true;
+                    return BadRequest("Email ou senha inválido!", response);
                 }
+
+                if (user.TwoFactorEnabled) {
+                    response.IsTwoFactorRequired = true;
+                }
+
+                var userClaims = await _userManager.GetClaimsAsync(user);
+
+                string newLoginTokenId = Guid.CreateVersion7().ToString("N");
+                userClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, newLoginTokenId));
+
+                string loginToken = GenerateLoginToken(userClaims);
+
+                AddLoginTokenToCookies(loginToken);
+
+                return Ok(response);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Erro Desconhecido: ");
+                return BadRequest("Não foi possível completar o login. Por favor, tente novamente mais tarde.");
+            }
+        }
+
+        /// <summary>
+        /// Completa o processo de autenticação com validação de código 2FA quando necessário.
+        /// </summary>
+        /// <remarks>
+        /// Exemplo de requisição:<br/>
+        /// 
+        ///     POST /api/Auth/login<br/>
+        ///     {
+        ///         "twoFactorCode": "123456",
+        ///         "twoFactorMode": 1,
+        ///     }
+        ///     
+        /// Requer cookie com token temporário gerado por TryLogin.
+        /// </remarks>
+        /// <param name="request">Dados contendo código 2FA quando aplicável.</param>
+        /// <returns>Tokens de autenticação completos em cookies HTTP-only.</returns>
+        /// <response code="200">Login realizado com sucesso.</response>
+        /// <response code="400">
+        /// Falha devido a:
+        /// - Código 2FA inválido/expirado
+        /// - Sessão inválida
+        /// - Limite de tentativas excedido
+        /// </response>
+        [HttpPost("login")]
+        [TypeFilter(typeof(LoginFilter))]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Login([FromBody] ValidateLoginRequest request)
+        {
+            try
+            {
+                var user = await ValidateLoginToken();
+                if (user == null) {
+                    return BadRequest(ERROR_SESSAO_INVALIDA);
+                }
+
+                LoginResponse response = new LoginResponse();
 
                 TwoFactorValidationResult twoFactorResult = await _authenticationService.VerifyTwoFactorAuthentication(user, request.TwoFactorCode);
                 if (!twoFactorResult.HasSucceeded())
                 {
-                    result.IsTwoFactorRequired = true;
+                    response.IsTwoFactorRequired = true;
 
-                    if (twoFactorResult.IsTwoFactorCodeEmpty)
-                    {
-                        return BadRequest("É necessário código de autenticação de 2 fatores para o login.", result);
+                    if (twoFactorResult.IsTwoFactorCodeEmpty) {
+                        return BadRequest("É necessário código de autenticação de 2 fatores para o login.", response);
                     }
-                    else if (twoFactorResult.IsMaxNumberOfTriesExceeded || twoFactorResult.IsTwoFactorCodeExpired)
-                    {
+                    else if (twoFactorResult.IsMaxNumberOfTriesExceeded || twoFactorResult.IsTwoFactorCodeExpired) {
                         if (twoFactorResult.IsMaxNumberOfTriesExceeded) {
                             await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.Add(TimeSpan.FromMinutes(30)));
                         }
-                        result.IsTwoFactorCodeExpired = true;
-                        return BadRequest("O código de 2 fatores expirou.", result);
+
+                        response.IsTwoFactorCodeExpired = true;
+                        return BadRequest("O código de 2 fatores expirou.", response);
                     }
-                    else if (twoFactorResult.IsTwoFactorCodeInvalid)
-                    {
-                        result.IsTwoFactorCodeInvalid = true;
-                        return BadRequest("O código de 2 fatores fornecido é inválido", result);
+                    else if (twoFactorResult.IsTwoFactorCodeInvalid) {
+
+                        response.IsTwoFactorCodeInvalid = true;
+                        return BadRequest("O código de 2 fatores fornecido é inválido", response);
                     }
                     throw new BusinessException("Houve um erro desconhecido durante o login.");
                 }
@@ -142,141 +214,108 @@ namespace Auth_Turkeysoftware.Controllers
 
                 return Ok("Login realizado com sucesso.");
             }
-            catch (Exception e) {
+            catch (BusinessException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (SecurityTokenException e)
+            {
+                return BadRequest(ERROR_SESSAO_INVALIDA);
+            }
+            catch (Exception e)
+            {
                 Log.Error(e, "Erro Desconhecido: ");
                 return BadRequest("Não foi possível completar o login. Por favor, tente novamente mais tarde.");
             }
         }
 
         /// <summary>
-        /// Envia um código de autenticação de dois fatores (2FA) para o usuário após validação inicial de credenciais.
+        /// Envia código de autenticação de dois fatores para o usuário.
         /// </summary>
         /// <remarks>
         /// Exemplo de requisição:<br/>
         /// 
         ///     POST /api/Auth/send-2fa<br/>
         ///     {
-        ///         "email": "usuario@exemplo.com",
-        ///         "password": "SenhaSegura123",
         ///         "twoFactorMode": 1
         ///     }
         ///     
+        /// Requer cookie com token temporário gerado por TryLogin.
         /// </remarks>
-        /// <param name="request">Dados de login contendo email, senha e modo de 2FA.</param>
-        /// <returns>Resultado da operação de envio do código 2FA.</returns>
-        /// <response code="200">
-        /// Retorna:
-        /// - Sucesso se o 2FA for enviado
-        /// - Se não houver 2FA então IsTwoFactorRequired = false
-        /// </response>
+        /// <param name="request">Dados contendo modo de envio do 2FA.</param>
+        /// <returns>Confirmação de envio do código 2FA.</returns>
+        /// <response code="200">Código 2FA enviado com sucesso.</response>
         /// <response code="400">
         /// Falha devido a:
-        /// - Credenciais inválidas
-        /// - Conta não confirmada
-        /// - Conta bloqueada
-        /// - TwoFactorMode inválido
+        /// - Modo 2FA inválido
+        /// - Sessão inválida
+        /// - 2FA não habilitado
         /// </response>
         [HttpPost("send-2fa")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(Response<object>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> SendTwoFactorCode([FromBody] LoginRequest request)
+        public async Task<IActionResult> SendTwoFactorCode([FromBody] ValidateLoginRequest request)
         {
-            if (request.TwoFactorMode <= 0) {
-                ModelState.AddModelError("twoFactorMode", "TwoFactorMode não pode ser nulo.");
-                return BadRequest("TwoFactorMode não pode ser nulo.");
-            }
-
-            LoginResponse result = new LoginResponse();
-
-            var user = await _userManager.FindByNameAsync(request.Email);
-            if (user == null) {
-                return BadRequest("Email ou senha inválido!", result);
-            }
-
-            if (!user.TwoFactorEnabled) {
-                return Ok("Usuário não possui autenticação de 2 fatores", result);
-            }
-
-            result.IsTwoFactorRequired = true;
-
-            var signInresult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
-
-            if (!signInresult.Succeeded) {
-                if (signInresult.IsLockedOut) {
-                    result.IsAccountLockedOut = true;
-                    return BadRequest("Sua conta foi bloqueada por excesso de tentativas de login.", result);
+            try
+            {
+                var user = await ValidateLoginToken();
+                if (user == null) {
+                    return BadRequest(ERROR_SESSAO_INVALIDA);
                 }
 
-                if (signInresult.IsNotAllowed) {
-                    if (!user.EmailConfirmed || !user.PhoneNumberConfirmed) {
-                        return BadRequest("É necessário confirmar a conta antes de fazer login.", result);
-                    }
+                if (!user.TwoFactorEnabled) {
+                    return Ok("Usuário não possui autenticação de 2 fatores");
                 }
-                return BadRequest("Email ou senha inválido!", result);
-            }
 
-            await _authenticationService.SendTwoFactorCodeAsync(user, request.TwoFactorMode);
-            return Ok("Código de 2 fatores enviado.");
+                if (request.TwoFactorMode <= 0) {
+                    ModelState.AddModelError("twoFactorMode", "TwoFactorMode não pode ser nulo.");
+                    return BadRequest("TwoFactorMode não pode ser nulo.");
+                }
+
+                await _authenticationService.SendTwoFactorCodeAsync(user, request.TwoFactorMode);
+                return Ok("Código de 2 fatores enviado.");
+            }
+            catch (BusinessException e)
+            {
+                return BadRequest(e.Message);
+            }
+            catch (SecurityTokenException e)
+            {
+                return BadRequest(e.Message);
+            }
         }
 
         /// <summary>
-        /// Lista as opções de autenticação de dois fatores (2FA) disponíveis para o usuário.
+        /// Lista os métodos de autenticação de dois fatores disponíveis para o usuário.
         /// </summary>
         /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Auth/list-2fa-options<br/>
-        ///     {
-        ///         "email": "usuario@exemplo.com",
-        ///         "password": "SenhaSegura123"
-        ///     }
-        ///     
+        /// Requer cookie com token temporário gerado por TryLogin.
         /// </remarks>
-        /// <param name="request">Dados de login contendo email e senha.</param>
-        /// <returns>Lista de métodos 2FA disponíveis para o usuário.</returns>
-        /// <response code="200">Lista de opções 2FA ou mensagem informando que 2FA não está habilitado.</response>
-        /// <response code="400">
-        /// Falha devido a:
-        /// - Credenciais inválidas
-        /// - Conta não confirmada
-        /// - Conta bloqueada
-        /// </response>
+        /// <returns>Lista de métodos 2FA disponíveis.</returns>
+        /// <response code="200">Lista de opções 2FA ou indicação que 2FA não está habilitado.</response>
+        /// <response code="400">Sessão inválida ou usuário não encontrado.</response>
         [HttpPost("list-2fa-options")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(Response<List<TwoFactorAuthResponse>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Response<LoginResponse>), StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> ListUserTwoFactorOptions([FromBody] LoginRequest request)
+        public async Task<IActionResult> ListUserTwoFactorOptions()
         {
-            LoginResponse result = new LoginResponse();
-
-            var user = await _userManager.FindByNameAsync(request.Email);
-            if (user == null) {
-                return BadRequest("Email ou senha inválido!", result);
-            }
-
-            if (!user.TwoFactorEnabled) {
-                return Ok("Usuário não possui autenticação de 2 fatores", result);
-            }
-
-            var signInresult = await _signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
-
-            if (!signInresult.Succeeded)
+            try
             {
-                if (signInresult.IsLockedOut) {
-                    result.IsAccountLockedOut = true;
-                    return BadRequest("Sua conta foi bloqueada por excesso de tentativas de login.", result);
+                var user = await ValidateLoginToken();
+                if (user == null) {
+                    return BadRequest(ERROR_SESSAO_INVALIDA);
                 }
 
-                if (signInresult.IsNotAllowed) {
-                    if (!user.EmailConfirmed || !user.PhoneNumberConfirmed) {
-                        return BadRequest("É necessário confirmar a conta antes de fazer login.", result);
-                    }
-                }
-                return BadRequest("Email ou senha inválido!", result);
+                return Ok(await _authenticationService.ListUserTwoFactorOptions(user));
             }
-
-            return Ok(await _authenticationService.ListUserTwoFactorOptions(user));
+            catch (BusinessException e) {
+                return BadRequest(e.Message);
+            }
+            catch (SecurityTokenException e) {
+                return BadRequest(e.Message);
+            }
         }
 
         /// <summary>
@@ -291,9 +330,14 @@ namespace Auth_Turkeysoftware.Controllers
         ///     }
         /// 
         /// </remarks>
-        /// <returns>Retorna 200 (OK) com os novos tokens nos cookies.</returns>
-        /// <response code="200">Tokens atualizados com sucesso (armazenados em cookies HTTP-only).</response>
-        /// <response code="401">Token inválido ou sessão não autorizada.</response>
+        /// <returns>Retorna 200 (OK) com os novos tokens de acesso e refresh nos cookies.</returns>
+        /// <response code="200">Tokens renovados com sucesso.</response>
+        /// <response code="401">
+        /// Falha devido a:
+        /// - Refresh token inválido
+        /// - Sessão expirada
+        /// - Token na blacklist
+        /// </response>
         [HttpPost("refresh-token")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
@@ -341,6 +385,36 @@ namespace Auth_Turkeysoftware.Controllers
                 _logger.LogError(e, "RefreshToken não gerado: {Message}", e.Message);
                 return Unauthorized(ERROR_SESSAO_INVALIDA);
             }
+        }
+
+        /// <summary>
+        /// Valida o token de login e retorna o usuário associado se válido.
+        /// </summary>
+        /// <returns>
+        /// Retorna o usuário autenticado se o token for válido,
+        /// ou null se o token for inválido/inexistente.
+        /// </returns>
+        private async Task<ApplicationUser?> ValidateLoginToken()
+        {
+            Request.Cookies.TryGetValue(LOGIN_TOKEN, out string? loginToken);
+            if (string.IsNullOrEmpty(loginToken)) {
+                return null;
+            }
+
+            var principalLogin = await GetPrincipalFromLoginToken(loginToken);
+
+            if (principalLogin.Identity == null || principalLogin.Identity.Name == null) {
+                _logger.LogError("Não foi possível identificar a identidade do login token.");
+                return null;
+            }
+
+            var user = await _userManager.FindByNameAsync(principalLogin.Identity.Name);
+            if (user == null) {
+                _logger.LogError("Usuário do refresh token não foi encontrado");
+                return null;
+            }
+
+            return user;
         }
     }
 }
