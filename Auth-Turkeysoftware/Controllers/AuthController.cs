@@ -218,7 +218,7 @@ namespace Auth_Turkeysoftware.Controllers
             {
                 return BadRequest(e.Message);
             }
-            catch (SecurityTokenException e)
+            catch (SecurityTokenException)
             {
                 return BadRequest(ERROR_SESSAO_INVALIDA);
             }

@@ -53,8 +53,8 @@ namespace Auth_Turkeysoftware.Services
         /// Lista as sessões ativas do usuário de forma paginada.
         /// </summary>
         /// <param name="userId">ID do usuário.</param>
-        /// <param name="page">Número da página.</param>
+        /// <param name="pageNumber">Número da página.</param>
         /// <returns>Retorna um DTO de paginação contendo as sessões ativas do usuário.</returns>
-        Task<PaginationDto<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page);
+        Task<PaginationDto<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pageNumber);
     }
 }

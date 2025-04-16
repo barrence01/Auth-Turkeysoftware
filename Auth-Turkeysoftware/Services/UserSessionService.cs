@@ -50,12 +50,12 @@ namespace Auth_Turkeysoftware.Services
         }
 
         /// <inheritdoc/>
-        public async Task<PaginationDto<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page)
+        public async Task<PaginationDto<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pageNumber)
         {
-            if (page <= 0)
-                page = 1;
+            if (pageNumber <= 0)
+                pageNumber = 1;
 
-            return await _userSessionRepository.ListUserActiveSessionsPaginated(userId, page, 10);
+            return await _userSessionRepository.ListUserActiveSessionsPaginated(userId, pageNumber, 10);
         }
     }
 }

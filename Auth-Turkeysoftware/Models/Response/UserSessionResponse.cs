@@ -2,17 +2,17 @@
 {
     public class UserSessionResponse
     {
-        public string? IdSessao { get; set; }
+        public string? SessionId { get; set; }
 
         public char? TokenStatus { get; set; }
 
-        public DateTime? DataInclusao { get; set; }
+        public DateTime? CreatedOn { get; set; }
 
-        public DateTime? UltimaVezOnline { get; set; }
+        public DateTime? LastTimeOnline { get; set; }
 
         public string? Platform { get; set; }
 
-        public string? Pais { get; set; }
+        public string? Country { get; set; }
 
         public string? UF { get; set; }
 

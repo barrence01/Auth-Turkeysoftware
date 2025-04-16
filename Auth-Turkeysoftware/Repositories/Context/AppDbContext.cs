@@ -1,10 +1,10 @@
 ﻿using Auth_Turkeysoftware.Enums;
+using Auth_Turkeysoftware.Models.DTOs;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Test.Repositories.Models;
 using Laraue.EfCoreTriggers.Common.Extensions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace Auth_Turkeysoftware.Repositories.Context
 {
@@ -144,6 +144,31 @@ namespace Auth_Turkeysoftware.Repositories.Context
             //            .ToTable("table_name", "owner");
 
             base.OnModelCreating(builder);
+        }
+
+        public async Task<PaginationDto<T>> GetPagedResultAsync<T>(IQueryable<T> query, int pageNumber, int pageSize) { 
+        
+            long totalCount = await query.CountAsync();
+
+            int pageCount = (int)Math.Ceiling((double)totalCount / (double)pageNumber);
+
+            if (totalCount <= 0 || pageNumber > pageCount) {
+                return new PaginationDto<T>([], pageNumber, pageSize, totalCount);
+            }
+
+            var elements = await query
+                                 .Skip((pageNumber - 1) * pageSize)
+                                 .Take(pageSize)
+                                 .ToListAsync();
+
+            return new PaginationDto<T>
+            {
+                Data = elements,
+                TotalCount = totalCount,
+                PageCount = pageCount,
+                PageSize = pageSize,
+                PageNumber = pageNumber
+            };
         }
     }
 }

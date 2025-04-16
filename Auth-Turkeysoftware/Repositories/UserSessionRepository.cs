@@ -11,6 +11,7 @@ namespace Auth_Turkeysoftware.Repositories
     public class UserSessionRepository : IUserSessionRepository
     {
         private const string ERROR_UPDATE_DB = "Houve um erro de acesso ao banco de dados durante a atualização da sessão do usuário";
+        private const int MAX_RETROACTIVE_DAYS = -7;
         internal AppDbContext dbContext;
         private readonly ILogger<UserSessionRepository> _logger;
 
@@ -60,10 +61,10 @@ namespace Auth_Turkeysoftware.Repositories
             try
             {
                 int rowsAffected = await dbContext.LoggedUser
-                                                    .Where(p => p.SessionId == sessionId
-                                                             && p.FkUserId == userId)
-                                                    .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO)
-                                                                              .SetProperty(e => e.UpdatedOn, DateTime.Now.ToUniversalTime()));
+                                                   .Where(p => p.SessionId == sessionId
+                                                            && p.FkUserId == userId)
+                                                   .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO)
+                                                                             .SetProperty(e => e.UpdatedOn, DateTime.Now.ToUniversalTime()));
 
                 if (rowsAffected <= 0)
                     throw new InvalidSessionException("Não foi possível encontrar a sessão à ser revogada.");
@@ -80,10 +81,10 @@ namespace Auth_Turkeysoftware.Repositories
             try
             {
                 int rowsAffected = await dbContext.LoggedUser
-                                                    .Where(p => p.SessionId == sessionId && p.FkUserId == userId
-                                                             && p.RefreshToken == oldRefreshToken && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
-                                                    .ExecuteUpdateAsync(p => p.SetProperty(e => e.RefreshToken, newRefreshToken)
-                                                                              .SetProperty(e => e.UpdatedOn, DateTime.Now.ToUniversalTime()));
+                                                   .Where(p => p.SessionId == sessionId && p.FkUserId == userId
+                                                            && p.RefreshToken == oldRefreshToken && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
+                                                   .ExecuteUpdateAsync(p => p.SetProperty(e => e.RefreshToken, newRefreshToken)
+                                                                             .SetProperty(e => e.UpdatedOn, DateTime.Now.ToUniversalTime()));
 
                 if (rowsAffected <= 0)
                     throw new InvalidSessionException("Não foi possível encontrar uma sessão válida que esteja utilizando o refresh token informado.");
@@ -96,48 +97,36 @@ namespace Auth_Turkeysoftware.Repositories
             }
         }
 
-        public async Task<PaginationDto<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int page, int pageSize)
-        {
+        private IQueryable<UserSessionResponse> GetQueryListUserActiveSessionsPaginated(string userId) {
+
             DateTime currentDate = DateTime.Now.ToUniversalTime();
-            DateTime sevenDaysAgo = currentDate.AddDays(-7).ToUniversalTime();
+            DateTime sevenDaysAgo = currentDate.AddDays(MAX_RETROACTIVE_DAYS).ToUniversalTime();
 
-            long rowsCount = await this.ListUserActiveSessionsCount(userId, sevenDaysAgo);
-            int pageCount = (int)Math.Ceiling((double)rowsCount / (double)pageSize);
-
-            if (rowsCount <= 0 || page > pageCount) {
-                return new PaginationDto<UserSessionResponse>([], page, pageSize, rowsCount);
-            }
-
-            var sessoes = await dbContext.LoggedUser
-                                         .AsNoTracking()
-                                         .Where(p => p.FkUserId == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
-                                                  && (p.UpdatedOn > sevenDaysAgo || (p.CreatedOn > sevenDaysAgo && p.UpdatedOn == null)))
-                                         .Select(p => new UserSessionResponse
-                                         {
-                                            IdSessao = p.SessionId,
-                                            TokenStatus = p.TokenStatus,
-                                            DataInclusao = p.CreatedOn,
-                                            UltimaVezOnline = p.UpdatedOn ?? p.CreatedOn,
-                                            IP = p.IP,
-                                            Platform = p.Platform,
-                                            Pais = p.Country,
-                                            UF = p.UF
-                                         }).OrderByDescending(p => p.DataInclusao)
-                                         .Skip((page - 1) * pageSize)
-                                         .Take(pageSize)
-                                         .ToListAsync();
-
-            return new PaginationDto<UserSessionResponse>(sessoes, page, pageSize, rowsCount);
+            return dbContext.LoggedUser
+                            .AsNoTracking()
+                            .Where(p => p.FkUserId == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
+                                        && (p.UpdatedOn > sevenDaysAgo || (p.CreatedOn > sevenDaysAgo && p.UpdatedOn == null)))
+                            .Select(p => new UserSessionResponse
+                            {
+                                SessionId = p.SessionId,
+                                TokenStatus = p.TokenStatus,
+                                CreatedOn = p.CreatedOn,
+                                LastTimeOnline = p.UpdatedOn ?? p.CreatedOn,
+                                IP = p.IP,
+                                Platform = p.Platform,
+                                Country = p.Country,
+                                UF = p.UF
+                            }).OrderByDescending(p => p.CreatedOn);
         }
 
-        public async Task<long> ListUserActiveSessionsCount(string userId, DateTime dayLimit)
+        public async Task<PaginationDto<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pageNumber, int pageSize)
         {
-            return await dbContext.LoggedUser
-                                  .AsNoTracking()
-                                  .Where(p => p.FkUserId == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
-                                           && (p.UpdatedOn > dayLimit || (p.CreatedOn > dayLimit && p.UpdatedOn == null)))
-                                  .OrderByDescending(p => p.CreatedOn)
-                                  .CountAsync();
+            return await dbContext.GetPagedResultAsync<UserSessionResponse>(GetQueryListUserActiveSessionsPaginated(userId), pageNumber, pageSize);
+        }
+
+        public async Task<long> ListUserActiveSessionsCount(IQueryable<UserSessionResponse> query)
+        {
+            return await query.CountAsync();
         }
 
         public async Task InvalidateAllUserSessions(string userId)

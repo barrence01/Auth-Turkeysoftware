@@ -113,7 +113,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <remarks>
         /// Exemplo de requisição:
         /// 
-        ///     POST /api/User/revoke-session/{sessionId}
+        ///     POST /api/User/revoke-session/{SessionId}
         ///     Authorization: Bearer {token}
         ///
         /// </remarks>

@@ -201,7 +201,7 @@ namespace Auth_Turkeysoftware.Controllers
         ///     POST /api/Admin/RevokeUserSession<br/>
         ///     {
         ///         "email": "usuario@exemplo.com",
-        ///         "sessionId": "abc123"
+        ///         "SessionId": "abc123"
         ///     }
         ///     
         /// </remarks>
