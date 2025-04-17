@@ -2,6 +2,7 @@
 {
     public class JwtSettings
     {
+        public required string EncryptionKey { get; init; }
         public required string LoginSecretKey { get; init; }
         public required string AccessSecretKey { get; init; }
         public required string RefreshSecretKey { get; init; }

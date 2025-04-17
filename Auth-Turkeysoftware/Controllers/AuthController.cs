@@ -1,6 +1,8 @@
 ﻿using Auth_Turkeysoftware.Configurations.Services;
 using Auth_Turkeysoftware.Controllers.Bases;
 using Auth_Turkeysoftware.Controllers.Filters;
+using Auth_Turkeysoftware.Controllers.Handlers;
+using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Models.Response;
@@ -108,15 +110,16 @@ namespace Auth_Turkeysoftware.Controllers
                     response.IsTwoFactorRequired = true;
                 }
 
-                var userClaims = await _userManager.GetClaimsAsync(user);
-
-                string newLoginTokenId = Guid.CreateVersion7().ToString("N");
-                userClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, newLoginTokenId));
+                var userClaims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Name, user.UserName!)
+                };
 
                 string loginToken = GenerateLoginToken(userClaims);
-
                 AddLoginTokenToCookies(loginToken);
 
+                response.IsSuccess = true;
                 return Ok(response);
             }
             catch (Exception e)
@@ -173,7 +176,8 @@ namespace Auth_Turkeysoftware.Controllers
                     if (twoFactorResult.IsTwoFactorCodeEmpty) {
                         return BadRequest("É necessário código de autenticação de 2 fatores para o login.", response);
                     }
-                    else if (twoFactorResult.IsMaxNumberOfTriesExceeded || twoFactorResult.IsTwoFactorCodeExpired) {
+                    else if (twoFactorResult.IsMaxNumberOfTriesExceeded || twoFactorResult.IsTwoFactorCodeExpired)
+                    {
                         if (twoFactorResult.IsMaxNumberOfTriesExceeded) {
                             await _userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.Add(TimeSpan.FromMinutes(30)));
                         }
@@ -181,8 +185,8 @@ namespace Auth_Turkeysoftware.Controllers
                         response.IsTwoFactorCodeExpired = true;
                         return BadRequest("O código de 2 fatores expirou.", response);
                     }
-                    else if (twoFactorResult.IsTwoFactorCodeInvalid) {
-
+                    else if (twoFactorResult.IsTwoFactorCodeInvalid)
+                    {
                         response.IsTwoFactorCodeInvalid = true;
                         return BadRequest("O código de 2 fatores fornecido é inválido", response);
                     }
@@ -347,8 +351,9 @@ namespace Auth_Turkeysoftware.Controllers
             try
             {
                 Request.Cookies.TryGetValue(REFRESH_TOKEN, out string? refreshToken);
-                if (string.IsNullOrEmpty(refreshToken))
+                if (string.IsNullOrEmpty(refreshToken)) {
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
+                }
 
                 var principalRefresh = await GetPrincipalFromRefreshToken(refreshToken);
 
@@ -372,8 +377,9 @@ namespace Auth_Turkeysoftware.Controllers
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
-                string newRefreshToken = GenerateRefreshToken(principalRefresh.Claims.ToList());
-                string newAccessToken = GenerateAccessToken(principalRefresh.Claims.ToList());
+                var userClaims = await _userManager.GetClaimsAsync(user);
+                string newRefreshToken = GenerateRefreshToken(userClaims);
+                string newAccessToken = GenerateAccessToken(userClaims);
 
                 await _loggedUserService.UpdateSessionRefreshToken(user.Id, idSessao, refreshToken, newRefreshToken);
 
@@ -410,7 +416,7 @@ namespace Auth_Turkeysoftware.Controllers
 
             var user = await _userManager.FindByNameAsync(principalLogin.Identity.Name);
             if (user == null) {
-                _logger.LogError("Usuário do refresh token não foi encontrado");
+                _logger.LogError("Usuário do login token não foi encontrado");
                 return null;
             }
 

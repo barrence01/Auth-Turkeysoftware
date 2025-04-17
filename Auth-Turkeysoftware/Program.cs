@@ -172,7 +172,9 @@ try
             ValidAudience = builder.Configuration["JwtSettings:Audience"],
             ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("JwtSettings:AccessSecretKey")
-                                                                               ?? throw new InvalidOperationException("AccessSecretKey is missing in configuration.")))
+                                                                               ?? throw new InvalidOperationException("AccessSecretKey is missing in configuration."))),
+            TokenDecryptionKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("JwtSettings:EncryptionKey")
+                                                                                 ?? throw new InvalidOperationException("EncryptionKey is missing in configuration.")))
         };
 
         options.Events = new JwtBearerEvents
