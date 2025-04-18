@@ -1,8 +1,6 @@
 ﻿using Auth_Turkeysoftware.Configurations.Services;
 using Auth_Turkeysoftware.Controllers.Bases;
 using Auth_Turkeysoftware.Controllers.Filters;
-using Auth_Turkeysoftware.Controllers.Handlers;
-using Auth_Turkeysoftware.Enums;
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Models.Response;
@@ -50,7 +48,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// <remarks>
         /// Exemplo de requisição:<br/>
         /// 
-        ///     POST /api/Auth/login<br/>
+        ///     POST /api/Auth/try-login<br/>
         ///     {
         ///         "email": "usuario@exemplo.com",
         ///         "password": "SenhaSegura123"
@@ -59,11 +57,11 @@ namespace Auth_Turkeysoftware.Controllers
         /// </remarks>
         /// <param name="request">Dados de login contendo email e senha.</param>
         /// <returns>
-        /// Resultado da tentativa de login. Pode indicar necessidade de 2FA e retorna token temporário.
+        /// Resultado da tentativa de login. Pode indicar necessidade de 2FA e retorna token temporário em cookies HTTP-only.
         /// </returns>
         /// <response code="200">
         /// Retorna:
-        /// - Token temporário se credenciais válidas
+        /// - Token temporário em cookies HTTP-only se credenciais válidas
         /// - IsTwoFactorRequired=true se 2FA necessário
         /// </response>
         /// <response code="400">
@@ -174,7 +172,7 @@ namespace Auth_Turkeysoftware.Controllers
                     response.IsTwoFactorRequired = true;
 
                     if (twoFactorResult.IsTwoFactorCodeEmpty) {
-                        return BadRequest("É necessário código de autenticação de 2 fatores para o login.", response);
+                        return BadRequest("É necessário inserir o código de autenticação de 2 fatores para o login.", response);
                     }
                     else if (twoFactorResult.IsMaxNumberOfTriesExceeded || twoFactorResult.IsTwoFactorCodeExpired)
                     {
@@ -246,7 +244,7 @@ namespace Auth_Turkeysoftware.Controllers
         ///     
         /// Requer cookie com token temporário gerado por TryLogin.
         /// </remarks>
-        /// <param name="request">Dados contendo modo de envio do 2FA.</param>
+        /// <param name="request">Dados contendo modo de autenticação 2FA.</param>
         /// <returns>Confirmação de envio do código 2FA.</returns>
         /// <response code="200">Código 2FA enviado com sucesso.</response>
         /// <response code="400">
@@ -334,7 +332,7 @@ namespace Auth_Turkeysoftware.Controllers
         ///     }
         /// 
         /// </remarks>
-        /// <returns>Retorna 200 (OK) com os novos tokens de acesso e refresh nos cookies.</returns>
+        /// <returns>Retorna 200 (OK) com os novos tokens de acesso e refresh em cookies HTTP-only.</returns>
         /// <response code="200">Tokens renovados com sucesso.</response>
         /// <response code="401">
         /// Falha devido a:
@@ -351,6 +349,7 @@ namespace Auth_Turkeysoftware.Controllers
             try
             {
                 Request.Cookies.TryGetValue(REFRESH_TOKEN, out string? refreshToken);
+                _logger.LogError("Token recebido" + refreshToken);
                 if (string.IsNullOrEmpty(refreshToken)) {
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
@@ -370,14 +369,18 @@ namespace Auth_Turkeysoftware.Controllers
 
                 string? idSessao = principalRefresh.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
                 if (idSessao == null) {
+                    _logger.LogError("Token não possui id da sessão.");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
                 if (await _loggedUserService.IsTokenBlackListed(user.Id, idSessao, refreshToken)) {
+                    _logger.LogError("O token utilizado já havia sido inválidado.");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
                 var userClaims = await _userManager.GetClaimsAsync(user);
+                userClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, idSessao));
+
                 string newRefreshToken = GenerateRefreshToken(userClaims);
                 string newAccessToken = GenerateAccessToken(userClaims);
 

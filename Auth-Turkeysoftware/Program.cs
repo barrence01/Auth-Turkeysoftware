@@ -69,16 +69,28 @@ try
     builder.Services.AddScoped<ITestDataRepository, TestDataRepository>();
 
     // Singleton Service
+    JwtSettingsSingleton jwtSettingsSingleton = new(new JwtSettings
+    {
+        EncryptionKey = GetRequiredEnvVar("JWT_ENCRYPTION_KEY"),
+        LoginSecretKey = GetRequiredEnvVar("JWT_LOGIN_SECRET"),
+        AccessSecretKey = GetRequiredEnvVar("JWT_ACCESS_SECRET"),
+        RefreshSecretKey = GetRequiredEnvVar("JWT_REFRESH_SECRET"),
+        Issuer = GetRequiredEnvVar("JWT_ISSUER"),
+        Audience = GetRequiredEnvVar("JWT_AUDIENCE"),
+        Domain = GetRequiredEnvVar("JWT_DOMAIN"),
+        AccessTokenValidityInMinutes = GetEnvVarAsInt("JWT_ACCESS_TOKEN_MINUTES"),
+        RefreshTokenValidityInMinutes = GetEnvVarAsInt("JWT_REFRESH_TOKEN_MINUTES"),
+        RefreshTokenPath = GetRequiredEnvVar("JWT_REFRESH_TOKEN_PATH") ?? "/api/Auth/refresh-token",
+        AccessTokenPath = GetRequiredEnvVar("JWT_ACCESS_TOKEN_PATH") ?? "/"
+    });
+    builder.Services.AddSingleton<JwtSettingsSingleton>(jwtSettingsSingleton);
     builder.Services.AddSingleton<HttpClientSingleton>();
-    builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-    builder.Services.AddSingleton<JwtSettingsSingleton>();
     builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
     builder.Services.AddSingleton<EmailSettingsSingleton>();
     builder.Services.Configure<EmailTokenProviderSettings>(builder.Configuration.GetSection("EmailTokenProviderSettings"));
     builder.Services.AddSingleton<EmailTokenProviderSingleton>();
 
     // Mail Service
-
     builder.Services.AddTransient<IEmailService, EmailService>();
 
     // Filters
@@ -312,3 +324,8 @@ finally
 {
     await Log.CloseAndFlushAsync();
 }
+static string GetRequiredEnvVar(string name) => Environment.GetEnvironmentVariable(name)
+                                                ?? throw new InvalidOperationException($"Variável de ambiente obrigatória '{name}' não existe.");
+
+static int GetEnvVarAsInt(string name) => int.TryParse(Environment.GetEnvironmentVariable(name), out int result) ? result
+                                          : throw new InvalidOperationException($"Variável de ambiente obrigatória '{name}' não existe.");

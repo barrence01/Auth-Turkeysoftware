@@ -3,13 +3,12 @@ using Microsoft.Extensions.Options;
 
 namespace Auth_Turkeysoftware.Configurations.Services
 {
-    //TODO Adicionar método para obter credencias de variáveis de ambiente
     public sealed class JwtSettingsSingleton
     {
         private readonly JwtSettings _jwtSettings;
-        public JwtSettingsSingleton(IOptions<JwtSettings> jwtSettings)
+        public JwtSettingsSingleton(JwtSettings jwtSettings)
         {
-            _jwtSettings = jwtSettings.Value;
+            _jwtSettings = jwtSettings;
         }
 
         public JwtSettings GetJwtSettings()
