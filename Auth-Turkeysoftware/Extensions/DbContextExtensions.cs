@@ -1,14 +1,51 @@
 ﻿using Auth_Turkeysoftware.Repositories.Context;
+using Auth_Turkeysoftware.Utils;
 using Laraue.EfCoreTriggers.PostgreSql.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Auth_Turkeysoftware.Extensions
 {
+    /// <summary>
+    /// Extensões para configuração de DbContexts da aplicação
+    /// </summary>
     public static class DbContextExtensions
     {
+        /// <summary>
+        /// Configura e registra os DbContexts principais da aplicação
+        /// </summary>
+        /// <param name="services">Coleção de serviços DI</param>
+        /// <param name="config">Configuração da aplicação</param>
+        /// <returns>IServiceCollection para encadeamento</returns>
+        /// <remarks>
+        /// <para>Configura dois DbContexts com pooling de conexões:</para>
+        /// <list type="number">
+        /// <item>
+        /// <term>AppDbContext</term>
+        /// <description>
+        /// Contexto principal com:
+        /// - Conexão padrão (DefaultConnection)
+        /// - Resiliência a falhas (retry automático)
+        /// - Suporte a triggers PostgreSQL
+        /// - Tratamento especial para deadlocks e timeouts
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <term>CacheDbContext</term>
+        /// <description>
+        /// Contexto secundário para operações realizadas fora do escopo da requisição atual(stateless):
+        /// - Conexão separada (SecondaryConnection)
+        /// - Resiliência básica a falhas
+        /// </description>
+        /// </item>
+        /// </list>
+        /// <para>
+        /// Os códigos de erro tratados automaticamente incluem:
+        /// 57014 (Timeout), 40P01 (Deadlock), e outros erros de conexão
+        /// </para>
+        /// </remarks>
         public static IServiceCollection AddAppDbContexts(this IServiceCollection services, IConfiguration config)
         {
-            var connStringDefault = config.GetConnectionString("DefaultConnection");
+            var connStringDefault = ApiConfigUtils.GetRequiredEnvVar("AUTH_DB_CONN");
             services.AddDbContextPool<AppDbContext>(options =>
             {
                 options.UseNpgsql(connStringDefault, npgsqlOptions =>
@@ -36,7 +73,7 @@ namespace Auth_Turkeysoftware.Extensions
             ////
             // Acesso separado para o dbcontext utilizado para operações que não dependam de estado
             ////
-            var connStringSecondary = config.GetConnectionString("CacheDbConnection");
+            var connStringSecondary = ApiConfigUtils.GetRequiredEnvVar("AUTH_SECONDARY_DB_CONN");
             services.AddDbContextPool<CacheDbContext>(options =>
             {
                 options.UseNpgsql(connStringSecondary, npgsql =>

@@ -9,11 +9,11 @@ namespace Auth_Turkeysoftware.Services.MailService
 {
     public class EmailService : IEmailService
     {
-        protected readonly EmailSettingsSingleton _emailSettings;
+        protected readonly AuthEmailSettingsSingleton _emailSettings;
 
         private readonly ILogger<EmailService> _logger;
 
-        public EmailService(EmailSettingsSingleton emailSettings,
+        public EmailService(AuthEmailSettingsSingleton emailSettings,
             ILogger<EmailService> logger)
         {
             _emailSettings = emailSettings;
