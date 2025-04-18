@@ -1,6 +1,7 @@
 ﻿using Auth_Turkeysoftware.Configurations.Services;
 using Auth_Turkeysoftware.Controllers.Bases;
 using Auth_Turkeysoftware.Controllers.Filters;
+using Auth_Turkeysoftware.Enums.Constants;
 using Auth_Turkeysoftware.Exceptions;
 using Auth_Turkeysoftware.Models.Request;
 using Auth_Turkeysoftware.Models.Response;
@@ -348,7 +349,7 @@ namespace Auth_Turkeysoftware.Controllers
         {
             try
             {
-                Request.Cookies.TryGetValue(REFRESH_TOKEN, out string? refreshToken);
+                Request.Cookies.TryGetValue(TokenNameConstant.REFRESH_TOKEN, out string? refreshToken);
                 _logger.LogError("Token recebido" + refreshToken);
                 if (string.IsNullOrEmpty(refreshToken)) {
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
@@ -405,7 +406,7 @@ namespace Auth_Turkeysoftware.Controllers
         /// </returns>
         private async Task<ApplicationUser?> ValidateLoginToken()
         {
-            Request.Cookies.TryGetValue(LOGIN_TOKEN, out string? loginToken);
+            Request.Cookies.TryGetValue(TokenNameConstant.LOGIN_TOKEN, out string? loginToken);
             if (string.IsNullOrEmpty(loginToken)) {
                 return null;
             }

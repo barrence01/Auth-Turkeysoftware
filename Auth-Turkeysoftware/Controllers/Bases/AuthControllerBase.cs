@@ -4,15 +4,13 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using System.Security.Claims;
 using System.Text;
 using Auth_Turkeysoftware.Configurations.Services;
+using Auth_Turkeysoftware.Enums.Constants;
 
 namespace Auth_Turkeysoftware.Controllers.Bases
 {
     [ApiController]
     public class AuthControllerBase : CommonControllerBase
     {
-        protected const string LOGIN_TOKEN = "TurkeySoftware-LoginToken";
-        protected const string ACCESS_TOKEN = "TurkeySoftware-AccessToken";
-        protected const string REFRESH_TOKEN = "TurkeySoftware-RefreshToken";
         protected readonly JwtSettingsSingleton _jwtSettings;
 
         protected AuthControllerBase(JwtSettingsSingleton jwtSettingsSingleton)
@@ -85,7 +83,7 @@ namespace Auth_Turkeysoftware.Controllers.Bases
 
         protected void AddLoginTokenToCookies(string loginToken)
         {
-            HttpContext.Response.Cookies.Append(LOGIN_TOKEN, loginToken,
+            HttpContext.Response.Cookies.Append(TokenNameConstant.LOGIN_TOKEN, loginToken,
                 new CookieOptions
                 {
                     HttpOnly = true,
@@ -102,7 +100,7 @@ namespace Auth_Turkeysoftware.Controllers.Bases
         {
             DeletePreviousTokenFromCookies();
 
-            HttpContext.Response.Cookies.Append(REFRESH_TOKEN, refreshToken,
+            HttpContext.Response.Cookies.Append(TokenNameConstant.REFRESH_TOKEN, refreshToken,
                 new CookieOptions
                 {
                     HttpOnly = true,
@@ -114,7 +112,7 @@ namespace Auth_Turkeysoftware.Controllers.Bases
                     Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.GetRefreshTokenValidityInMinutes())
                 });
 
-            HttpContext.Response.Cookies.Append(ACCESS_TOKEN, accessToken,
+            HttpContext.Response.Cookies.Append(TokenNameConstant.ACCESS_TOKEN, accessToken,
                 new CookieOptions
                 {
                     HttpOnly = true,
@@ -175,7 +173,7 @@ namespace Auth_Turkeysoftware.Controllers.Bases
 
         protected void DeletePreviousTokenFromCookies()
         {
-            HttpContext.Response.Cookies.Delete(REFRESH_TOKEN,
+            HttpContext.Response.Cookies.Delete(TokenNameConstant.REFRESH_TOKEN,
                 new CookieOptions
                 {
                     HttpOnly = true,
@@ -186,7 +184,7 @@ namespace Auth_Turkeysoftware.Controllers.Bases
                     Path = _jwtSettings.GetRefreshTokenPath()
                 });
 
-            HttpContext.Response.Cookies.Delete(ACCESS_TOKEN,
+            HttpContext.Response.Cookies.Delete(TokenNameConstant.ACCESS_TOKEN,
                 new CookieOptions
                 {
                     HttpOnly = true,
@@ -197,7 +195,7 @@ namespace Auth_Turkeysoftware.Controllers.Bases
                     Path = _jwtSettings.GetAccessTokenPath()
                 });
 
-            HttpContext.Response.Cookies.Delete(LOGIN_TOKEN,
+            HttpContext.Response.Cookies.Delete(TokenNameConstant.LOGIN_TOKEN,
                 new CookieOptions
                 {
                     HttpOnly = true,

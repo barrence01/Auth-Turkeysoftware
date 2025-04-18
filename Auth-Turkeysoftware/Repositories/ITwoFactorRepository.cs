@@ -1,6 +1,4 @@
-﻿using Auth_Turkeysoftware.Models.DTOs;
-using Auth_Turkeysoftware.Models.Response;
-using Auth_Turkeysoftware.Repositories.DataBaseModels;
+﻿using Auth_Turkeysoftware.Repositories.DataBaseModels;
 
 namespace Auth_Turkeysoftware.Repositories
 {

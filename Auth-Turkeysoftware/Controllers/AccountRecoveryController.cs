@@ -6,7 +6,6 @@ using Auth_Turkeysoftware.Services;
 using Microsoft.AspNetCore.Authorization;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Auth_Turkeysoftware.Models.Response;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Auth_Turkeysoftware.Controllers
 {

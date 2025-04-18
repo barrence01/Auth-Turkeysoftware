@@ -1,8 +1,6 @@
-﻿using Auth_Turkeysoftware.Enums;
-using Auth_Turkeysoftware.Extensions;
+﻿using Auth_Turkeysoftware.Extensions;
 using Auth_Turkeysoftware.Models.Response;
 using Microsoft.AspNetCore.Mvc;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Auth_Turkeysoftware.Controllers.Bases
 {
