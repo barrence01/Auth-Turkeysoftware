@@ -9,12 +9,12 @@ namespace Auth_Turkeysoftware.Repositories
     {
         private const string ERROR_ACESSO_DB = "Houve um erro de acesso ao banco de dados.";
         private const string ERROR_INVALID_FOR_INCLUSION = "O objeto não é valido para inclusão";
-        internal AppDbContext dbContext;
+        internal AppDbContext _dbContext;
         private readonly ILogger<TwoFactorRepository> _logger;
 
         public TwoFactorRepository(AppDbContext dataBaseContext, ILogger<TwoFactorRepository> logger)
         {
-            this.dbContext = dataBaseContext;
+            this._dbContext = dataBaseContext;
             this._logger = logger;
         }
 
@@ -30,8 +30,8 @@ namespace Auth_Turkeysoftware.Repositories
                 model.CreatedOn = DateTime.UtcNow.ToUniversalTime();
                 model.IsActive = true;
 
-                await dbContext.AddAsync(model);
-                await dbContext.SaveChangesAsync();
+                await _dbContext.AddAsync(model);
+                await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {
@@ -44,7 +44,7 @@ namespace Auth_Turkeysoftware.Repositories
         {
             try
             {
-                return await dbContext.TwoFactorAuth.Where(w => w.FkUserId == userId && w.TwoFactorMode == twoFactorMode)
+                return await _dbContext.TwoFactorAuth.Where(w => w.FkUserId == userId && w.TwoFactorMode == twoFactorMode)
                                                     .FirstOrDefaultAsync();      
             }
             catch (DbUpdateException ex)
@@ -58,7 +58,7 @@ namespace Auth_Turkeysoftware.Repositories
         {
             try
             {
-                return await dbContext.TwoFactorAuth.Where(w => w.FkUserId == userId)
+                return await _dbContext.TwoFactorAuth.Where(w => w.FkUserId == userId)
                                                     .ToListAsync();
             }
             catch (DbUpdateException ex)
@@ -72,7 +72,7 @@ namespace Auth_Turkeysoftware.Repositories
         {
             try
             {
-                return await dbContext.TwoFactorAuth.Where(w => w.FkUserId == userId && w.IsActive == true)
+                return await _dbContext.TwoFactorAuth.Where(w => w.FkUserId == userId && w.IsActive == true)
                                                     .ToListAsync();
             }
             catch (DbUpdateException ex)
@@ -92,8 +92,8 @@ namespace Auth_Turkeysoftware.Repositories
             {
                 model.UpdatedOn = DateTime.UtcNow.ToUniversalTime();
 
-                dbContext.Update(model);
-                await dbContext.SaveChangesAsync();
+                _dbContext.Update(model);
+                await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException ex)
             {

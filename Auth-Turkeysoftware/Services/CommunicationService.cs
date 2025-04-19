@@ -8,13 +8,9 @@ namespace Auth_Turkeysoftware.Services
     public class CommunicationService : ICommunicationService
     {
         private readonly IEmailService _emailService;
-        private readonly EmailTokenProviderSingleton _emailTokenSettings;
-        private readonly IDistributedCacheService _cache;
-        public CommunicationService(IEmailService emailService, EmailTokenProviderSingleton emailTokenSettings, IDistributedCacheService cacheService)
+        public CommunicationService(IEmailService emailService)
         {
             _emailService = emailService;
-            _emailTokenSettings = emailTokenSettings;
-            _cache = cacheService;
         }
 
         public async Task Send2FAEmailAsync(string email, string twoFactorCode, string tokenLifeSpanInMinutes)

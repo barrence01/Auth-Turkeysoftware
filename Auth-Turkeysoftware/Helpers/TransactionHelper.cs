@@ -24,7 +24,7 @@ namespace Auth_Turkeysoftware.Helpers
         /// <param name="dbContext">Contexto do banco de dados.</param>
         /// <param name="operation">Operação assíncrona a ser executada na transação.</param>
         /// <returns>Task contendo o resultado da operação.</returns>
-        /// <exception cref="ArgumentNullException">Lançada quando dbContext ou operation são nulos.</exception>
+        /// <exception cref="ArgumentNullException">Lançada quando _dbContext ou operation são nulos.</exception>
         /// <exception cref="Exception">Qualquer exceção lançada pela operation será repassada após rollback.</exception>
         /// <remarks>
         /// <para>
@@ -36,7 +36,7 @@ namespace Auth_Turkeysoftware.Helpers
         /// </para>
         /// <example>
         /// <code>
-        /// var result = await dbContext.ExecuteWithTransactionAsync(async () => 
+        /// var result = await _dbContext.ExecuteWithTransactionAsync(async () => 
         /// {
         ///     // Operações no banco de dados
         ///     return await service.ProcessAsync();
@@ -73,7 +73,7 @@ namespace Auth_Turkeysoftware.Helpers
         /// <param name="dbContext">Contexto do banco de dados.</param>
         /// <param name="operation">Operação síncrona a ser executada na transação.</param>
         /// <returns>Resultado da operação.</returns>
-        /// <exception cref="ArgumentNullException">Lançada quando dbContext ou operation são nulos.</exception>
+        /// <exception cref="ArgumentNullException">Lançada quando _dbContext ou operation são nulos.</exception>
         /// <exception cref="Exception">Qualquer exceção lançada pela operation será repassada após rollback.</exception>
         /// <remarks>
         /// <para>
@@ -85,7 +85,7 @@ namespace Auth_Turkeysoftware.Helpers
         /// </para>
         /// <example>
         /// <code>
-        /// var result = dbContext.ExecuteWithTransaction(() => 
+        /// var result = _dbContext.ExecuteWithTransaction(() => 
         /// {
         ///     // Operações no banco de dados
         ///     return service.Process();

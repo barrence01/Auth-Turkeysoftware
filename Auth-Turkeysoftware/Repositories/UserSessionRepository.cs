@@ -12,12 +12,12 @@ namespace Auth_Turkeysoftware.Repositories
     {
         private const string ERROR_UPDATE_DB = "Houve um erro de acesso ao banco de dados durante a atualização da sessão do usuário";
         private const int MAX_RETROACTIVE_DAYS = -7;
-        internal AppDbContext dbContext;
+        internal AppDbContext _dbContext;
         private readonly ILogger<UserSessionRepository> _logger;
 
         public UserSessionRepository(AppDbContext dataBaseContext, ILogger<UserSessionRepository> logger)
         {
-            this.dbContext = dataBaseContext;
+            this._dbContext = dataBaseContext;
             this._logger = logger;
         }
 
@@ -31,8 +31,8 @@ namespace Auth_Turkeysoftware.Repositories
                     throw new BusinessException("Os campos EmailUsuario, RefreshToken e IP são obrigatórios.");
                 }
 
-                dbContext.LoggedUser.Add(loggedUser);
-                await dbContext.SaveChangesAsync();
+                _dbContext.LoggedUser.Add(loggedUser);
+                await _dbContext.SaveChangesAsync();
             }
             catch (DbUpdateException e)
             {
@@ -43,7 +43,7 @@ namespace Auth_Turkeysoftware.Repositories
 
         public async Task<UserSessionModel?> FindRefreshToken(string userId, string sessionId, string userToken)
         {
-            return await dbContext.LoggedUser
+            return await _dbContext.LoggedUser
                                   .AsNoTracking()
                                   .Where(p => p.SessionId == sessionId && p.FkUserId == userId
                                               && p.RefreshToken == userToken)
@@ -60,14 +60,15 @@ namespace Auth_Turkeysoftware.Repositories
         {
             try
             {
-                int rowsAffected = await dbContext.LoggedUser
-                                                   .Where(p => p.SessionId == sessionId
-                                                            && p.FkUserId == userId)
-                                                   .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO)
-                                                                             .SetProperty(e => e.UpdatedOn, DateTime.Now.ToUniversalTime()));
+                int rowsAffected = await _dbContext.LoggedUser
+                                                  .Where(p => p.SessionId == sessionId
+                                                           && p.FkUserId == userId)
+                                                  .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO)
+                                                                            .SetProperty(e => e.UpdatedOn, DateTime.Now.ToUniversalTime()));
 
-                if (rowsAffected <= 0)
+                if (rowsAffected <= 0) {
                     throw new InvalidSessionException("Não foi possível encontrar a sessão à ser revogada.");
+                }
             }
             catch (DbUpdateException e)
             {
@@ -80,14 +81,15 @@ namespace Auth_Turkeysoftware.Repositories
         {
             try
             {
-                int rowsAffected = await dbContext.LoggedUser
-                                                   .Where(p => p.SessionId == sessionId && p.FkUserId == userId
-                                                            && p.RefreshToken == oldRefreshToken && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
-                                                   .ExecuteUpdateAsync(p => p.SetProperty(e => e.RefreshToken, newRefreshToken)
-                                                                             .SetProperty(e => e.UpdatedOn, DateTime.Now.ToUniversalTime()));
+                int rowsAffected = await _dbContext.LoggedUser
+                                                  .Where(p => p.SessionId == sessionId && p.FkUserId == userId
+                                                           && p.RefreshToken == oldRefreshToken && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
+                                                  .ExecuteUpdateAsync(p => p.SetProperty(e => e.RefreshToken, newRefreshToken)
+                                                                            .SetProperty(e => e.UpdatedOn, DateTime.Now.ToUniversalTime()));
 
-                if (rowsAffected <= 0)
+                if (rowsAffected <= 0) {
                     throw new InvalidSessionException("Não foi possível encontrar uma sessão válida que esteja utilizando o refresh token informado.");
+                }
 
             }
             catch (DbUpdateException e)
@@ -102,7 +104,7 @@ namespace Auth_Turkeysoftware.Repositories
             DateTime currentDate = DateTime.Now.ToUniversalTime();
             DateTime sevenDaysAgo = currentDate.AddDays(MAX_RETROACTIVE_DAYS).ToUniversalTime();
 
-            return dbContext.LoggedUser
+            return _dbContext.LoggedUser
                             .AsNoTracking()
                             .Where(p => p.FkUserId == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO
                                         && (p.UpdatedOn > sevenDaysAgo || (p.CreatedOn > sevenDaysAgo && p.UpdatedOn == null)))
@@ -121,7 +123,7 @@ namespace Auth_Turkeysoftware.Repositories
 
         public async Task<PaginationDto<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pageNumber, int pageSize)
         {
-            return await dbContext.GetPagedResultAsync<UserSessionResponse>(GetQueryListUserActiveSessionsPaginated(userId), pageNumber, pageSize);
+            return await _dbContext.GetPagedResultAsync<UserSessionResponse>(GetQueryListUserActiveSessionsPaginated(userId), pageNumber, pageSize);
         }
 
         public async Task<long> ListUserActiveSessionsCount(IQueryable<UserSessionResponse> query)
@@ -131,7 +133,7 @@ namespace Auth_Turkeysoftware.Repositories
 
         public async Task InvalidateAllUserSessions(string userId)
         {
-            await dbContext.LoggedUser
+            await _dbContext.LoggedUser
                            .Where(p => p.FkUserId == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
                            .ExecuteUpdateAsync(p => p.SetProperty(e => e.TokenStatus, (char)StatusTokenEnum.INATIVO));
         }

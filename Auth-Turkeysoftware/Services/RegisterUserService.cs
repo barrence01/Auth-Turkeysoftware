@@ -7,7 +7,6 @@ using Auth_Turkeysoftware.Repositories.Context;
 using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
-using YamlDotNet.Core.Tokens;
 
 namespace Auth_Turkeysoftware.Services
 {

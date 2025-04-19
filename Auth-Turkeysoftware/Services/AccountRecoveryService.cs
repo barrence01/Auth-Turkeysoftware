@@ -12,7 +12,7 @@ namespace Auth_Turkeysoftware.Services
         private readonly ICommunicationService _commService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IDistributedCacheService _cache;
-        private const int RESET_CODE_LIFE_IN_HOURS = 3;
+        private const int RESET_CODE_LIFESPAN_IN_HOURS = 3;
 
         public AccountRecoveryService(ICommunicationService communicationService, UserManager<ApplicationUser> userManager, IDistributedCacheService cacheService)
         {
@@ -38,7 +38,7 @@ namespace Auth_Turkeysoftware.Services
 
             TwoFactorRetryDto retryInfo = new TwoFactorRetryDto { UserId = user.Id, TwoFactorCode = resetToken, MaxNumberOfTries = 15 };
 
-            await _cache.SetAsync(passResetKey, retryInfo, TimeSpan.FromHours(RESET_CODE_LIFE_IN_HOURS));
+            await _cache.SetAsync(passResetKey, retryInfo, TimeSpan.FromHours(RESET_CODE_LIFESPAN_IN_HOURS));
 
             await _commService.SendPasswordResetEmail(user.Email!, resetToken);
         }
