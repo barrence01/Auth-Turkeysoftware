@@ -23,5 +23,11 @@ Entity Framework Core
 
 ASP.NET Core Web API
 
+MailKit
+
+Serilog
+
+Banco de dados PostgreSQL
+
 Este projeto foi inteiramente desenvolvido com foco em segurança, escalabilidade e flexibilidade, servindo como base para aplicações que necessitem de um sistema robusto de autenticação e controle de acesso.
 
