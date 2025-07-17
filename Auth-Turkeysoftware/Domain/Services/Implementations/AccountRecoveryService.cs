@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity.Data;
 using Auth_Turkeysoftware.Domain.Models.Result;
 using Auth_Turkeysoftware.Domain.Models.VOs;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
+using Auth_Turkeysoftware.Shared.Utils;
 
 namespace Auth_Turkeysoftware.Domain.Services.Implementations
 {
@@ -29,7 +30,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
         /// <returns>Uma tarefa que representa a operação assíncrona.</returns>
         public async Task SendPasswordResetEmail(ApplicationUser user)
         {
-            string passResetKey = GetPassResetKey(user.Email!);
+            string passResetKey = AuthUtil.GetPassResetKey(user.Email!);
 
             if (await _cache.IsCachedAsync(passResetKey))
             {
@@ -52,7 +53,8 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
                 throw new ArgumentNullException(nameof(user), "Usuário não pode ser nulo.");
             }
 
-            ResetPasswordValidationResult result = new ResetPasswordValidationResult();
+            ResetPasswordValidationResult result = new();
+
             if (string.IsNullOrEmpty(request.ResetCode))
             {
                 result.IsResetCodeEmpty = true;
@@ -64,7 +66,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
                 return result;
             }
 
-            string cacheKey = GetPassResetKey(user.UserName!);
+            string cacheKey = AuthUtil.GetPassResetKey(user.UserName!);
             TwoFactorRetryVO? retryInfo = await _cache.GetAsync<TwoFactorRetryVO>(cacheKey);
             if (retryInfo == null)
             {
@@ -91,16 +93,6 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Gera uma chave para ser utilizada nas operações com cache para validação de dois fatores
-        /// </summary>
-        /// <param name="email">Email ou Username do usuário.</param>
-        /// <returns>Uma string contendo a chave a ser utilizada.</returns>
-        private static string GetPassResetKey(string email)
-        {
-            return $"PassReset:{email}";
         }
     }
 }

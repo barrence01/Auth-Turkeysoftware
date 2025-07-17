@@ -35,7 +35,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
 
         public async Task<RegisterUserResult> RegisterUser(RegisterRequest request)
         {
-            RegisterUserResult result = new RegisterUserResult();
+            RegisterUserResult result = new();
 
             try
             {

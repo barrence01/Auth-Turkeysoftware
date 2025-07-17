@@ -30,9 +30,9 @@ namespace Auth_Turkeysoftware.Shared.Extensions
         /// </remarks>
         public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration config)
         {
-            var domain = ConfigUtils.GetRequiredEnvVar("JWT_DOMAIN");
-            var accessSecret = ConfigUtils.GetRequiredEnvVar("JWT_ACCESS_SECRET");
-            var encryptionKey = ConfigUtils.GetRequiredEnvVar("JWT_ENCRYPTION_KEY");
+            var domain = ConfigUtil.GetRequiredEnvVar("JWT_DOMAIN");
+            var accessSecret = ConfigUtil.GetRequiredEnvVar("JWT_ACCESS_SECRET");
+            var encryptionKey = ConfigUtil.GetRequiredEnvVar("JWT_ENCRYPTION_KEY");
 
             var audience = GetJwtSettings("Audience", config);
             var issuer = GetJwtSettings("Issuer", config);

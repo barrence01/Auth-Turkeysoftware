@@ -36,7 +36,7 @@ try
     ////
     // Carrega as variáveis de ambiente a partir de um arquivo .env
     ////
-    ConfigUtils.LoadEnvironmentVariablesFromEnvFile(builder);
+    ConfigUtil.LoadEnvironmentVariablesFromEnvFile(builder);
 
     ////
     // Adicionar log do serilog como padrão

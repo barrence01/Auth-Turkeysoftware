@@ -8,6 +8,7 @@ using Auth_Turkeysoftware.Shared.Enums;
 using Auth_Turkeysoftware.Domain.Models.Result;
 using Auth_Turkeysoftware.Domain.Models.VOs;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
+using Auth_Turkeysoftware.Shared.Utils;
 
 namespace Auth_Turkeysoftware.Domain.Services.Implementations
 {
@@ -42,7 +43,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
 
         private async Task SendTwoFactorCodeByEmail(ApplicationUser user)
         {
-            string cacheKey = Get2FACacheKey(user.UserName!);
+            string cacheKey = AuthUtil.Get2FACacheKey(user.UserName!);
 
             if (await _cache.IsCachedAsync(cacheKey))
             {
@@ -85,7 +86,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
                 return result;
             }
 
-            string cacheKey = Get2FACacheKey(user.UserName);
+            string cacheKey = AuthUtil.Get2FACacheKey(user.UserName);
             TwoFactorRetryVO? retryInfo = await _cache.GetAsync<TwoFactorRetryVO>(cacheKey);
             if (retryInfo == null)
             {
@@ -129,16 +130,6 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
                     _ => null
                 }
             }).ToList();
-        }
-
-        /// <summary>
-        /// Gera uma chave para ser utilizada nas operações com cache para validação de dois fatores
-        /// </summary>
-        /// <param name="email">Email ou Username do usuário.</param>
-        /// <returns>Uma string contendo a chave a ser utilizada.</returns>
-        private static string Get2FACacheKey(string email)
-        {
-            return $"2FA:{email}";
         }
     }
 }

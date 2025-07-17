@@ -45,7 +45,7 @@ namespace Auth_Turkeysoftware.Shared.Extensions
         /// </remarks>
         public static IServiceCollection AddDbContexts(this IServiceCollection services, IConfiguration config)
         {
-            var connStringDefault = ConfigUtils.GetRequiredEnvVar("AUTH_DB_CONN");
+            var connStringDefault = ConfigUtil.GetRequiredEnvVar("AUTH_DB_CONN");
             services.AddDbContextPool<AppDbContext>(options =>
             {
                 options.UseNpgsql(connStringDefault, npgsqlOptions =>
@@ -73,7 +73,7 @@ namespace Auth_Turkeysoftware.Shared.Extensions
             ////
             // Acesso separado para o dbcontext utilizado para operações que não dependam de estado
             ////
-            var connStringSecondary = ConfigUtils.GetRequiredEnvVar("AUTH_SECONDARY_DB_CONN");
+            var connStringSecondary = ConfigUtil.GetRequiredEnvVar("AUTH_SECONDARY_DB_CONN");
             services.AddDbContextPool<CacheDbContext>(options =>
             {
                 options.UseNpgsql(connStringSecondary, npgsql =>

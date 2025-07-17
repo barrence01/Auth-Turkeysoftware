@@ -10,6 +10,7 @@ using Auth_Turkeysoftware.Shared.Enums;
 using Auth_Turkeysoftware.Domain.Models.Result;
 using Auth_Turkeysoftware.Domain.Models.VOs;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
+using Auth_Turkeysoftware.Shared.Utils;
 
 namespace Auth_Turkeysoftware.Domain.Services.Implementations
 {
@@ -35,7 +36,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
 
         public async Task RequestEnable2FAByEmail(ApplicationUser user, string email)
         {
-            string cacheKey = Get2FAEnableCacheKey(email);
+            string cacheKey = AuthUtil.Get2FAEnableCacheKey(email);
 
             if (await _cache.IsCachedAsync(cacheKey))
             {
@@ -72,7 +73,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
                 return result;
             }
 
-            string cacheKey = Get2FAEnableCacheKey(user.UserName!);
+            string cacheKey = AuthUtil.Get2FAEnableCacheKey(user.UserName!);
             TwoFactorRetryVO? retryInfo = await _cache.GetAsync<TwoFactorRetryVO>(cacheKey);
             if (retryInfo == null)
             {
@@ -131,11 +132,6 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             await _commService.SendConfirmEmailRequest(user.Id, user.Email!, token);
-        }
-
-        private static string Get2FAEnableCacheKey(string email)
-        {
-            return $"2FA-Email-Enable:{email}";
         }
     }
 }

@@ -3,7 +3,7 @@
     /// <summary>
     /// Classe de utilitários para obter configurações do ambiente
     /// </summary>
-    public static class ConfigUtils
+    public static class ConfigUtil
     {
         /// <summary>
         /// Obtém variável de ambiente obrigatória

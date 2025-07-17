@@ -130,11 +130,11 @@ namespace Auth_Turkeysoftware.Shared.Extensions
         {
             return new JwtSettingsSingleton(new JwtSettings
             {
-                EncryptionKey = ConfigUtils.GetRequiredEnvVar("JWT_ENCRYPTION_KEY"),
-                LoginSecretKey = ConfigUtils.GetRequiredEnvVar("JWT_LOGIN_SECRET"),
-                AccessSecretKey = ConfigUtils.GetRequiredEnvVar("JWT_ACCESS_SECRET"),
-                RefreshSecretKey = ConfigUtils.GetRequiredEnvVar("JWT_REFRESH_SECRET"),
-                Domain = ConfigUtils.GetRequiredEnvVar("JWT_DOMAIN"),
+                EncryptionKey = ConfigUtil.GetRequiredEnvVar("JWT_ENCRYPTION_KEY"),
+                LoginSecretKey = ConfigUtil.GetRequiredEnvVar("JWT_LOGIN_SECRET"),
+                AccessSecretKey = ConfigUtil.GetRequiredEnvVar("JWT_ACCESS_SECRET"),
+                RefreshSecretKey = ConfigUtil.GetRequiredEnvVar("JWT_REFRESH_SECRET"),
+                Domain = ConfigUtil.GetRequiredEnvVar("JWT_DOMAIN"),
 
                 Issuer = GetJwtSettings("Issuer", config),
                 Audience = GetJwtSettings("Audience", config),
@@ -167,8 +167,8 @@ namespace Auth_Turkeysoftware.Shared.Extensions
                 SenderName = GetAuthEmailSettings("SenderName", config),
                 SenderEmail = GetAuthEmailSettings("SenderEmail", config),
                 SSL = GetAuthEmailSettings("SSL", config),
-                SmtpUser = ConfigUtils.GetRequiredEnvVar("AUTH_EMAIL_USER"),
-                SmtpPass = ConfigUtils.GetRequiredEnvVar("AUTH_EMAIL_PASS")
+                SmtpUser = ConfigUtil.GetRequiredEnvVar("AUTH_EMAIL_USER"),
+                SmtpPass = ConfigUtil.GetRequiredEnvVar("AUTH_EMAIL_PASS")
             });
         }
 
