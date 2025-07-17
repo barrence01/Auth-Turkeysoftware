@@ -1,9 +1,9 @@
-﻿using Auth_Turkeysoftware.Configurations.Services;
-using Auth_Turkeysoftware.Controllers.Bases;
-using Auth_Turkeysoftware.Enums;
-using Auth_Turkeysoftware.Models.Request;
-using Auth_Turkeysoftware.Repositories.DataBaseModels;
-using Auth_Turkeysoftware.Services;
+﻿using Auth_Turkeysoftware.API.Bases;
+using Auth_Turkeysoftware.API.Models.Request;
+using Auth_Turkeysoftware.Domain.Services.Interfaces;
+using Auth_Turkeysoftware.Infraestructure.Configurations.Singletons;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
+using Auth_Turkeysoftware.Shared.Enums;
 using Auth_Turkeysoftware.Test.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

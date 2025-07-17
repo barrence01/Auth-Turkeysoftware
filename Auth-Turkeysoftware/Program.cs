@@ -1,14 +1,16 @@
-using Auth_Turkeysoftware.Repositories.Context;
 using Microsoft.AspNetCore.Identity;
 using Serilog;
 using Serilog.Events;
 using Microsoft.AspNetCore.HttpOverrides;
-using Auth_Turkeysoftware.Models.Identity;
-using Auth_Turkeysoftware.Enums;
-using Auth_Turkeysoftware.Repositories.DataBaseModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
-using Auth_Turkeysoftware.Extensions;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.DbContext;
+using Auth_Turkeysoftware.Shared.Extensions;
+using Auth_Turkeysoftware.Shared.Enums;
+using Auth_Turkeysoftware.Domain.Models.Identity;
+using Auth_Turkeysoftware.Shared.Utils;
+
 
 // Logging provider
 Log.Logger = new LoggerConfiguration()
@@ -30,7 +32,15 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+
+    ////
+    // Carrega as variáveis de ambiente a partir de um arquivo .env
+    ////
+    ConfigUtils.LoadEnvironmentVariablesFromEnvFile(builder);
+
+    ////
     // Adicionar log do serilog como padrão
+    ////
     builder.Host.UseSerilog();
 
     ////
@@ -41,18 +51,18 @@ try
     builder.Services.AddOpenApiDocument();
 
     ////
-    // Serviços criados
+    // Carrega os serviços
     ////
-    builder.Services.AddCustomServices()
+    builder.Services.AddCustomScoped()
                     .AddCustomSingletons(builder.Configuration)
                     .AddCustomTransients(builder.Configuration)
                     .AddCustomHandlers(builder.Configuration);
 
     ////
     // Entity Framework
-    // Acesso ao banco de dados
+    // Configuração do acesso ao banco de dados
     ////
-    builder.Services.AddAppDbContexts(builder.Configuration);
+    builder.Services.AddDbContexts(builder.Configuration);
 
     ////
     // Microsoft Identity
@@ -65,7 +75,7 @@ try
                     .AddTokenProvider<EmailTokenProvider<ApplicationUser>>(TokenOptions.DefaultEmailProvider);
 
 
-    // Configurar requisitos para login de usuário
+    // Configura os requisitos para login de usuário
     builder.Services.Configure<IdentityOptions>(options =>
     {
         options.User.RequireUniqueEmail = true;

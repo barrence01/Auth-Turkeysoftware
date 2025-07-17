@@ -1,6 +1,5 @@
-﻿using Auth_Turkeysoftware.Exceptions;
-using Auth_Turkeysoftware.Repositories;
-using Auth_Turkeysoftware.Repositories.Context;
+﻿using Auth_Turkeysoftware.Shared.Exceptions;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.DbContext;
 using Auth_Turkeysoftware.Test.Repositories.Models;
 using Microsoft.EntityFrameworkCore;
 

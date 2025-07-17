@@ -7,7 +7,8 @@ namespace Auth_Turkeysoftware.Test.Repositories.Models
     public class TestDataModel
     {
         [Key]
-        [Column("id_test")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("id_test", TypeName = "uuid")]
         public string? IdTest { get; set; }
 
         [Column("nr_number")]
