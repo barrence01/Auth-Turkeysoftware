@@ -2,7 +2,7 @@
 using Auth_Turkeysoftware.Domain.Models.Result;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
 using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.DbContext;
-using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 using Auth_Turkeysoftware.Shared.Enums;
 using Auth_Turkeysoftware.Shared.Exceptions;
 using Auth_Turkeysoftware.Shared.Helpers;
@@ -14,14 +14,14 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
     public class RegisterUserService : IRegisterUserService
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly ICommunicationService _commService;
         private readonly ILogger<RegisterUserService> _logger;
         internal AppDbContext _dbContext;
 
         public RegisterUserService(
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager,
+            RoleManager<ApplicationRole> roleManager,
             ICommunicationService commService,
             ILogger<RegisterUserService> logger,
             AppDbContext dataBaseContext)
@@ -71,7 +71,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
 
                     var claims = new List<Claim>
                     {
-                        new Claim(ClaimTypes.NameIdentifier, user.Id),
+                        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                         new Claim(ClaimTypes.Name, user.UserName),
                         new Claim(ClaimTypes.Email, user.Email),
                         new Claim(ClaimTypes.Role, nameof(UserRolesEnum.User))
@@ -113,7 +113,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
             {
                 if (!roles.Any(r => r.Name == userRole))
                 {
-                    await _roleManager.CreateAsync(new IdentityRole(userRole));
+                    await _roleManager.CreateAsync(new ApplicationRole(userRole));
                 }
             }
         }

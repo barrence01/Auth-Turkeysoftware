@@ -20,7 +20,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Interfaces
         /// <param name="userId">ID do usuário.</param>
         /// <param name="sessionId">ID da sessão.</param>
         /// <returns>Uma tarefa que representa a operação assíncrona.</returns>
-        Task InvalidateUserSession(string userId, string sessionId);
+        Task InvalidateUserSession(Guid userId, Guid sessionId);
 
         /// <summary>
         /// Invalida todas as sessões de um usuário.
@@ -28,7 +28,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Interfaces
         /// <param name="userId">ID do usuário.</param>
         /// <param name="sessionId">ID da sessão.</param>
         /// <returns>Uma tarefa que representa a operação assíncrona.</returns>
-        Task InvalidateAllUserSession(string userId, string sessionId);
+        Task InvalidateAllUserSession(Guid userId, Guid sessionId);
 
         /// <summary>
         /// Verifica se o token do usuário está na lista negra.
@@ -37,7 +37,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Interfaces
         /// <param name="sessionId">ID da sessão.</param>
         /// <param name="userToken">Token do usuário.</param>
         /// <returns>Retorna verdadeiro se o token estiver na lista negra, caso contrário, falso.</returns>
-        Task<bool> IsTokenBlackListed(string userId, string sessionId, string userToken);
+        Task<bool> IsTokenBlackListed(Guid userId, Guid sessionId, string userToken);
 
         /// <summary>
         /// Atualiza o refresh token da sessão.
@@ -47,7 +47,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Interfaces
         /// <param name="refreshToken">Token de atualização atual.</param>
         /// <param name="newRefreshToken">Novo token de atualização.</param>
         /// <returns>Uma tarefa que representa a operação assíncrona.</returns>
-        Task UpdateSessionRefreshToken(string userId, string sessionId, string refreshToken, string newRefreshToken);
+        Task UpdateSessionRefreshToken(Guid userId, Guid sessionId, string refreshToken, string newRefreshToken);
 
         /// <summary>
         /// Lista as sessões ativas do usuário de forma paginada.
@@ -55,6 +55,6 @@ namespace Auth_Turkeysoftware.Domain.Services.Interfaces
         /// <param name="userId">ID do usuário.</param>
         /// <param name="pageNumber">Número da página.</param>
         /// <returns>Retorna um DTO de paginação contendo as sessões ativas do usuário.</returns>
-        Task<PaginationVO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pageNumber);
+        Task<PaginationVO<UserSessionResponse>> ListUserActiveSessionsPaginated(Guid userId, int pageNumber);
     }
 }

@@ -1,11 +1,11 @@
-﻿using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
-using Auth_Turkeysoftware.Infraestructure.DistributedCache;
+﻿using Auth_Turkeysoftware.Infraestructure.DistributedCache;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Auth_Turkeysoftware.Domain.Models.Result;
 using Auth_Turkeysoftware.Domain.Models.VOs;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
 using Auth_Turkeysoftware.Shared.Utils;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 
 namespace Auth_Turkeysoftware.Domain.Services.Implementations
 {
@@ -38,7 +38,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
 
             var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
 
-            TwoFactorRetryVO retryInfo = new TwoFactorRetryVO { UserId = user.Id, TwoFactorCode = resetToken, MaxNumberOfTries = 15 };
+            TwoFactorRetryVO retryInfo = new TwoFactorRetryVO { UserId = user.Id.ToString(), TwoFactorCode = resetToken, MaxNumberOfTries = 15 };
 
             await _cache.SetAsync(passResetKey, retryInfo, TimeSpan.FromHours(RESET_CODE_LIFESPAN_IN_HOURS));
 

@@ -33,7 +33,7 @@ namespace Auth_Turkeysoftware.API.Filters
             _logger.LogWarning("Operação administrativa realizada: {MethodName} por {UserName} com os argumentos {Arguments}",
                                 methodName, userName, arguments);
 
-            var logEntry = new AdminActionLogModel(userName, methodName, arguments);
+            var logEntry = new LogAdminActionModel(userName, methodName, arguments);
             logEntry.TruncateAllFields();
 
             _dbContext.AdminActionLog.Add(logEntry);

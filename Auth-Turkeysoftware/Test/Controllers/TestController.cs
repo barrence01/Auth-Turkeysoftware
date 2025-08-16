@@ -2,7 +2,7 @@
 using Auth_Turkeysoftware.API.Models.Request;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
 using Auth_Turkeysoftware.Infraestructure.Configurations.Singletons;
-using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 using Auth_Turkeysoftware.Shared.Enums;
 using Auth_Turkeysoftware.Test.Repositories;
 using Microsoft.AspNetCore.Authorization;
@@ -20,11 +20,11 @@ namespace Auth_Turkeysoftware.Test.Controllers
     public class TestController : AuthControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly RoleManager<ApplicationRole> _roleManager;
 
         public TestController(
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager,
+            RoleManager<ApplicationRole> roleManager,
             JwtSettingsSingleton jwtSettingsSingleton,
             IUserSessionService loggedUserService,
             ITestDataRepository testDataRepository) : base(jwtSettingsSingleton)
@@ -112,7 +112,7 @@ namespace Auth_Turkeysoftware.Test.Controllers
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Role, nameof(UserRolesEnum.Admin))
@@ -132,7 +132,7 @@ namespace Auth_Turkeysoftware.Test.Controllers
             {
                 if (!roles.Any(r => r.Name == userRole))
                 {
-                    await _roleManager.CreateAsync(new IdentityRole(userRole));
+                    await _roleManager.CreateAsync(new ApplicationRole(userRole));
                 }
             }
         }

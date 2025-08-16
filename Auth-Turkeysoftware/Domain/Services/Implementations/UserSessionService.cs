@@ -23,19 +23,19 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
         }
 
         /// <inheritdoc/>
-        public async Task InvalidateUserSession(string userId, string sessionId)
+        public async Task InvalidateUserSession(Guid userId, Guid sessionId)
         {
             await _userSessionRepository.InvalidateUserSession(userId, sessionId);
         }
 
         /// <inheritdoc/>
-        public async Task InvalidateAllUserSession(string userId, string sessionId)
+        public async Task InvalidateAllUserSession(Guid userId, Guid sessionId)
         {
             await _userSessionRepository.InvalidateUserSession(userId, sessionId);
         }
 
         /// <inheritdoc/>
-        public async Task<bool> IsTokenBlackListed(string userId, string sessionId, string userToken)
+        public async Task<bool> IsTokenBlackListed(Guid userId, Guid sessionId, string userToken)
         {
             var result = await _userSessionRepository.FindRefreshToken(userId, sessionId, userToken);
             if (result == null || result.TokenStatus == (char)StatusTokenEnum.INATIVO)
@@ -45,13 +45,13 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
         }
 
         /// <inheritdoc/>
-        public async Task UpdateSessionRefreshToken(string userId, string sessionId, string refreshToken, string newRefreshToken)
+        public async Task UpdateSessionRefreshToken(Guid userId, Guid sessionId, string refreshToken, string newRefreshToken)
         {
             await _userSessionRepository.UpdateSessionRefreshToken(userId, sessionId, refreshToken, newRefreshToken);
         }
 
         /// <inheritdoc/>
-        public async Task<PaginationVO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pageNumber)
+        public async Task<PaginationVO<UserSessionResponse>> ListUserActiveSessionsPaginated(Guid userId, int pageNumber)
         {
             if (pageNumber <= 0)
                 pageNumber = 1;

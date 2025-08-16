@@ -8,16 +8,16 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
     {
         Task AddLoggedUser(UserSessionModel loggedUser);
 
-        Task<UserSessionModel?> FindRefreshToken(string userId, string sessionId, string userToken);
+        Task<UserSessionModel?> FindRefreshToken(Guid userId, Guid sessionId, string userToken);
 
-        Task InvalidateUserSession(string userId, string sessionId);
+        Task InvalidateUserSession(Guid userId, Guid sessionId);
 
-        Task UpdateSessionRefreshToken(string userId, string sessionId, string oldRefreshToken, string newRefreshToken);
+        Task UpdateSessionRefreshToken(Guid userId, Guid sessionId, string oldRefreshToken, string newRefreshToken);
 
-        Task<PaginationVO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pageNumber, int pageSize);
+        Task<PaginationVO<UserSessionResponse>> ListUserActiveSessionsPaginated(Guid userId, int pageNumber, int pageSize);
 
         Task<long> ListUserActiveSessionsCount(IQueryable<UserSessionResponse> query);
 
-        Task InvalidateAllUserSessions(string userId);
+        Task InvalidateAllUserSessions(Guid userId);
     }
 }

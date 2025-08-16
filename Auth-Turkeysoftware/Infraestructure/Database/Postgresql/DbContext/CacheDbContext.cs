@@ -7,8 +7,8 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.DbContext
     {
         public CacheDbContext(DbContextOptions<CacheDbContext> options) : base(options) { }
 
-        public DbSet<CacheEntryModel> DistributedCache { get; set; }
-        public DbSet<AdminActionLogModel> AdminActionLog { get; set; }
+        public DbSet<DistributedCacheModel> DistributedCache { get; set; }
+        public DbSet<LogAdminActionModel> AdminActionLog { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -66,7 +66,6 @@ namespace Auth_Turkeysoftware.Shared.Extensions
                         "40P01"  // Deadlock detected
                     });
                 });
-                options.UsePostgreSqlTriggers();
             });
 
             ////

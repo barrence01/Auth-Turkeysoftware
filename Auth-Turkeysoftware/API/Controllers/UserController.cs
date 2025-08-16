@@ -4,7 +4,7 @@ using Auth_Turkeysoftware.API.Models.Response;
 using Auth_Turkeysoftware.Domain.Models.Result;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
 using Auth_Turkeysoftware.Infraestructure.Configurations.Singletons;
-using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 using Auth_Turkeysoftware.Shared.Enums;
 using Auth_Turkeysoftware.Shared.Exceptions;
 using Microsoft.AspNetCore.Identity;
@@ -86,11 +86,11 @@ namespace Auth_Turkeysoftware.API.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var user = await _userManager.FindByNameAsync(userName!);
-            if (user == null || userName == null)
+            if (user == null || userName == null || userId == null)
             {
                 return BadRequest(ERROR_USUARIO_INVALIDO);
             }
-            else if (user.Id != userId)
+            else if (user.Id != new Guid(userId))
             {
                 return BadRequest(ERROR_USUARIO_INVALIDO);
             }
@@ -134,11 +134,11 @@ namespace Auth_Turkeysoftware.API.Controllers
             {
                 return BadRequest(ERROR_USUARIO_INVALIDO);
             }
-            else if (user == null || userName == null)
+            else if (user == null || userName == null || userId == null)
             {
                 return BadRequest(ERROR_USUARIO_INVALIDO);
             }
-            else if (user.Id != userId)
+            else if (user.Id != new Guid(userId))
             {
                 return BadRequest(ERROR_USUARIO_INVALIDO);
             }

@@ -1,5 +1,4 @@
 ﻿using Auth_Turkeysoftware.Infraestructure.Configurations.Singletons;
-using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +10,7 @@ using Auth_Turkeysoftware.Shared.Exceptions;
 using Auth_Turkeysoftware.Shared.Enums;
 using Auth_Turkeysoftware.Domain.Models.VOs;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 
 namespace Auth_Turkeysoftware.API.Controllers
 {
@@ -180,7 +180,7 @@ namespace Auth_Turkeysoftware.API.Controllers
                     return BadRequest(USER_NOT_FOUND);
                 }
 
-                await _admnistrationService.InvalidateUserSession(user.Id, request.SessionId);
+                await _admnistrationService.InvalidateUserSession(user.Id, new Guid(request.SessionId));
 
                 return Ok("Sessão revogada com sucesso.");
             }

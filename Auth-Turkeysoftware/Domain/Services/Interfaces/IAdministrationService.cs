@@ -5,8 +5,8 @@ namespace Auth_Turkeysoftware.Domain.Services.Interfaces
 {
     public interface IAdministrationService
     {
-        Task InvalidateUserSession(string userId, string sessionId);
-        Task InvalidateAllUserSession(string userId);
-        Task<PaginationVO<UserSessionResponse>> ListUserActiveSessions(string userId, int page);
+        Task InvalidateUserSession(Guid userId, Guid sessionId);
+        Task InvalidateAllUserSession(Guid userId);
+        Task<PaginationVO<UserSessionResponse>> ListUserActiveSessions(Guid userId, int page);
     }
 }

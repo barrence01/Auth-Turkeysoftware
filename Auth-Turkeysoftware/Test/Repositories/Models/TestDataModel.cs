@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Auth_Turkeysoftware.Test.Repositories.Models
 {
-    [Table("tb_test", Schema = "auth")]
+    [Table("TestData", Schema = "auth")]
     public class TestDataModel
     {
         [Key]

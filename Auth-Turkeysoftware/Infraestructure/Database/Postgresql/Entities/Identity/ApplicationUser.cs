@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 
 //TODO Alterar o username para ser email
-namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
+namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity
 {
     /// <summary>
     /// ApplicationUser class
@@ -15,11 +15,11 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
     /// SecurityStamp: É alterado sempre que o usuário altera as credenciais<br></br>
     /// ConcurrencyStamp: É alterado sempre que algum dado do usuário é alterado para evitar conflitos de concorrência.
     /// </remarks>
-    public class ApplicationUser : IdentityUser
+    public class ApplicationUser : IdentityUser<Guid>
     {
         public ApplicationUser()
         {
-            Id = Guid.CreateVersion7().ToString();
+            Id = Guid.CreateVersion7();
             SecurityStamp = Guid.CreateVersion7().ToString();
             Name = string.Empty;
         }

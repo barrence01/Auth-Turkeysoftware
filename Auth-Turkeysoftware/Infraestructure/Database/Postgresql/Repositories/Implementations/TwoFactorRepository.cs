@@ -42,7 +42,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
             }
         }
 
-        public async Task<TwoFactorAuthModel?> FindByUserIdAndModeAsync(string userId, int twoFactorMode)
+        public async Task<TwoFactorAuthModel?> FindByUserIdAndModeAsync(Guid userId, int twoFactorMode)
         {
             try
             {
@@ -56,7 +56,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
             }
         }
 
-        public async Task<List<TwoFactorAuthModel>> ListAll2FAOptionsAsync(string userId)
+        public async Task<List<TwoFactorAuthModel>> ListAll2FAOptionsAsync(Guid userId)
         {
             try
             {
@@ -70,7 +70,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
             }
         }
 
-        public async Task<List<TwoFactorAuthModel>> ListActive2FAOptionsAsync(string userId)
+        public async Task<List<TwoFactorAuthModel>> ListActive2FAOptionsAsync(Guid userId)
         {
             try
             {

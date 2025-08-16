@@ -1,5 +1,4 @@
 ﻿using Auth_Turkeysoftware.Infraestructure.Configurations.Singletons;
-using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +9,7 @@ using Auth_Turkeysoftware.API.Models.Response;
 using Auth_Turkeysoftware.Shared.Exceptions;
 using Auth_Turkeysoftware.Domain.Models.VOs;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 
 namespace Auth_Turkeysoftware.API.Controllers
 {
@@ -52,7 +52,7 @@ namespace Auth_Turkeysoftware.API.Controllers
                     return BadRequest(ERROR_USUARIO_INVALIDO);
                 }
 
-                var userActiveSessions = await _userSessionService.ListUserActiveSessionsPaginated(userId, pagina);
+                var userActiveSessions = await _userSessionService.ListUserActiveSessionsPaginated(new Guid(userId), pagina);
 
                 return Ok(userActiveSessions);
             }
@@ -98,7 +98,7 @@ namespace Auth_Turkeysoftware.API.Controllers
                 return Ok();
             }
 
-            await _userSessionService.InvalidateUserSession(user.Id, sessionId);
+            await _userSessionService.InvalidateUserSession(user.Id, new Guid(sessionId));
 
             return Ok();
         }
@@ -106,16 +106,16 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Revoga uma sessão específica do usuário autenticado.
         /// </summary>
-        /// <param name="idSessao">Identificador único da sessão a ser revogada.</param>
+        /// <param name="sessionId">Identificador único da sessão a ser revogada.</param>
         /// <returns>Resultado da operação de revogação.</returns>
         /// <response code="200">Sessão revogada com sucesso.</response>
         /// <response code="400">Falha na operação (usuário inválido, sessão não encontrada ou permissão negada).</response>
         /// <response code="401">Não autorizado - token inválido ou ausente.</response>
-        [HttpPost("revoke-session/{idSessao}")]
+        [HttpPost("revoke-session/{sessionId}")]
         [ProducesResponseType(typeof(void), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Response<object>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(void), StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> RevokeSession([FromRoute] string idSessao)
+        public async Task<IActionResult> RevokeSession([FromRoute] string sessionId)
         {
             try
             {
@@ -133,12 +133,12 @@ namespace Auth_Turkeysoftware.API.Controllers
                     return BadRequest(ERROR_USUARIO_INVALIDO);
                 }
 
-                if (user.Id != userId)
+                if (user.Id != new Guid(userId))
                 {
                     return BadRequest(ERROR_USUARIO_INVALIDO);
                 }
 
-                await _userSessionService.InvalidateUserSession(user.Id, idSessao);
+                await _userSessionService.InvalidateUserSession(user.Id, new Guid(sessionId));
 
                 return Ok();
             }

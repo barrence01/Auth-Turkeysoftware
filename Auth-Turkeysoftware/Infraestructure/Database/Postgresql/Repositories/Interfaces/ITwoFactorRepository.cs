@@ -5,9 +5,9 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
     public interface ITwoFactorRepository
     {
         Task AddTwoFactorAuth(TwoFactorAuthModel model);
-        Task<TwoFactorAuthModel?> FindByUserIdAndModeAsync(string userId, int twoFactorMode);
-        Task<List<TwoFactorAuthModel>> ListAll2FAOptionsAsync(string userId);
-        Task<List<TwoFactorAuthModel>> ListActive2FAOptionsAsync(string userId);
+        Task<TwoFactorAuthModel?> FindByUserIdAndModeAsync(Guid userId, int twoFactorMode);
+        Task<List<TwoFactorAuthModel>> ListAll2FAOptionsAsync(Guid userId);
+        Task<List<TwoFactorAuthModel>> ListActive2FAOptionsAsync(Guid userId);
         Task UpdateTwoFactorAuth(TwoFactorAuthModel model);
     }
 }

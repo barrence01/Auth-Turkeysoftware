@@ -1,6 +1,6 @@
 ﻿using Auth_Turkeysoftware.API.Models.Response;
 using Auth_Turkeysoftware.Domain.Models.Result;
-using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 
 namespace Auth_Turkeysoftware.Domain.Services.Interfaces
 {

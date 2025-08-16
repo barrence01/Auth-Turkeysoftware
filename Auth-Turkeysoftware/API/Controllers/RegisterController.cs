@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
 using Auth_Turkeysoftware.API.Bases;
 using Auth_Turkeysoftware.API.Models.Request;
 using Auth_Turkeysoftware.API.Models.Response;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
 using Auth_Turkeysoftware.Shared.Exceptions;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 
 namespace Auth_Turkeysoftware.API.Controllers
 {

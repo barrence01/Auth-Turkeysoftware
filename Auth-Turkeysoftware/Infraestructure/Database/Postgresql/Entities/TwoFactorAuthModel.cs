@@ -2,21 +2,22 @@
 using System.ComponentModel.DataAnnotations;
 using YamlDotNet.Core.Tokens;
 using Microsoft.EntityFrameworkCore;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 
 namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
 {
-    [Table("tb_two_factor_auth", Schema = "auth")]
+    [Table("TwoFactorAuth", Schema = "auth")]
     [Index(nameof(FkUserId), Name = "IX_fk_id_usuar_2fa")]
     public class TwoFactorAuthModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("id_two_factor")]
-        public string? TwoFactorId { get; set; } = Guid.CreateVersion7().ToString();
+        public Guid TwoFactorId { get; set; } = Guid.CreateVersion7();
 
         [Column("fk_id_usuario")]
         [Required]
-        public string? FkUserId { get; set; }
+        public Guid FkUserId { get; set; }
 
         [Column("in_two_factor_mode")]
         [Required]
@@ -45,7 +46,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
 
         public TwoFactorAuthModel() { }
 
-        public TwoFactorAuthModel(string userId, int twoFactorMode)
+        public TwoFactorAuthModel(Guid userId, int twoFactorMode)
         {
             FkUserId = userId;
             TwoFactorMode = twoFactorMode;
@@ -53,7 +54,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
 
         public bool IsValidForInclusion()
         {
-            if (FkUserId == null || TwoFactorMode == null || TwoFactorMode <= 0)
+            if (TwoFactorMode == null || TwoFactorMode <= 0)
             {
                 return false;
             }

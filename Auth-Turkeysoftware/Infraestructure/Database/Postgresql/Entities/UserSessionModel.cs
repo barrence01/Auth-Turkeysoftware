@@ -6,17 +6,17 @@ using Auth_Turkeysoftware.Shared.Extensions;
 
 namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
 {
-    [Table("tb_usuar_session", Schema = "auth")]
+    [Table("UserSession", Schema = "auth")]
     [Index(nameof(FkUserId), Name = "IX_fk_id_usuar_session")]
     public class UserSessionModel
     {
         [Key]
         [Column("id_sessao")]
-        public string? SessionId { get; set; }
+        public Guid SessionId { get; set; }
 
         [Column("fk_id_usuario")]
         [Required]
-        public string? FkUserId { get; set; }
+        public Guid FkUserId { get; set; }
 
         [Column("ds_refresh_token")]
         [Required]
@@ -64,8 +64,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
 
         public bool IsValidForInclusion()
         {
-            if (FkUserId == null ||
-                string.IsNullOrEmpty(RefreshToken) || string.IsNullOrEmpty(IP))
+            if (string.IsNullOrEmpty(RefreshToken) || string.IsNullOrEmpty(IP))
             {
                 return false;
             }

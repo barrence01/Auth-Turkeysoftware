@@ -1,15 +1,18 @@
+using Auth_Turkeysoftware.Domain.Models.Identity;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.DbContext;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
+using Auth_Turkeysoftware.Shared.Enums;
+using Auth_Turkeysoftware.Shared.Extensions;
+using Auth_Turkeysoftware.Shared.Utils;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
-using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
-using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.DbContext;
-using Auth_Turkeysoftware.Shared.Extensions;
-using Auth_Turkeysoftware.Shared.Enums;
-using Auth_Turkeysoftware.Domain.Models.Identity;
-using Auth_Turkeysoftware.Shared.Utils;
+using System.Data;
 
 
 // Logging provider
@@ -68,7 +71,7 @@ try
     // Microsoft Identity
     // Autenticação e autorização
     ////
-    builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
                     .AddEntityFrameworkStores<AppDbContext>()
                     .AddErrorDescriber<CustomIdentityErrorDescriber>()
                     .AddDefaultTokenProviders()

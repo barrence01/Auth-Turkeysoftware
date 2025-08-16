@@ -85,10 +85,10 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
         /// <inheritdoc/>
         public async Task<bool> IsCachedAsync(string key)
         {
-            CacheEntryModel? cacheEntry = await _dbContext.DistributedCache
+            DistributedCacheModel? cacheEntry = await _dbContext.DistributedCache
                                                           .AsNoTracking()
                                                           .Where(e => e.Id == key)
-                                                          .Select(s => new CacheEntryModel
+                                                          .Select(s => new DistributedCacheModel
                                                           {
                                                               Id = s.Id,
                                                               ExpiresAtTime = s.ExpiresAtTime,
@@ -112,13 +112,13 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
         /// <param name="value">Objeto a ser armazenado no cache (será serializado para JSON).</param>
         /// <param name="expiration">Tempo de vida padrão para a entrada de cache.</param>
         /// <param name="options">Opções adicionais de cache como expiração absoluta ou deslizante.</param>
-        /// <returns>Um novo <see cref="CacheEntryModel"/> configurado com os parâmetros fornecidos.</returns>
-        private static CacheEntryModel CreateCacheEntry(string key, object value, TimeSpan expiration, CacheEntryOptions? options)
+        /// <returns>Um novo <see cref="DistributedCacheModel"/> configurado com os parâmetros fornecidos.</returns>
+        private static DistributedCacheModel CreateCacheEntry(string key, object value, TimeSpan expiration, CacheEntryOptions? options)
         {
             var jsonData = JsonSerializer.Serialize(value);
             var encodedData = Encoding.UTF8.GetBytes(jsonData);
 
-            var entry = new CacheEntryModel
+            var entry = new DistributedCacheModel
             {
                 Id = key,
                 Value = encodedData,
@@ -140,7 +140,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
         /// <param name="cacheEntry">Modelo da entrada de cache com os valores atualizados.</param>
         /// <param name="keepExpTime">Se true, mantém o tempo de expiração existente; caso contrário atualiza todas as propriedades.</param>
         /// <returns>Uma tarefa que representa a operação assíncrona de atualização.</returns>
-        private async Task UpdateCachedEntry(CacheEntryModel cacheEntry, bool keepExpTime = false)
+        private async Task UpdateCachedEntry(DistributedCacheModel cacheEntry, bool keepExpTime = false)
         {
             if (keepExpTime)
             {
@@ -172,7 +172,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
         /// <returns>
         /// O valor desserializado se válido; caso contrário remove a entrada expirada e retorna default(T).
         /// </returns>
-        private async Task<T?> ValidateDeserializeCachedElement<T>(CacheEntryModel? cacheEntry)
+        private async Task<T?> ValidateDeserializeCachedElement<T>(DistributedCacheModel? cacheEntry)
         {
 
             DateTimeOffset currentTime = DateTimeOffset.UtcNow;
@@ -200,7 +200,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
         /// <returns>
         /// Retorna o cacheEntry se não estiver expirado.
         /// </returns>
-        private async Task<CacheEntryModel?> ValidateCachedElement(CacheEntryModel? cacheEntry)
+        private async Task<DistributedCacheModel?> ValidateCachedElement(DistributedCacheModel? cacheEntry)
         {
             DateTimeOffset currentTime = DateTimeOffset.UtcNow;
 

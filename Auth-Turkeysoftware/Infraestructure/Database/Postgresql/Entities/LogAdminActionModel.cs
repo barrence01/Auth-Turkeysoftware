@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
 {
-    [Table("tb_log_admin_action", Schema = "auth")]
-    public class AdminActionLogModel
+    [Table("LogAdminAction", Schema = "auth")]
+    public class LogAdminActionModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -28,9 +28,9 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
         [Required]
         public DateTime? CreatedOn { get; set; }
 
-        public AdminActionLogModel() { }
+        public LogAdminActionModel() { }
 
-        public AdminActionLogModel(string idAdmin, string nomeMetodo, string argumentos)
+        public LogAdminActionModel(string idAdmin, string nomeMetodo, string argumentos)
         {
             FkUserId = idAdmin;
             MethodName = nomeMetodo;

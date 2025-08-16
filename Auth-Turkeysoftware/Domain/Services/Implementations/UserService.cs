@@ -11,6 +11,7 @@ using Auth_Turkeysoftware.Domain.Models.Result;
 using Auth_Turkeysoftware.Domain.Models.VOs;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
 using Auth_Turkeysoftware.Shared.Utils;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 
 namespace Auth_Turkeysoftware.Domain.Services.Implementations
 {
@@ -50,7 +51,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
             var tokenLifeSpanInMinutes = _emailTokenSettings.GetSettings().TokenLifeSpan;
             var maxNumberOfTries = _emailTokenSettings.GetSettings().MaxNumberOfTries;
 
-            TwoFactorRetryVO retryInfo = new TwoFactorRetryVO { UserId = user.Id, TwoFactorCode = token, MaxNumberOfTries = maxNumberOfTries };
+            TwoFactorRetryVO retryInfo = new TwoFactorRetryVO { UserId = user.Id.ToString(), TwoFactorCode = token, MaxNumberOfTries = maxNumberOfTries };
 
             await _cache.SetAsync(cacheKey, retryInfo, tokenLifeSpanInMinutes);
 
@@ -91,7 +92,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
                 return result;
             }
 
-            if (retryInfo.TwoFactorCode == twoFactorCode && user.Id == retryInfo.UserId)
+            if (retryInfo.TwoFactorCode == twoFactorCode && user.Id == new Guid(retryInfo.UserId))
             {
                 await _cache.RemoveAsync(cacheKey);
                 await Enable2FA(user);

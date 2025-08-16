@@ -47,7 +47,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
             await _emailService.SendEmailAsync(emailRequest);
         }
 
-        public async Task SendConfirmEmailRequest(string userId, string email, string confirmToken)
+        public async Task SendConfirmEmailRequest(Guid userId, string email, string confirmToken)
         {
             var confirmLink = $"https://yourfrontend.com/confirm-email?token={Uri.EscapeDataString(confirmToken)}&email={email}&userId={userId}";
             var emailRequest = new SendEmailVO

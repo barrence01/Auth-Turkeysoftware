@@ -14,17 +14,17 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
             _userSessionRepository = userSessionRepository;
         }
 
-        public async Task InvalidateUserSession(string userId, string sessionId)
+        public async Task InvalidateUserSession(Guid userId, Guid sessionId)
         {
             await _userSessionRepository.InvalidateUserSession(userId, sessionId);
         }
 
-        public async Task InvalidateAllUserSession(string userId)
+        public async Task InvalidateAllUserSession(Guid userId)
         {
             await _userSessionRepository.InvalidateAllUserSessions(userId);
         }
 
-        public async Task<PaginationVO<UserSessionResponse>> ListUserActiveSessions(string userId, int page)
+        public async Task<PaginationVO<UserSessionResponse>> ListUserActiveSessions(Guid userId, int page)
         {
             if (page <= 0)
                 page = 1;

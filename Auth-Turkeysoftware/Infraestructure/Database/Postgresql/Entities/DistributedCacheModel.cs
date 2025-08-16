@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
 {
     [Table("DistributedCache", Schema = "auth")]
-    public class CacheEntryModel
+    public class DistributedCacheModel
     {
         [Key]
         [MaxLength(255)]

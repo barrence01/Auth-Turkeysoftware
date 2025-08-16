@@ -4,16 +4,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
 {
-    [Table("tb_hist_aspnet_users", Schema = "auth")]
+    [Table("HistAspNetUsers", Schema = "auth")]
     [Comment("Tracks the changes in the AspNetUsers table")]
-    public class HistAplicationUserModel
+    public class HistAspNetUsersModel
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column(TypeName = "uuid")]
         public Guid HistoryId { get; set; } = Guid.CreateVersion7();
         [Required]
-        public string? UserId { get; set; }
+        public Guid UserId { get; set; }
         [Required]
         public string? UserName { get; set; }
         [Required]

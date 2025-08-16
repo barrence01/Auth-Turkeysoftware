@@ -4,20 +4,19 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Auth_Turkeysoftware.Shared.Enums;
 using Auth_Turkeysoftware.Domain.Models.VOs;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.DbContext
 {
-    public class AppDbContext : IdentityDbContext<ApplicationUser>
+    public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>(options)
     {
-
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
-        public DbSet<CacheEntryModel> DistributedCache { get; set; }
+        public DbSet<DistributedCacheModel> DistributedCache { get; set; }
         public DbSet<TwoFactorAuthModel> TwoFactorAuth { get; set; }
         public DbSet<UserSessionModel> LoggedUser { get; set; }
-        public DbSet<AdminActionLogModel> AdminActionLog { get; set; }
+        public DbSet<LogAdminActionModel> AdminActionLog { get; set; }
         public DbSet<HistUserLoginModel> HistUserLogin { get; set; }
-        public DbSet<HistAplicationUserModel> HistAplicationUser { get; set; }
+        public DbSet<HistAspNetUsersModel> HistAplicationUser { get; set; }
         public DbSet<TestDataModel> TestData { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -82,12 +81,12 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.DbContext
         private void HandleUserChanges() {
 
             // LOG of changes in ApplicationUser
-            var entries = ChangeTracker.Entries<ApplicationUser>()
-                           .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified);
+            var entriesAppUser = ChangeTracker.Entries<ApplicationUser>()
+                                              .Where(e => e.State == EntityState.Added || e.State == EntityState.Modified).ToList();
 
-            foreach (var entry in entries)
+            foreach (var entry in entriesAppUser)
             {
-                var historyEntry = new HistAplicationUserModel
+                var historyEntry = new HistAspNetUsersModel
                 {
                     UserId = entry.Entity.Id,
                     UserName = entry.Entity.UserName,
@@ -103,7 +102,30 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.DbContext
                     DbOperationWhen = DateTime.Now.ToUniversalTime()
                 };
 
-                this.Set<HistAplicationUserModel>().Add(historyEntry);
+                this.Set<HistAspNetUsersModel>().Add(historyEntry);
+            }
+
+            // LOG of changes in UserSessionModel
+            var entriesLogin = ChangeTracker.Entries<UserSessionModel>()
+                                            .Where(e => e.State == EntityState.Added).ToList();
+
+            foreach (var entry in entriesLogin)
+            {
+                var historyEntry = new HistUserLoginModel
+                {
+                    SessionId = entry.Entity.SessionId,
+                    FkUserId = entry.Entity.FkUserId,
+                    CreatedOn = entry.Entity.CreatedOn,
+                    UF = entry.Entity.UF,
+                    ServiceProvider = entry.Entity.ServiceProvider,
+                    IP = entry.Entity.IP,
+                    Platform = entry.Entity.Platform,
+                    UserAgent = entry.Entity.UserAgent,
+                    DbOperationType = (char)DbOperationTypeEnum.INCLUSAO,
+                    DbOperationWhen = DateTime.Now.ToUniversalTime()
+                };
+
+                this.Set<HistUserLoginModel>().Add(historyEntry);
             }
         }
     }

@@ -6,6 +6,7 @@ using Auth_Turkeysoftware.Domain.Models.Result;
 using Auth_Turkeysoftware.Domain.Services.Interfaces;
 using Auth_Turkeysoftware.Infraestructure.Configurations.Singletons;
 using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
+using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 using Auth_Turkeysoftware.Shared.Constants;
 using Auth_Turkeysoftware.Shared.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -107,7 +108,7 @@ namespace Auth_Turkeysoftware.API.Controllers
 
                 var userClaims = new List<Claim>
                 {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                     new Claim(ClaimTypes.Name, user.UserName!)
                 };
 
@@ -185,8 +186,8 @@ namespace Auth_Turkeysoftware.API.Controllers
 
                 var userClaims = await _userManager.GetClaimsAsync(user);
 
-                string newIdSessao = Guid.CreateVersion7().ToString();
-                userClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, newIdSessao));
+                string newSessionId = Guid.CreateVersion7().ToString();
+                userClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, newSessionId));
 
                 string accessToken = GenerateAccessToken(userClaims);
                 string refreshToken = GenerateRefreshToken(userClaims);
@@ -194,7 +195,7 @@ namespace Auth_Turkeysoftware.API.Controllers
                 UserSessionModel userModel;
                 userModel = new UserSessionModel
                 {
-                    SessionId = newIdSessao,
+                    SessionId = new Guid(newSessionId),
                     FkUserId = user.Id,
                     RefreshToken = refreshToken,
                     IP = HttpContext.Items["IP"]?.ToString() ?? string.Empty,
@@ -352,26 +353,26 @@ namespace Auth_Turkeysoftware.API.Controllers
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
-                string? idSessao = principalRefresh.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
-                if (idSessao == null)
+                string? sessionId = principalRefresh.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+                if (sessionId == null)
                 {
                     _logger.LogError("Token não possui id da sessão.");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
-                if (await _loggedUserService.IsTokenBlackListed(user.Id, idSessao, refreshToken))
+                if (await _loggedUserService.IsTokenBlackListed(user.Id, new Guid(sessionId), refreshToken))
                 {
                     _logger.LogError("O token utilizado já havia sido inválidado.");
                     return Unauthorized(ERROR_SESSAO_INVALIDA);
                 }
 
                 var userClaims = await _userManager.GetClaimsAsync(user);
-                userClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, idSessao));
+                userClaims.Add(new Claim(JwtRegisteredClaimNames.Jti, sessionId));
 
                 string newRefreshToken = GenerateRefreshToken(userClaims);
                 string newAccessToken = GenerateAccessToken(userClaims);
 
-                await _loggedUserService.UpdateSessionRefreshToken(user.Id, idSessao, refreshToken, newRefreshToken);
+                await _loggedUserService.UpdateSessionRefreshToken(user.Id, new Guid(sessionId), refreshToken, newRefreshToken);
 
                 AddTokensToCookies(newRefreshToken, newAccessToken);
                 return Ok();

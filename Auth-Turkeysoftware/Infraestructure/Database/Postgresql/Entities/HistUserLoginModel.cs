@@ -4,17 +4,21 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
 {
-    [Table("tb_hist_usuar_login", Schema = "auth")]
-    [Keyless]
+    [Table("HistUserLogin", Schema = "auth")]
     public class HistUserLoginModel
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column(TypeName = "uuid")]
+        public Guid HistoryId { get; set; } = Guid.CreateVersion7();
+
         [Column("id_sessao")]
         [Required]
-        public string? SessionId { get; set; }
+        public Guid SessionId { get; set; }
 
         [Column("fk_id_usuario")]
         [Required]
-        public string? FkUserId { get; set; }
+        public Guid FkUserId { get; set; }
 
         [Column("dt_inclusao")]
         [Required]

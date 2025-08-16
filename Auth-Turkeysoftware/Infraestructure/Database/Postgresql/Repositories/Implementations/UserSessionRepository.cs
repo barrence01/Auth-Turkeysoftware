@@ -43,7 +43,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
             }
         }
 
-        public async Task<UserSessionModel?> FindRefreshToken(string userId, string sessionId, string userToken)
+        public async Task<UserSessionModel?> FindRefreshToken(Guid userId, Guid sessionId, string userToken)
         {
             return await _dbContext.LoggedUser
                                   .AsNoTracking()
@@ -58,7 +58,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
                                   .FirstOrDefaultAsync();
         }
 
-        public async Task InvalidateUserSession(string userId, string sessionId)
+        public async Task InvalidateUserSession(Guid userId, Guid sessionId)
         {
             try
             {
@@ -80,7 +80,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
             }
         }
 
-        public async Task UpdateSessionRefreshToken(string userId, string sessionId, string oldRefreshToken, string newRefreshToken)
+        public async Task UpdateSessionRefreshToken(Guid userId, Guid sessionId, string oldRefreshToken, string newRefreshToken)
         {
             try
             {
@@ -103,7 +103,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
             }
         }
 
-        private IQueryable<UserSessionResponse> GetQueryListUserActiveSessionsPaginated(string userId)
+        private IQueryable<UserSessionResponse> GetQueryListUserActiveSessionsPaginated(Guid userId)
         {
 
             DateTime currentDate = DateTime.Now.ToUniversalTime();
@@ -115,7 +115,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
                                         && (p.UpdatedOn > sevenDaysAgo || p.CreatedOn > sevenDaysAgo && p.UpdatedOn == null))
                             .Select(p => new UserSessionResponse
                             {
-                                SessionId = p.SessionId,
+                                SessionId = p.SessionId.ToString(),
                                 TokenStatus = p.TokenStatus,
                                 CreatedOn = p.CreatedOn,
                                 LastTimeOnline = p.UpdatedOn ?? p.CreatedOn,
@@ -126,7 +126,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
                             }).OrderByDescending(p => p.CreatedOn);
         }
 
-        public async Task<PaginationVO<UserSessionResponse>> ListUserActiveSessionsPaginated(string userId, int pageNumber, int pageSize)
+        public async Task<PaginationVO<UserSessionResponse>> ListUserActiveSessionsPaginated(Guid userId, int pageNumber, int pageSize)
         {
             return await _dbContext.GetPagedResultAsync(GetQueryListUserActiveSessionsPaginated(userId), pageNumber, pageSize);
         }
@@ -136,7 +136,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
             return await query.CountAsync();
         }
 
-        public async Task InvalidateAllUserSessions(string userId)
+        public async Task InvalidateAllUserSessions(Guid userId)
         {
             await _dbContext.LoggedUser
                            .Where(p => p.FkUserId == userId && p.TokenStatus == (char)StatusTokenEnum.ATIVO)
