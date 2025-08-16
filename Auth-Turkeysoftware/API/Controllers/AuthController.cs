@@ -46,16 +46,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Verifica as credenciais do usuário e inicia o processo de autenticação.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Auth/try-login<br/>
-        ///     {
-        ///         "email": "usuario@exemplo.com",
-        ///         "password": "SenhaSegura123"
-        ///     }
-        ///     
-        /// </remarks>
         /// <param name="request">Dados de login contendo email e senha.</param>
         /// <returns>
         /// Resultado da tentativa de login. Pode indicar necessidade de 2FA e retorna token temporário em cookies HTTP-only.
@@ -138,14 +128,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// Completa o processo de autenticação com validação de código 2FA quando necessário.
         /// </summary>
         /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Auth/login<br/>
-        ///     {
-        ///         "twoFactorCode": "123456",
-        ///         "twoFactorMode": 1,
-        ///     }
-        ///     
         /// Requer cookie com token temporário gerado por TryLogin.
         /// </remarks>
         /// <param name="request">Dados contendo código 2FA quando aplicável.</param>
@@ -245,13 +227,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// Envia código de autenticação de dois fatores para o usuário.
         /// </summary>
         /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Auth/send-2fa<br/>
-        ///     {
-        ///         "twoFactorMode": 1
-        ///     }
-        ///     
         /// Requer cookie com token temporário gerado por TryLogin.
         /// </remarks>
         /// <param name="request">Dados contendo modo de autenticação 2FA.</param>
@@ -339,15 +314,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Gera um novo par de tokens de acesso e refresh com base no refresh token fornecido.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Auth/refresh-token<br/>
-        ///     {
-        ///         // (O refresh token deve ser enviado como cookie)
-        ///     }
-        /// 
-        /// </remarks>
         /// <returns>Retorna 200 (OK) com os novos tokens de acesso e refresh em cookies HTTP-only.</returns>
         /// <response code="200">Tokens renovados com sucesso.</response>
         /// <response code="401">

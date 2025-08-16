@@ -1,6 +1,5 @@
 ﻿using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.DbContext;
 using Auth_Turkeysoftware.Shared.Utils;
-using Laraue.EfCoreTriggers.PostgreSql.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Auth_Turkeysoftware.Shared.Extensions

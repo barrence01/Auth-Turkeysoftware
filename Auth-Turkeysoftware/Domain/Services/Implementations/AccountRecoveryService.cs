@@ -32,8 +32,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
         {
             string passResetKey = AuthUtil.GetPassResetKey(user.Email!);
 
-            if (await _cache.IsCachedAsync(passResetKey))
-            {
+            if (await _cache.IsCachedAsync(passResetKey)) {
                 return;
             }
 
@@ -48,28 +47,23 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
 
         public async Task<ResetPasswordValidationResult> ResetPassword(ApplicationUser user, ResetPasswordRequest request)
         {
-            if (user == null)
-            {
+            if (user == null) {
                 throw new ArgumentNullException(nameof(user), "Usuário não pode ser nulo.");
             }
 
             ResetPasswordValidationResult result = new();
 
-            if (string.IsNullOrEmpty(request.ResetCode))
-            {
+            if (string.IsNullOrEmpty(request.ResetCode)) {
                 result.IsResetCodeEmpty = true;
                 return result;
-            }
-            else if (string.IsNullOrEmpty(request.NewPassword))
-            {
+            } else if (string.IsNullOrEmpty(request.NewPassword)) {
                 result.IsNewPasswordEmpty = true;
                 return result;
             }
 
             string cacheKey = AuthUtil.GetPassResetKey(user.UserName!);
             TwoFactorRetryVO? retryInfo = await _cache.GetAsync<TwoFactorRetryVO>(cacheKey);
-            if (retryInfo == null)
-            {
+            if (retryInfo == null) {
                 result.IsResetCodeExpired = true;
                 return result;
             }
@@ -77,8 +71,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
             retryInfo.NumberOfTries += 1;
             await _cache.SetAsync(cacheKey, retryInfo);
 
-            if (retryInfo.NumberOfTries >= retryInfo.MaxNumberOfTries)
-            {
+            if (retryInfo.NumberOfTries >= retryInfo.MaxNumberOfTries) {
                 await _cache.RemoveAsync(cacheKey);
                 result.IsResetCodeExpired = true;
                 return result;
@@ -86,8 +79,7 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
 
             var passResetResult = await _userManager.ResetPasswordAsync(user, request.ResetCode, request.NewPassword);
 
-            if (!passResetResult.Succeeded)
-            {
+            if (!passResetResult.Succeeded) {
                 result.Errors = (List<IdentityError>)passResetResult.Errors;
                 return result;
             }

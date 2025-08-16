@@ -6,8 +6,8 @@ namespace Auth_Turkeysoftware.Domain.Services.Implementations
 {
     public class CommunicationService : ICommunicationService
     {
-        private readonly EmailService _emailService;
-        public CommunicationService(EmailService emailService)
+        private readonly IEmailService _emailService;
+        public CommunicationService(IEmailService emailService)
         {
             _emailService = emailService;
         }

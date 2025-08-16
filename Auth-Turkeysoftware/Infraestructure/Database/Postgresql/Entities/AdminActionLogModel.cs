@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
 {
-    [Table("tb_log_admin_action")]
+    [Table("tb_log_admin_action", Schema = "auth")]
     public class AdminActionLogModel
     {
         [Key]

@@ -1,5 +1,4 @@
 ﻿using Auth_Turkeysoftware.Infraestructure.Configurations.Models;
-using Microsoft.Extensions.Options;
 
 namespace Auth_Turkeysoftware.Infraestructure.Configurations.Singletons
 {

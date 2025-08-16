@@ -37,16 +37,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Lista todas as sessões ativas de um usuário específico (paginação).
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Admin/ListUserActiveSessions<br/>
-        ///     {
-        ///         "email": "usuario@exemplo.com",
-        ///         "pagina": 1
-        ///     }
-        ///     
-        /// </remarks>
         /// <param name="request">Dados para consulta (email e página).</param>
         /// <returns>Lista paginada de sessões ativas.</returns>
         /// <response code="200">Retorna a lista de sessões ativas.</response>
@@ -78,17 +68,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Altera a senha de um usuário (requer permissão Master).
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Admin/ChangeUserPassword<br/>
-        ///     {
-        ///         "email": "usuario@exemplo.com",
-        ///         "newPassword": "NovaSenha@123",
-        ///         "confirmPassword": "NovaSenha@123"
-        ///     }
-        ///     
-        /// </remarks>
         /// <param name="request">Dados para alteração de senha.</param>
         /// <returns>Resultado da operação.</returns>
         /// <response code="200">Senha alterada com sucesso.</response>
@@ -128,16 +107,7 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Bloqueia uma conta de usuário.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Admin/LockUserAccount<br/>
-        ///     {
-        ///         "email": "usuario@exemplo.com"
-        ///     }
-        ///     
-        /// </remarks>
-        /// <param name="request">Email do usuário a ser bloqueado.</param>
+        /// <param name="request">Mail do usuário a ser bloqueado.</param>
         /// <returns>Status da conta após bloqueio.</returns>
         /// <response code="200">Conta bloqueada com sucesso.</response>
         /// <response code="400">Usuário não encontrado.</response>
@@ -164,15 +134,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Desbloqueia uma conta de usuário.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Admin/UnlockUserAccount<br/>
-        ///     {
-        ///         "email": "usuario@exemplo.com"
-        ///     }
-        ///     
-        /// </remarks>
         /// <param name="request">Email do usuário a ser desbloqueado.</param>
         /// <returns>Status da conta após desbloqueio.</returns>
         /// <response code="200">Conta desbloqueada com sucesso.</response>
@@ -200,16 +161,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Revoga uma sessão específica de um usuário.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Admin/RevokeUserSession<br/>
-        ///     {
-        ///         "email": "usuario@exemplo.com",
-        ///         "SessionId": "abc123"
-        ///     }
-        ///     
-        /// </remarks>
         /// <param name="request">Dados para revogação (email e ID da sessão).</param>
         /// <returns>Resultado da operação.</returns>
         /// <response code="200">Sessão revogada com sucesso.</response>
@@ -242,16 +193,7 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Revoga todas as sessões ativas de um usuário.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Admin/RevokeAllUserSession<br/>
-        ///     {
-        ///         "email": "usuario@exemplo.com"
-        ///     }
-        ///     
-        /// </remarks>
-        /// <param name="request">Email do usuário.</param>
+        /// <param name="request">Mail do usuário.</param>
         /// <returns>Resultado da operação.</returns>
         /// <response code="200">Todas as sessões foram revogadas.</response>
         /// <response code="400">Usuário não encontrado.</response>
@@ -283,16 +225,7 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Obtém o status de bloqueio de uma conta de usuário.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:
-        /// 
-        ///     POST /api/Admin/GetUserAccountStatus<br/>
-        ///     {
-        ///         "email": "usuario@exemplo.com"<br/>
-        ///     }
-        ///     
-        /// </remarks>
-        /// <param name="request">Email do usuário.</param>
+        /// <param name="request">Mail do usuário.</param>
         /// <returns>Status da conta e informação de bloqueio.</returns>
         /// <response code="200">Retorna o status da conta.</response>
         /// <response code="400">Usuário não encontrado.</response>
@@ -326,16 +259,7 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Obtém informações cadastrais de um usuário.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Admin/GetUserInformation<br/>
-        ///     {
-        ///         "email": "usuario@exemplo.com"
-        ///     }
-        ///     
-        /// </remarks>
-        /// <param name="request">Email do usuário.</param>
+        /// <param name="request">Mail do usuário.</param>
         /// <returns>Dados cadastrais do usuário.</returns>
         /// <response code="200">Retorna as informações do usuário.</response>
         /// <response code="400">Usuário não encontrado.</response>

@@ -33,13 +33,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Obtém todas as sessões ativas do usuário com paginação.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        ///
-        ///     GET /api/User/all-sessions?pagina=1<br/>
-        ///     Authorization: Bearer {token}
-        ///
-        /// </remarks>
         /// <param name="pagina">Número da página (iniciando em 1).</param>
         /// <returns>Lista paginada de sessões ativas do usuário autenticado.</returns>
         /// <response code="200">Retorna a lista de sessões ativas com metadados de paginação.</response>
@@ -113,13 +106,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Revoga uma sessão específica do usuário autenticado.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:
-        /// 
-        ///     POST /api/User/revoke-session/{SessionId}
-        ///     Authorization: Bearer {token}
-        ///
-        /// </remarks>
         /// <param name="idSessao">Identificador único da sessão a ser revogada.</param>
         /// <returns>Resultado da operação de revogação.</returns>
         /// <response code="200">Sessão revogada com sucesso.</response>

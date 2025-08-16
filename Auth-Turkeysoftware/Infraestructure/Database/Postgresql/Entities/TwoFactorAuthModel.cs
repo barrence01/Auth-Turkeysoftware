@@ -11,7 +11,7 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("id_two_factor", TypeName = "uuid")]
+        [Column("id_two_factor")]
         public string? TwoFactorId { get; set; } = Guid.CreateVersion7().ToString();
 
         [Column("fk_id_usuario")]

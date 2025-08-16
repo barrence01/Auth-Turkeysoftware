@@ -29,18 +29,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Registra um novo usuário no sistema com perfil padrão.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/Register/register-user<br/>
-        ///     {
-        ///         "email": "novo.usuario@exemplo.com",
-        ///         "name": "Fulano da Silva",
-        ///         "phoneNumber": "11999999999",
-        ///         "password": "SenhaForte@123"
-        ///     }
-        ///     
-        /// </remarks>
         /// <param name="request">Dados para cadastro do novo usuário.</param>
         /// <returns>Resultado da operação de cadastro.</returns>
         /// <response code="200">Usuário registrado com sucesso.</response>
@@ -95,17 +83,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Confirma o endereço de email de um usuário utilizando o token de confirmação.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///      POST /api/Register/confirm-email<br/>
-        ///      {
-        ///         "userId": "123e4567-e89b-12d3-a456-426614174000",
-        ///         "email": "usuario@exemplo.com",
-        ///         "token": "CfDJ8N...LQ8tT" // Token de confirmação
-        ///      }
-        /// 
-        /// </remarks>
         /// <param name="request">Dados para confirmação do email contendo:
         /// <list type="bullet">
         /// <item><description>userId: ID do usuário</description></item>
@@ -114,12 +91,12 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// </list>
         /// </param>
         /// <returns>Resultado da operação de confirmação de email.</returns>
-        /// <response code="200">Email confirmado com sucesso.</response>
+        /// <response code="200">Mail confirmado com sucesso.</response>
         /// <response code="400">
         /// Falha na confirmação devido a:
         /// <list type="bullet">
         /// <item><description>Usuário não encontrado</description></item>
-        /// <item><description>Email não corresponde ao usuário</description></item>
+        /// <item><description>Mail não corresponde ao usuário</description></item>
         /// <item><description>Token inválido ou expirado</description></item>
         /// </list>
         /// </response>

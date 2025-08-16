@@ -33,13 +33,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// Envia um e-mail de recuperação de senha para o usuário. TODO: Colocar o domínio correto da página de recuperação.
         /// </summary>
         /// <remarks>
-        /// Exemplo de requisição:
-        /// 
-        ///     POST /api/AccountRecovery/forgot-password
-        ///     {
-        ///         "email": "usuario@exemplo.com"
-        ///     }
-        ///     
         /// O e-mail conterá um link para redefinição de senha com o domínio da aplicação.
         /// </remarks>
         /// <param name="request">Dados do usuário para recuperação de senha.</param>
@@ -68,15 +61,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// Redefine a senha do usuário utilizando um token de redefinição válido.
         /// </summary>
         /// <remarks>
-        /// Exemplo de requisição:
-        /// 
-        ///     POST /api/AccountRecovery/reset-password
-        ///     {
-        ///         "email": "usuario@exemplo.com",
-        ///         "resetCode": "token-gerado",
-        ///         "newPassword": "NovaSenha@123"
-        ///     }
-        ///     
         /// O token se encontra como paramêtro na URL recebida por email, depois de solicitar /api/AccountRecovery/forgot-password
         /// </remarks>
         /// <param name="request">Dados para redefinição de senha.</param>

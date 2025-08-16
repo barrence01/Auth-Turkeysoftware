@@ -8,7 +8,7 @@
         /// <summary>
         /// Gera uma chave para ser utilizada nas operações com cache para validação de dois fatores.
         /// </summary>
-        /// <param name="email">Email ou Username do usuário.</param>
+        /// <param name="email">Mail ou Username do usuário.</param>
         /// <returns>Uma string contendo a chave a ser utilizada.</returns>
         public static string Get2FACacheKey(string email)
         {
@@ -18,7 +18,7 @@
         /// <summary>
         /// Gera uma chave para ser utilizada nas operações com cache para habilitação de autenticação de dois fatores.
         /// </summary>
-        /// <param name="email">Email ou Username do usuário.</param>
+        /// <param name="email">Mail ou Username do usuário.</param>
         /// <returns>Uma string contendo a chave a ser utilizada.</returns>
         public static string Get2FAEnableCacheKey(string email)
         {
@@ -28,7 +28,7 @@
         /// <summary>
         /// Gera uma chave para ser utilizada nas operações com cache para redefinição de senha.
         /// </summary>
-        /// <param name="email">Email ou Username do usuário.</param>
+        /// <param name="email">Mail ou Username do usuário.</param>
         /// <returns>Uma string contendo a chave a ser utilizada.</returns>
         public static string GetPassResetKey(string email)
         {

@@ -71,17 +71,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Altera a senha do usuário autenticado.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///     POST /api/User/change-password<br/>
-        ///     {
-        ///         "currentPassword": "SenhaAtual@123",
-        ///         "newPassword": "NovaSenha@456",
-        ///         "confirmPassword": "NovaSenha@456"
-        ///     }
-        ///     
-        /// </remarks>
         /// <param name="request">Dados necessários para alteração de senha (senha atual e nova senha).</param>
         /// <returns>Resultado da operação de alteração de senha.</returns>
         /// <response code="200">Senha alterada com sucesso.</response>
@@ -124,11 +113,6 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// Remove permanentemente a conta do usuário autenticado.
         /// </summary>
         /// <remarks>
-        /// Exemplo de requisição:
-        /// 
-        ///     POST /api/User/delete-account
-        ///     Authorization: Bearer {token}
-        ///
         /// Observação: Esta operação é irreversível e remove todos os dados de login do usuário.
         /// </remarks>
         /// <returns>Resultado da operação de exclusão da conta.</returns>
@@ -180,22 +164,12 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// </summary>
         /// <remarks>
         /// Envia um código de verificação para o método de autenticação escolhido (email, SMS, etc.).
-        /// 
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///      POST /api/User/enable-two-factor
-        ///      Authorization: Bearer {token}
-        ///      {
-        ///         "password": "SenhaDoUsuario123",
-        ///         "operationMode": 1 // 1 = Email
-        ///      }
-        /// 
         /// </remarks>
         /// <param name="request">
         /// Dados para solicitação de ativação do 2FA:
         /// <list type="bullet">
         /// <item><description>password: Senha do usuário para confirmação</description></item>
-        /// <item><description>operationMode: Método de autenticação (1 = Email)</description></item>
+        /// <item><description>operationMode: Método de autenticação (1 = Mail)</description></item>
         /// </list>
         /// </param>
         /// <returns>
@@ -205,7 +179,7 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <response code="400">
         /// Possíveis erros:
         /// <list type="bullet">
-        /// <item><description>Email não confirmado (IsEmailNotConfirmed = true)</description></item>
+        /// <item><description>Mail não confirmado (IsEmailNotConfirmed = true)</description></item>
         /// <item><description>Senha inválida (IsPasswordInvalid = true)</description></item>
         /// <item><description>Método de autenticação não implementado</description></item>
         /// </list>
@@ -256,23 +230,12 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// <summary>
         /// Confirma a habilitação da autenticação de dois fatores (2FA) com o código de verificação.
         /// </summary>
-        /// <remarks>
-        /// Exemplo de requisição:<br/>
-        /// 
-        ///      POST /api/User/confirm-enable-two-factor
-        ///      Authorization: Bearer {token}
-        ///      {
-        ///         "code": "123456",
-        ///         "operationMode": 1 // 1=Email
-        ///      }
-        /// 
-        /// </remarks>
         /// <param name="request">Dados de confirmação contendo código de verificação e modo de operação.</param>
         /// <returns>Resultado da confirmação do 2FA.</returns>
         /// <response code="200">2FA habilitado com sucesso.</response>
         /// <response code="400">
         /// Falha devido a:
-        /// - Email não confirmado
+        /// - Mail não confirmado
         /// - Código 2FA inválido/expirado
         /// - Número máximo de tentativas excedido
         /// - Modo de operação não implementado
@@ -336,15 +299,10 @@ namespace Auth_Turkeysoftware.API.Controllers
         /// Envia um novo email de confirmação para o usuário autenticado.
         /// </summary>
         /// <remarks>
-        /// Exemplo de requisição:
-        /// 
-        ///      POST /api/User/send-confirm-email
-        ///      Authorization: Bearer {token}
-        /// 
         /// O email será enviado para o endereço cadastrado do usuário autenticado.
         /// </remarks>
         /// <returns>Resultado da operação.</returns>
-        /// <response code="200">Email de confirmação enviado com sucesso.</response>
+        /// <response code="200">Mail de confirmação enviado com sucesso.</response>
         /// <response code="400">Usuário não encontrado.</response>
         /// <response code="401">Não autorizado - Token inválido ou ausente.</response>
         [HttpPost("send-confirm-email")]
