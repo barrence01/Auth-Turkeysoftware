@@ -18,24 +18,24 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 namespace Auth_Turkeysoftware.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth/[controller]")]
     [ApiController]
-    public class AuthController : AuthControllerBase
+    public class LoginController : AuthControllerBase
     {
         private const string ERROR_SESSAO_INVALIDA = "Não foi possível reconhecer a sessão do usuário";
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IUserSessionService _loggedUserService;
         private readonly IAuthenticationService _authenticationService;
-        private readonly ILogger<AuthController> _logger;
+        private readonly ILogger<LoginController> _logger;
 
-        public AuthController(
+        public LoginController(
             JwtSettingsSingleton jwtSettingsSingleton,
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IUserSessionService loggedUserService,
             IAuthenticationService authenticationService,
-            ILogger<AuthController> logger) : base(jwtSettingsSingleton)
+            ILogger<LoginController> logger) : base(jwtSettingsSingleton)
         {
             _userManager = userManager;
             _signInManager = signInManager;

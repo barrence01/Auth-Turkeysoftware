@@ -14,7 +14,7 @@ namespace Auth_Turkeysoftware.API.Controllers
     /// O acesso à este controller é bloqueado para contas "Guest"
     /// por serem gerenciados pela aplicação que criou a conta.
     /// </summary>
-    [Route("api/[controller]")]
+    [Route("api/auth/[controller]")]
     [ApiController]
     [AllowAnonymous]
     public class AccountRecoveryController : CommonControllerBase

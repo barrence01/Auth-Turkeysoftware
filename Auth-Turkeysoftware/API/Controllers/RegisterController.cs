@@ -10,7 +10,7 @@ using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 
 namespace Auth_Turkeysoftware.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth/[controller]")]
     [ApiController]
     public class RegisterController : CommonControllerBase
     {

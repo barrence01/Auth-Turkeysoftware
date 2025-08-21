@@ -13,7 +13,7 @@ using System.Security.Claims;
 
 namespace Auth_Turkeysoftware.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth/[controller]")]
     [ApiController]
     public class UserController : AuthControllerBase
     {
