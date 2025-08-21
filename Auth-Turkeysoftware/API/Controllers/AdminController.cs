@@ -14,7 +14,7 @@ using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities.Identity;
 
 namespace Auth_Turkeysoftware.API.Controllers
 {
-    [Route("api/auth/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     [Authorize(Policy = "AcessoElevado")]
     [TypeFilter(typeof(AdminActionLoggingFilterAsync))]
