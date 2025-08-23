@@ -42,7 +42,7 @@ namespace Auth_Turkeysoftware.Shared.Extensions
             services.AddScoped<ITwoFactorRepository, TwoFactorRepository>();
             services.AddScoped<IUserSessionService, UserSessionService>();
             services.AddScoped<IUserSessionRepository, UserSessionRepository>();
-            services.AddScoped<IExternalApiService, ExternalApiService>();
+            services.AddScoped<IGeoLocationService, GeoLocationService>();
             services.AddScoped<IAdministrationService, AdministrationService>();
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IAccountRecoveryService, AccountRecoveryService>();

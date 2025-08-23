@@ -34,24 +34,25 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     ////
-    // Carrega as variáveis de ambiente a partir de um arquivo .env
+    // Load environment variables from a .env file
     ////
     ConfigUtil.LoadEnvironmentVariablesFromEnvFile(builder);
 
     ////
-    // Adicionar log do serilog como padrão
+    // Add serilog as the default logger provider
     ////
     builder.Host.UseSerilog();
 
     ////
     // Controllers e Swagger
     ////
+    builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddOpenApiDocument();
 
     ////
-    // Carrega os serviços
+    // Load services
     ////
     builder.Services.AddCustomScoped()
                     .AddCustomSingletons(builder.Configuration)
@@ -60,13 +61,13 @@ try
 
     ////
     // Entity Framework
-    // Configuração do acesso ao banco de dados
+    // Sets ups database access
     ////
     builder.Services.AddDbContexts(builder.Configuration);
 
     ////
     // Microsoft Identity
-    // Autenticação e autorização
+    // Authorization and authentication
     ////
     builder.Services.AddIdentity<ApplicationUser, ApplicationRole>()
                     .AddEntityFrameworkStores<AppDbContext>()
@@ -75,7 +76,7 @@ try
                     .AddTokenProvider<EmailTokenProvider<ApplicationUser>>(TokenOptions.DefaultEmailProvider);
 
 
-    // Configura os requisitos para login de usuário
+    // Sets the requirements for a new account
     builder.Services.Configure<IdentityOptions>(options =>
     {
         options.User.RequireUniqueEmail = true;
@@ -85,12 +86,12 @@ try
     });
 
     ////
-    // Adição de autenticação e autorização via JWE TOKEN
+    // Add authorization and authentication using JWE TOKEN
     ////
     builder.Services.AddJwtAuthentication(builder.Configuration);
     
 
-    // Configura o MVC para exigir autenticação globalmente
+    // Sets authentication required to all routes by default
     builder.Services.AddControllers(config =>
     {
         var policy = new AuthorizationPolicyBuilder()
@@ -102,7 +103,7 @@ try
 
     ////
     // CORS
-    // Controle de acesso ao host
+    // Host access control
     ////
     builder.Services.AddAuthorization(options =>
     {
@@ -153,8 +154,8 @@ try
         ForwardedHeaders.XForwardedProto
     });
 
+    // Automatizally execute migrations on start up
 #if !DEBUG
-    // Verifica se o banco de dados está em conformidade com as migrações, caso não esteja, executará o migrations para sincronizar a base.
     await using (var scope = app.Services.CreateAsyncScope())
     {
         var services = scope.ServiceProvider;

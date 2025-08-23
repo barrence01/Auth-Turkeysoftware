@@ -2,7 +2,7 @@
 
 namespace Auth_Turkeysoftware.Infraestructure.External.Services
 {
-    public interface IExternalApiService
+    public interface IGeoLocationService
     {
         Task<IpDetailsVO?> GetIpDetails(string ipAddress);
     }

@@ -4,13 +4,13 @@ using System.Text.Json;
 
 namespace Auth_Turkeysoftware.Infraestructure.External.Services
 {
-    public class ExternalApiService : IExternalApiService
+    public class GeoLocationService : IGeoLocationService
     {
-        private readonly ILogger<ExternalApiService> _logger;
+        private readonly ILogger<GeoLocationService> _logger;
 
         private readonly HttpClientSingleton _httpClientSingleton;
 
-        public ExternalApiService(ILogger<ExternalApiService> logger, HttpClientSingleton httpClientSingleton)
+        public GeoLocationService(ILogger<GeoLocationService> logger, HttpClientSingleton httpClientSingleton)
         {
             _logger = logger;
             _httpClientSingleton = httpClientSingleton;
