@@ -2,6 +2,7 @@
 using Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Entities;
 using Auth_Turkeysoftware.Shared.Extensions;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
 namespace Auth_Turkeysoftware.API.Filters
@@ -9,15 +10,15 @@ namespace Auth_Turkeysoftware.API.Filters
     public class AdminActionLoggingFilterAsync : IAsyncActionFilter
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly CacheDbContext _dbContext;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<AdminActionLoggingFilterAsync> _logger;
 
         public AdminActionLoggingFilterAsync(IHttpContextAccessor httpContextAccessor,
-                                             CacheDbContext dbContext,
+                                             IServiceProvider serviceProvider,
                                              ILogger<AdminActionLoggingFilterAsync> logger)
         {
             _httpContextAccessor = httpContextAccessor;
-            _dbContext = dbContext;
+            _serviceProvider = serviceProvider;
             _logger = logger;
         }
 
@@ -36,8 +37,12 @@ namespace Auth_Turkeysoftware.API.Filters
             var logEntry = new LogAdminActionModel(userName, methodName, arguments);
             logEntry.TruncateAllFields();
 
-            _dbContext.AdminActionLog.Add(logEntry);
-            await _dbContext.SaveChangesAsync();
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                _dbContext.AdminActionLog.Add(logEntry);
+                await _dbContext.SaveChangesAsync();
+            }
 
             await next();
         }

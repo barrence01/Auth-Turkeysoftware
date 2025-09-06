@@ -9,23 +9,27 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
 {
     public class PostgresCacheRepository : IPostgresCacheRepository
     {
-        private readonly CacheDbContext _dbContext;
+        private readonly IServiceProvider _serviceProvider;
 
-        public PostgresCacheRepository(CacheDbContext dbContext)
+        public PostgresCacheRepository(IServiceProvider serviceProvider)
         {
-            _dbContext = dbContext;
+            _serviceProvider = serviceProvider;
         }
 
         /// <inheritdoc/>
         public async Task SetAsync(string key, object value, TimeSpan expiration)
         {
             var cacheEntry = CreateCacheEntry(key, value, expiration, default);
-
+            
             if (!await IsAlreadyInserted(key))
             {
-                await _dbContext.DistributedCache.AddAsync(cacheEntry);
-                await _dbContext.SaveChangesAsync();
-                return;
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    await _dbContext.DistributedCache.AddAsync(cacheEntry);
+                    await _dbContext.SaveChangesAsync();
+                    return;
+                }
             }
 
             await UpdateCachedEntry(cacheEntry);
@@ -38,9 +42,13 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
 
             if (!await IsAlreadyInserted(key))
             {
-                await _dbContext.DistributedCache.AddAsync(cacheEntry);
-                await _dbContext.SaveChangesAsync();
-                return;
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    await _dbContext.DistributedCache.AddAsync(cacheEntry);
+                    await _dbContext.SaveChangesAsync();
+                    return;
+                }
             }
 
             await UpdateCachedEntry(cacheEntry, keepExpTime);
@@ -53,9 +61,13 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
 
             if (!await IsAlreadyInserted(key))
             {
-                await _dbContext.DistributedCache.AddAsync(cacheEntry);
-                await _dbContext.SaveChangesAsync();
-                return;
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    await _dbContext.DistributedCache.AddAsync(cacheEntry);
+                    await _dbContext.SaveChangesAsync();
+                    return;
+                }
             }
 
             await UpdateCachedEntry(cacheEntry);
@@ -64,28 +76,43 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
         /// <inheritdoc/>
         public async Task<T?> GetAsync<T>(string key)
         {
-            var cacheEntry = await _dbContext.DistributedCache.FindAsync(key);
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                var cacheEntry = await _dbContext.DistributedCache.FindAsync(key);
 
-            return await ValidateDeserializeCachedElement<T>(cacheEntry);
+                return await ValidateDeserializeCachedElement<T>(cacheEntry);
+            }
         }
 
         /// <inheritdoc/>
         public async Task RemoveAsync(string key)
         {
-            await _dbContext.DistributedCache
-                            .Where(p => p.Id == key)
-                            .ExecuteDeleteAsync();
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await _dbContext.DistributedCache
+                                .Where(p => p.Id == key)
+                                .ExecuteDeleteAsync();
+            }
         }
 
         public async Task<bool> IsAlreadyInserted(string key)
         {
-            return await _dbContext.DistributedCache.AsNoTracking().AnyAsync(e => e.Id == key);
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                return await _dbContext.DistributedCache.AsNoTracking().AnyAsync(e => e.Id == key);
+            }
         }
 
         /// <inheritdoc/>
         public async Task<bool> IsCachedAsync(string key)
         {
-            DistributedCacheModel? cacheEntry = await _dbContext.DistributedCache
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                DistributedCacheModel? cacheEntry = await _dbContext.DistributedCache
                                                           .AsNoTracking()
                                                           .Where(e => e.Id == key)
                                                           .Select(s => new DistributedCacheModel
@@ -98,11 +125,12 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
                                                           .Take(1)
                                                           .FirstOrDefaultAsync();
 
-            if (await ValidateCachedElement(cacheEntry) == null)
-            {
-                return false;
+                if (await ValidateCachedElement(cacheEntry) == null)
+                {
+                    return false;
+                }
+                return true;
             }
-            return true;
         }
 
         /// <summary>
@@ -142,25 +170,29 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
         /// <returns>Uma tarefa que representa a operação assíncrona de atualização.</returns>
         private async Task UpdateCachedEntry(DistributedCacheModel cacheEntry, bool keepExpTime = false)
         {
-            if (keepExpTime)
+            using (var scope = _serviceProvider.CreateScope())
             {
-                await _dbContext.DistributedCache
-                .Where(p => p.Id == cacheEntry.Id)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(p => p.Value, cacheEntry.Value)
-                );
+                var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                if (keepExpTime)
+                {
+                    await _dbContext.DistributedCache
+                    .Where(p => p.Id == cacheEntry.Id)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(p => p.Value, cacheEntry.Value)
+                    );
 
-            }
-            else
-            {
-                await _dbContext.DistributedCache
-                .Where(p => p.Id == cacheEntry.Id)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(p => p.Value, cacheEntry.Value)
-                    .SetProperty(p => p.ExpiresAtTime, cacheEntry.ExpiresAtTime)
-                    .SetProperty(p => p.SlidingExpiration, cacheEntry.SlidingExpiration)
-                    .SetProperty(p => p.AbsoluteExpiration, cacheEntry.AbsoluteExpiration)
-                );
+                }
+                else
+                {
+                    await _dbContext.DistributedCache
+                    .Where(p => p.Id == cacheEntry.Id)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(p => p.Value, cacheEntry.Value)
+                        .SetProperty(p => p.ExpiresAtTime, cacheEntry.ExpiresAtTime)
+                        .SetProperty(p => p.SlidingExpiration, cacheEntry.SlidingExpiration)
+                        .SetProperty(p => p.AbsoluteExpiration, cacheEntry.AbsoluteExpiration)
+                    );
+                }
             }
         }
 
@@ -186,8 +218,12 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
 
             if (cacheEntry.SlidingExpiration.HasValue && cacheEntry.AbsoluteExpiration <= currentTime)
             {
-                cacheEntry.ExpiresAtTime = currentTime.Add(cacheEntry.SlidingExpiration.Value);
-                await _dbContext.SaveChangesAsync();
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    cacheEntry.ExpiresAtTime = currentTime.Add(cacheEntry.SlidingExpiration.Value);
+                    await _dbContext.SaveChangesAsync();
+                }
             }
 
             return DeserializeCacheEntry<T>(cacheEntry.Value);
@@ -211,10 +247,15 @@ namespace Auth_Turkeysoftware.Infraestructure.Database.Postgresql.Repositories.I
                 return default;
             }
 
+
             if (cacheEntry.SlidingExpiration.HasValue && cacheEntry.AbsoluteExpiration <= currentTime)
             {
-                cacheEntry.ExpiresAtTime = currentTime.Add(cacheEntry.SlidingExpiration.Value);
-                await _dbContext.SaveChangesAsync();
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var _dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    cacheEntry.ExpiresAtTime = currentTime.Add(cacheEntry.SlidingExpiration.Value);
+                    await _dbContext.SaveChangesAsync();
+                }
             }
 
             return cacheEntry;

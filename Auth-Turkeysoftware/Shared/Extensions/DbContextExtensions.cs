@@ -68,18 +68,6 @@ namespace Auth_Turkeysoftware.Shared.Extensions
                 });
             });
 
-            ////
-            // Acesso separado para o dbcontext utilizado para operações que não dependam de estado
-            ////
-            var connStringSecondary = ConfigUtil.GetRequiredEnvVar("AUTH_SECONDARY_DB_CONN");
-            services.AddDbContextPool<CacheDbContext>(options =>
-            {
-                options.UseNpgsql(connStringSecondary, npgsql =>
-                {
-                    npgsql.EnableRetryOnFailure();
-                });
-            });
-
             return services;
         }
     }
